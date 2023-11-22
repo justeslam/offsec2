@@ -2,9 +2,9 @@
 
 ###############################################################################################################
 ## [Title]: reconscan.py -- a recon/enumeration script
-## [Author]: Mike Czumak (T_v3rn1x) -- @SecuritySift
+## [Author]: Gunnar Franek
 ##-------------------------------------------------------------------------------------------------------------
-## [Details]: 
+## [Details]:
 ## This script is intended to be executed remotely against a list of IPs to enumerate discovered services such 
 ## as smb, smtp, snmp, ftp and other. 
 ##-------------------------------------------------------------------------------------------------------------
@@ -13,11 +13,6 @@
 ## I have no plans to maintain updates, I did not write it to be efficient and in some cases you may find the 
 ## functions may not produce the desired results so use at your own risk/discretion. I wrote this script to 
 ## target machines in a lab environment so please only use it against systems for which you have permission!!  
-##-------------------------------------------------------------------------------------------------------------   
-## [Modification, Distribution, and Attribution]:
-## You are free to modify and/or distribute this script as you wish.  I only ask that you maintain original
-## author attribution and not attempt to sell it or incorporate it into any commercial offering (as if it's 
-## worth anything anyway :)
 ###############################################################################################################
 
 import subprocess
