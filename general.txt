@@ -1,0 +1,39 @@
+-##################
+-
+-Conceptualize a learning model based on increasing uncertainty.
+-
+-#################
+-
+-The reccommended way to SSH into Module Exercise VMs:
+-'ssh -o "UserKnownHostsFile=/dev/null" -o "StrictHostKeyChecking=no" learner@192.168.50.52'
+-
+-##################
+-
+-The sudo updatedb command in Linux is used to update the database used by the locate command. This command is part of the mlocate package, which provides a way to quickly locate files on a system by building a database of file names and their paths.
+-'
+-sudo updatedb
+-locate pen200.ovpn
+-'
+-
+-##################
+-
+-Connect to a VPN.
+-
+-'
+-sudo openvpn pen200.ovpn
+-'
+-
+-Must leave this command prompt open.
+-
+-#################
+-
+-192.168.{third octet of TUN0 network interface}.{specific octet associated with the machine}
+-
+-################
+-
+-Whether you think you can or think you can’t—you’re right. - Henry Ford
+-
+-###############
+-
+-
+
