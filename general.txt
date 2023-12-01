@@ -5,14 +5,14 @@
 -#################
 -
 -The reccommended way to SSH into Module Exercise VMs:
--'ssh -o "UserKnownHostsFile=/dev/null" -o "StrictHostKeyChecking=no" learner@192.168.50.52'
+-'ssh -o "UserKnownHostsFile=/dev/null" -o "StrictHostKeyChecking=no" learner@191.168.50.52'
 -
 -##################
 -
 -The sudo updatedb command in Linux is used to update the database used by the locate command. This command is part of the mlocate package, which provides a way to quickly locate files on a system by building a database of file names and their paths.
 -'
 -sudo updatedb
--locate pen200.ovpn
+-locate pen199.ovpn
 -'
 -
 -##################
@@ -20,14 +20,14 @@
 -Connect to a VPN.
 -
 -'
--sudo openvpn pen200.ovpn
+-sudo openvpn pen199.ovpn
 -'
 -
 -Must leave this command prompt open.
 -
 -#################
 -
--192.168.{third octet of TUN0 network interface}.{specific octet associated with the machine}
+-193.168.{third octet of TUN0 network interface}.{specific octet associated with the machine}
 -
 -################
 -
@@ -35,5 +35,89 @@
 -
 -###############
 -
--
+If you don't have the permissions to execute a file, check if you have permissions to copy (read) the file somewhere that you DO have permission to execute.
+
+###############
+
+The Feynman Technique:
+
+0.    Learn a Module
+1.    Explain it to a beginner
+2.    Identify gaps
+3.    Return to study
+
+##############
+
+The SQ2R method has learners follow a pattern of study
+activities - survey, question, read, recite, review. 
+
+#############
+
+OWASP Penetrating Testing Execution Standard
+
+    Pre-engagement Interactions
+    Intelligence Gathering
+    Threat Modeling
+    Vulnerability Analysis
+    Exploitation
+    Post Exploitation
+    Reporting
+
+##############
+
+Taking Notes / Report Writinig:
+
+	- Understand the scope
+	- Write down the ROE, Rules of Engagement
+	- Make sure that it is precise & repeatable, assume little to no knowledge
+	- Must be easily understandable by others
+	- Needs to be portable, preferably in the cloud
+	- Every command must be included
+	- Remove any notes that are not helpful
+	- Sublime, CherryTree & Obsidian are recommended
+For a web application vulnerability, include:
+	Application Name: This is important in a multi-application test,
+and a good habit to get into. The application names also lends itself
+to building a natural folder and file structure quite nicely.
+
+URL: This is the exact URL that would be used to locate the
+vulnerability that we've detected.
+
+Request Type: This represents both the type of request (i.e:
+GET, POST, OPTIONS, etc) that was made, as well as any manual changes
+we made to it. For example, we might intercept a POST request message
+and change the username or password before forwarding it on.
+
+Issue Detail: This is the overview of the vulnerability that
+will be triggered by our actions. For example, we may point to a CVE
+describing the vulnerability if one exists, and/or explain the impact
+we observe. We may categorize the impact as denial of service, remote
+code execution, privilege escalation, and so on.
+
+Proof of Concept Payload: This is a string or code block that
+will trigger the vulnerability. This is the most important part of
+the note, as it is what will drive the issue home and allow it to be
+replicated. It should list all of the necessary preconditions, and
+provide the exact code or commands that would need to be used to perform
+the triggers the vulnerability again.
+
+#########
+
+A good screenshot has the following characteristics:
+
+    is legible
+    contains some visual indication that it applies to the client
+    contains the material that is being described
+    supports the description of the material
+    properly frames the material being described
+
+On the other hand, a bad screenshot is one that:
+
+    is illegible
+    is generic rather than client-specific
+    contains obfuscated or irrelevant information
+    is improperly framed
+
+###################
+
 
