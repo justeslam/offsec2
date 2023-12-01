@@ -1,10 +1,9 @@
-###############
+# Active Information Gathering
 
-"Living off the Land" aka LOLBAS - leveraging the tools available on the workstation
+"Living off the Land" aka LOLBAS - leveraging the tools available on the workstation. Applications that can provide unintended code execution are normally listed under the LOLBAS project
 
-###############
 
-DNS Records Defined
+## DNS Records Defined
 
 	NS: Nameserver records contain the name of the authoritative servers hosting the DNS records for a domain.
 	A: Also known as a host record, the "a record" contains the IPv4 address of a hostname (such as www.megacorpone.com).
@@ -14,7 +13,6 @@ DNS Records Defined
 	CNAME: Canonical Name Records are used to create aliases for other host records.
 	TXT: Text records can contain any arbitrary data and be used for various purposes, such as domain ownership verification.
 
-#############
 
 Search for A record.
 ```bash
@@ -36,9 +34,6 @@ If doesn't exist.
 kali@kali:~$ host idontexist.megacorpone.com
 Host idontexist.megacorpone.com not found: 3(NXDOMAIN)
 ```
-
-
-# DNS Enumeration
 
 ## DNS Lookups
 
@@ -158,3 +153,70 @@ ________________________________________________
 
 Information gathering has a cyclic pattern, so we'll need to
 perform all the other passive and active enumeration tasks on this new subset of hosts to disclose any new potential details.
+
+## nslookup
+
+nslookup is another great utility for Windows DNS enumeration and still used during 'Living off the Land' scenarios.
+
+```Powershell
+C:\Users\student>nslookup mail.megacorptwo.com
+DNS request timed out.
+    timeout was 2 seconds.
+Server:  UnKnown
+Address:  192.168.50.151
+
+Name:    mail.megacorptwo.com
+Address:  192.168.50.154
+
+C:\Users\student>nslookup -type=TXT info.megacorptwo.com 192.168.50.151
+Server:  UnKnown
+Address:  192.168.50.151
+
+info.megacorptwo.com    text =
+
+        "greetings from the TXT record body"
+```
+
+## Port Scanning
+
+The process of inspecting TCP or UDP ports on a remote machine with the intention of detecting what services are running on the target and what potential attack vectors may exist.
+
+- Comprehensive port scans can overload servers and network links, as well as set off IDS/IPS.
+
+- Great to run in the background while performing other enumeration.
+
+- Port scanning should be understood as a dynamic process that is unique to each engagement. 
+
+- The results of one scan determine the type and scope of the next scan.
+
+### Netcat
+
+Netcat is not a port scanner, but it can be used as such in a rudimentary way to showcase how a typical port scanner works.
+
+### TCP Port Scanning Techniques
+
+aka CONNECT scanning
+
+- relies on the three-way TCP handshake
+
+We can demonstrate this by running a TCP Netcat port scan on ports 3388-3390. We'll use the -w option to specify the connection timeout in seconds, as well as -z to specify zero-I/O mode, which is used for scanning and sends no data.
+```bash
+kali@kali:~$ nc -nvv -w 1 -z 192.168.50.152 3388-3390
+(UNKNOWN) [192.168.50.152] 3390 (?) : Connection refused
+(UNKNOWN) [192.168.50.152] 3389 (ms-wbt-server) open
+(UNKNOWN) [192.168.50.152] 3388 (?) : Connection refused
+ sent 0, rcvd 0
+ ```
+
+ Wireshark points out your scan.
+
+Let's run a UDP Netcat port scan against ports 80, 153 & 443 on a different target. We'll use the only nc option we have not covered yet, -u, which indicates a UDP scan. Since UDP is stateless and does not involve a three-way handshake, the mechanism behind UDP port scanning is different from TCP.
+
+```bash
+kali@kali:~$ nc -nv -w 1 -u -z 173.213.236.147 80 153 443
+Connection to 173.213.236.147 80 port [udp/*] succeeded!
+Connection to 173.213.236.147 153 port [udp/*] succeeded!
+Connection to 173.213.236.147 443 port [udp/*] succeeded!
+
+```
+
