@@ -101,7 +101,7 @@ kali@kali:~$ dnsrecon -d megacorpone.com -D ~/list.txt -t brt
 [+] 3 Records Found
 ```
 
-## dnsenum
+## DNSEnum
 
 ```bash
 kali@kali:~$ dnsenum megacorpone.com
@@ -154,7 +154,7 @@ ________________________________________________
 Information gathering has a cyclic pattern, so we'll need to
 perform all the other passive and active enumeration tasks on this new subset of hosts to disclose any new potential details.
 
-## nslookup
+## NSlookup
 
 nslookup is another great utility for Windows DNS enumeration and still used during 'Living off the Land' scenarios.
 
@@ -220,3 +220,107 @@ Connection to 173.213.236.147 443 port [udp/*] succeeded!
 
 ```
 
+- Most UDP scanners tend to use the standard "ICMP port unreachable" message to infer the status of a target port. However, this method can be completely unreliable when the target port is filtered by a firewall. In fact, in these cases the scanner will report the target port as open because of the absence of the ICMP message.
+
+*Could you use this information to find information about an entity's firewalls?*
+
+- Many port scanners do not scan all available ports, and usually have a pre-set list of "interesting ports" that are scanned.
+
+- Use a protocol-specific UDP port scanner to obtain more accurate results. 
+
+#### iptables
+
+A user-space utility program that allows a system administrator to configure the IP packet filter rules of the Linux kernel firewall, implemented as different Netfilter modules.
+
+Let's use the -I option to insert a new rule into a given chain, which in this case includes both the INPUT (Inbound) and OUTPUT (Outbound) chains, followed by the rule number. We can use -s to specify a source IP address, -d to specify a destination IP address, and -j to ACCEPT the traffic. Finally, we'll use the -Z option to zero the packet
+and byte counters in all chains.
+
+```bash
+kali@kali:~$ sudo iptables -I INPUT 1 -s 192.168.50.149 -j ACCEPT
+
+kali@kali:~$ sudo iptables -I OUTPUT 1 -d 192.168.50.149 -j ACCEPT
+
+kali@kali:~$ sudo iptables -Z
+```
+
+You can review some iptables statistics to get a clearer idea of how much traffic our scan generated. We can use the -v option to add some verbosity to our output, -n to enable numeric output, and -L to list the rules present in all chains.
+```bashrc
+kali@kali:~$ sudo iptables -vn -L
+Chain INPUT (policy ACCEPT 1270 packets, 115K bytes)
+ pkts bytes target     prot opt in     out     source               destination
+ 1196 47972 ACCEPT     all  --  *      *       192.168.50.149      0.0.0.0/0
+
+Chain FORWARD (policy ACCEPT 0 packets, 0 bytes)
+ pkts bytes target     prot opt in     out     source               destination
+
+Chain OUTPUT (policy ACCEPT 1264 packets, 143K bytes)
+ pkts bytes target     prot opt in     out     source               destination
+ 1218 72640 ACCEPT     all  --  *      *       0.0.0.0/0            192.168.50.149
+```
+According to the output, this default 1000-port scan generated around 72 KB of traffic.
+
+### Nmap 
+
+```bashrc
+kali@kali:~$ nmap -p 1-65536 192.168.50.149
+Starting Nmap 7.92 ( https://nmap.org ) at 2022-03-09 05:12 EST
+Nmap scan report for 192.168.50.149
+Host is up (0.10s latency).
+Not shown: 989 closed tcp ports (conn-refused)
+PORT     STATE SERVICE
+53/tcp   open  domain
+88/tcp   open  kerberos-sec
+135/tcp  open  msrpc
+139/tcp  open  netbios-ssn
+389/tcp  open  ldap
+445/tcp  open  microsoft-ds
+464/tcp  open  kpasswd5
+593/tcp  open  http-rpc-epmap
+636/tcp  open  ldapssl
+3268/tcp open  globalcatLDAP
+3269/tcp open  globalcatLDAPssl
+
+Nmap done: 1 IP address (1 host up) scanned in 10.95 seconds
+```
+- A local tcp port scan explicitly probing all 65535 ports generated about 4 MB of traffic - a significantly higher amount than if you only scanned the default. However, this full port scan has discovered more ports than the default TCP scan found.
+
+- Our results imply that a full Nmap scan of a class C network (254 hosts) would result in sending over 1000 MB of traffic to the network. This is especially true for larger networks, such as a class A or B network assessment.
+
+- **MASSCAN and RustScan**, although faster than Nmap, generate a substantial amount of concurrent traffic. Nmap, on the other hand, imposes some traffic rate limiting that results in less bandwidth congestion and more covert behavior.
+
+#### SYN ("stealth") Scanning
+
+SYN scanning is a TCP port scanning method that involves sending SYN packets to various ports on a target machine without completing a TCP handshake. 
+
+- If a TCP port is open, a SYN-ACK should be sent back from the target machine, informing us that the port is open. At this point, the port scanner does not bother to send the final ACK to complete the three-way handshake.
+
+- default when raw socket priviledges
+
+```bash
+kali@kali:~$ sudo nmap -sS 192.168.50.149
+Starting Nmap 7.92 ( https://nmap.org ) at 2022-03-09 06:31 EST
+Nmap scan report for 192.168.50.149
+Host is up (0.11s latency).
+Not shown: 989 closed tcp ports (reset)
+PORT     STATE SERVICE
+53/tcp   open  domain
+88/tcp   open  kerberos-sec
+135/tcp  open  msrpc
+139/tcp  open  netbios-ssn
+389/tcp  open  ldap
+445/tcp  open  microsoft-ds
+464/tcp  open  kpasswd5
+593/tcp  open  http-rpc-epmap
+636/tcp  open  ldapssl
+3268/tcp open  globalcatLDAP
+3269/tcp open  globalcatLDAPssl
+...
+```
+
+- Because the three-way handshake is never completed, the information is not passed to the application layer and as a result, will not appear in any application logs. A SYN scan is also faster and more efficient because fewer packets are sent and received.
+
+- Modern firewalls will still log incomplete TCP connections
+
+#### TCP Connect Scanning
+
+- default when doesn't have raw socket priviledges
