@@ -1,102 +1,87 @@
-Conceptualize a learning model based on increasing uncertainty.
+## Generic Notes
 
-#################
+### Learning and Problem-Solving Strategies
 
-The recommended way to SSH into Module Exercise VMs:
-```bash
-ssh -o "UserKnownHostsFile=/dev/null" -o "StrictHostKeyChecking=no" learner@191.168.50.52
-```
+1. **Feynman Technique for Learning**:
+   - Learn a Module.
+   - Explain it to a beginner.
+   - Identify gaps in understanding.
+   - Return to study to fill those gaps.
 
-##################
+2. **SQ2R Method for Study**:
+   - Survey, Question, Read, Recite, Review.
 
-The `sudo updatedb` command in Linux is used to update the database used by the `locate` command. This command is part of the `mlocate` package, which provides a way to quickly locate files on a system by building a database of file names and their paths.
+3. **Inspirational Quote by Henry Ford**:
+   - "Whether you think you can or think you can’t—you’re right."
 
-```bash
-sudo updatedb
-locate pen199.ovpn
-```
+---
 
-##################
+### Technical Procedures and Commands
 
-Connect to a VPN.
+1. **Accessing Module Exercise VMs via SSH**:
+   ```bash
+   ssh -o "UserKnownHostsFile=/dev/null" -o "StrictHostKeyChecking=no" learner@191.168.50.52
+   ```
 
-```bash
-sudo openvpn pen199.ovpn
-```
+2. **Updating and Locating Files in Linux**:
+   - Update the database with `sudo updatedb`.
+   - Locate specific files using `locate`.
+     Example:
+     ```bash
+     sudo updatedb
+     locate pen199.ovpn
+     ```
 
-Must leave this command prompt open.
+3. **Connecting to a VPN**:
+   - Use `sudo openvpn` to connect.
+   - Keep the command prompt open.
+     Example:
+     ```bash
+     sudo openvpn pen199.ovpn
+     ```
 
-#################
+4. **Addressing File Execution Permission Issues**:
+   - If lacking execution permissions, copy the file to a location where execution is permitted.
 
-193.168.{third octet of TUN0 network interface}.{specific octet associated with the machine}
+---
 
-################
+### Networking and IP Addressing
 
-"Whether you think you can or think you can’t—you’re right." - Henry Ford
+- Use the format `193.168.{third octet of TUN0 network interface}.{specific octet associated with the machine}` for specific network addressing.
 
-###############
+---
 
-If you don't have the permissions to execute a file, check if you have permissions to copy (read) the file somewhere that you DO have permission to execute.
+### Penetration Testing Methodologies
 
-###############
+1. **OWASP Penetrating Testing Execution Standard**:
+   - Pre-engagement Interactions.
+   - Intelligence Gathering.
+   - Threat Modeling.
+   - Vulnerability Analysis.
+   - Exploitation.
+   - Post Exploitation.
+   - Reporting.
 
-The Feynman Technique:
+---
 
-0. Learn a Module
-1. Explain it to a beginner
-2. Identify gaps
-3. Return to study
+### Effective Note-taking and Report Writing
 
-##############
+1. **General Guidelines**:
+   - Understand the scope.
+   - Document the Rules of Engagement.
+   - Ensure clarity and precision.
+   - Make notes easily understandable and repeatable.
+   - Use cloud storage for portability.
+   - Include every relevant command.
+   - Discard unhelpful notes.
+   - Recommended tools: Sublime, CherryTree, Obsidian.
 
-The SQ2R method has learners follow a pattern of study activities: survey, question, read, recite, review. 
+2. **Documenting Web Application Vulnerabilities**:
+   - Application Name, URL, Request Type, Issue Detail, Proof of Concept Payload.
 
-#############
+3. **Characteristics of Good and Bad Screenshots**:
+   - Good: Legible, relevant to the client, supports description, properly frames the material.
+   - Bad: Illegible, generic, contains irrelevant information, poorly framed.
 
-OWASP Penetrating Testing Execution Standard:
+---
 
-- Pre-engagement Interactions
-- Intelligence Gathering
-- Threat Modeling
-- Vulnerability Analysis
-- Exploitation
-- Post Exploitation
-- Reporting
-
-##############
-
-Taking Notes / Report Writing:
-
-- Understand the scope
-- Write down the ROE, Rules of Engagement
-- Make sure that it is precise & repeatable, assume little to no knowledge
-- Must be easily understandable by others
-- Needs to be portable, preferably in the cloud
-- Every command must be included
-- Remove any notes that are not helpful
-- Sublime, CherryTree & Obsidian are recommended
-
-For a web application vulnerability, include:
-
-- Application Name
-- URL
-- Request Type
-- Issue Detail
-- Proof of Concept Payload
-
-A good screenshot has the following characteristics:
-
-- Is legible
-- Contains some visual indication that it applies to the client
-- Contains the material that is being described
-- Supports the description of the material
-- Properly frames the material being described
-
-On the other hand, a bad screenshot is one that:
-
-- Is illegible
-- Is generic rather than client-specific
-- Contains obfuscated or irrelevant information
-- Is improperly framed
-
-###################

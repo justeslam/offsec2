@@ -1,2 +1,2 @@
-# OffensiveSecurity
-A repository of useful offensive security notes & scripts. In progress. 
+# OffSec
+A repository of useful notes & scripts. In progress. 
