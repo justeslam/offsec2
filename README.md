@@ -1,2 +1,2 @@
-# Scripts
-A repository of useful scripts that will help you pass the OSCP.
+# OffensiveSecurity
+A repository of useful offensive security notes & scripts. In progress. 
