@@ -278,7 +278,7 @@ kali@kali:~$ curl -d '{"password":"pwned","username":"admin"}' -H 'Content-Type:
 ```
 We can replicate the latest admin login attempt and send it to the proxy by appending the --proxy 127.0.0.1:8080 to the command . Once done, from Burp's Repeater tab, we can create a new empty request and fill it with the same data as we did previously.
 
-## XSS
+### XSS
 
 Cross-Site Scripting (XSS) is a vulnerability that exploits a user's trust in a website by dynamically injecting content into the page rendered by the user's browser.
 
