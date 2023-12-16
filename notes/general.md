@@ -85,3 +85,39 @@
 
 ---
 
+#### Processes
+
+To filter processes to find the processes you'd like:
+```bash
+ps aux | grep process_name
+```
+Aux argument will provide all processes, and piping to grep filters.
+
+---
+
+#### Adding Resositories
+
+Sources are stored in /etc/apt/sources.list. Let's say that a package isn't found, so you can't install new binaries or packages, you're likely missing the source location in which the binary or package is held. Modify the provided file to include the source you need.
+
+#### sed
+
+Stream editor.
+
+```bash
+sed s/mysql/MySQL/g /etc/snort/snort.conf > snort2.conf
+```
+Find all of the occurences of 'mysql' (s/mysql), and replace them with 'MySQL globally' (/MySQL/g) in the file '/etc/snort/snort.conf', and sent the output to 'snort2.conf'
+
+---
+
+#### strings
+
+Pull the strings out of any file.
+
+#### Changing MAC Address
+
+```bash
+sudo ifconfig eth0 down
+sudo ifconfig eth0 hw ether 00:00:00:11:11:11
+sudo ifconfig eth0 up
+```
