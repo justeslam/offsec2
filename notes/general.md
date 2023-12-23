@@ -121,3 +121,21 @@ sudo ifconfig eth0 down
 sudo ifconfig eth0 hw ether 00:00:00:11:11:11
 sudo ifconfig eth0 up
 ```
+
+#### Obsidian 
+
+Obsidian stores information in a Vault, which is a folder on our system. We can create both markdown files and folders within the Vault. Obsidian's features include a live preview of markdown text, in-line image placement, code blocks, and a multitude of add-ons such as a community-built CSS extension.
+
+An Obsidian vault can be relocated to another computer and opened from the Welcome menu. Markdown files can simply be dropped into the Vault folders, which will automatically be recognized by Obsidian.
+
+The use of markdown means that we can provide syntax and formatting that is easily copied to most report generation tools, and a PDF can be generated straight from Obsidian itself.
+
+Installing:
+
+```bash
+wget https://github.com/obsidianmd/obsidian-releases/releases/download/v0.14.2/Obsidian-0.14.2.AppImage
+chmod +x Obsidian-0.14.2.AppImage
+./Obsidian-0.`14.2.AppImage
+```
+
+Some additional cool tools are located in 'https://github.com/nil0x42/awesome-hacker-note-taking'.
