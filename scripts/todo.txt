@@ -1,1 +1,2 @@
+- Create a methodology, with scripts and notes combined (as precise as possible), categorized appropriately. (eg. if this than this, if that than that). Encompasses the entire domain.
 - Create a script that searches for paths (Windows) where there are spaces AND it is not enclosed within quotations
