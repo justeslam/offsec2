@@ -59,3 +59,9 @@ Security Headers
 Alternative - SSL Labs
 Resource: [Security Headers](https://securityheaders.com/), [SSL Labs](https://www.ssllabs.com/ssltest/)
 ```
+
+#### Wappalyzer
+
+Use to try & uncover the tech stack behind a web app or website.
+
+
