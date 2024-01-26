@@ -728,3 +728,16 @@ iso.3.6.1.2.1.6.13.1.3.0.0.0.0.5985.0.0.0.0.0 = INTEGER: 5985
 ...
 ```
 The integer value from the output above represents the current listening TCP ports on the target. This information can be extremely useful as it can disclose ports that are listening only locally and thus reveal a new service that had been previously unknown.
+
+## Processes
+
+To look at all processes.
+
+```bash
+ps aux
+```
+
+Easier to parse through, shown in trees. If you have a reverse shell in an app, you can locate which app you're running in.
+
+```ps -ef --forest | less
+```
