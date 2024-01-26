@@ -184,3 +184,8 @@ Running without configuration file.
 
 You can check that it's running by going to 'http://127.0.0.1' in your browser.
 
+#### Find Files Owned by Particular User (or Group)
+
+```bash
+find / -user admin 2</dev/null
+```
