@@ -36,4 +36,6 @@ Checklist:
 
     Can you bypass extension filters by using varied capitalization?
 
+    Look for '?page=' in the source code to identify potential vectors.
+
 Resource: https://www.onsecurity.io/blog/file-upload-checklist/, https://github.com/mikesmullin/pentest-notes
