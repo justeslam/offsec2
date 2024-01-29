@@ -189,3 +189,19 @@ You can check that it's running by going to 'http://127.0.0.1' in your browser.
 ```bash
 find / -user admin 2</dev/null
 ```
+
+#### Test Ping Against Yourself
+
+Local.
+```
+sudo tcpdump -i tun0 icmp -n -v
+```
+
+Remote.
+```
+ping -c 1 {ip address}
+```
+
+#### Test for RCE
+
+A great way to test for remote code execution is by using 'sleep {number}', and seeing if the request time increases by that number. This can be easily tested in BurpSuite.
