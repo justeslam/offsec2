@@ -329,6 +329,8 @@ PORT     STATE SERVICE
 
 - takes much longer
 
+- please also (at least) check for snmp on port 161 (udp)
+
 We may occasionally need to perform a connect scan using nmap, such as when scanning via certain types of proxies. We can use the -sT option to start a connect scan.
 ```bashrc
 kali@kali:~$ nmap -sT 192.168.50.149
