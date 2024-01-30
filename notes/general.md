@@ -205,3 +205,7 @@ ping -c 1 {ip address}
 #### Test for RCE
 
 A great way to test for remote code execution is by using 'sleep {number}', and seeing if the request time increases by that number. This can be easily tested in BurpSuite.
+
+#### Reverse Shell (NoHup)
+
+It's good practice to use 'nohup' when you're doing a reverse shell so that it doesn't hang. If workers={currently maxed out}, then you won't be able to create your own thread. - IppSec HTB Mentor
