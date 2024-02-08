@@ -11,7 +11,7 @@
 2. **SQ2R Method for Study**:
    - Survey, Question, Read, Recite, Review.
 
-3. **Inspirational Quote by Henry Ford**:
+3. **Cool Quote by Henry Ford**:
    - "Whether you think you can or think you can’t—you’re right."
 
 ---
@@ -29,7 +29,7 @@
      Example:
      ```bash
      sudo updatedb
-     locate pen199.ovpn
+     locate file.ovpn
      ```
 
 3. **Connecting to a VPN**:
@@ -37,7 +37,7 @@
    - Keep the command prompt open.
      Example:
      ```bash
-     sudo openvpn pen199.ovpn
+     sudo openvpn file.ovpn
      ```
 
 4. **Addressing File Execution Permission Issues**:
@@ -209,3 +209,7 @@ A great way to test for remote code execution is by using 'sleep {number}', and 
 #### Reverse Shell (NoHup)
 
 It's good practice to use 'nohup' when you're doing a reverse shell so that it doesn't hang. If workers={currently maxed out}, then you won't be able to create your own thread. - IppSec HTB Mentor
+
+#### Session Cookie
+
+Your session cookie may be JSON in base64.. decode to see how you can manipulate your status.
