@@ -213,3 +213,7 @@ It's good practice to use 'nohup' when you're doing a reverse shell so that it d
 #### Session Cookie
 
 Your session cookie may be JSON in base64.. decode to see how you can manipulate your status.
+
+#### Logging In to Apps
+
+Intercept with BurpSuite, see if you can modify headers for mass assignment, LFI, RFI, RCE.
