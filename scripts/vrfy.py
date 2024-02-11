@@ -26,5 +26,5 @@ result = s.recv(1024)
 
 print(result)
 
-# Close the socket
+# Close the socket 
 s.close()
