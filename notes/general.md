@@ -217,3 +217,11 @@ Your session cookie may be JSON in base64.. decode to see how you can manipulate
 #### Logging In to Apps
 
 Intercept with BurpSuite, see if you can modify headers for mass assignment, LFI, RFI, RCE.
+
+#### Version Identified
+ 
+Proceed to check ExploitDB and Google for any public vulnerabilities.
+
+#### Login Screen
+
+Google what the default credentials are for that app and try those.
