@@ -225,3 +225,7 @@ Proceed to check ExploitDB and Google for any public vulnerabilities.
 #### Login Screen
 
 Google what the default credentials are for that app and try those.
+
+#### Additional Practice 
+
+TJ_Null's OSCP-like box list.
