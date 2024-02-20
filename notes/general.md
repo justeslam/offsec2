@@ -233,3 +233,8 @@ TJ_Null's OSCP-like box list.
 #### Search Known Hashes
 
 - Go to hashes.org.
+
+#### Crack SSH Login
+
+- Use Medusa if you want to check a known list of potential usernames and passwords.
+- Use SHCrack if you want to check a password list for a specified user.. can put into a loop for multiple users.
