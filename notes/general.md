@@ -229,3 +229,7 @@ Google what the default credentials are for that app and try those.
 #### Additional Practice 
 
 TJ_Null's OSCP-like box list.
+
+#### Search Known Hashes
+
+- Go to hashes.org.
