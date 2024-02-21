@@ -241,4 +241,7 @@ TJ_Null's OSCP-like box list.
 
 #### Fuzzing APIs
 
-When fuzzing APIs, try to fuzz in special characters ("/opt/SecLists/Fuzzing/special-characters.txt") and monitor for different responses. You can do this recursively. Find out if you can close out a command so you can inject new code.
+When fuzzing APIs, try to fuzz in special characters ("/opt/SecLists/Fuzzing/special-characters.txt") and monitor for different responses. You can do this recursively. Find out if you can close out a command so you can inject new code. Note: You have to escape special characters in FUFF:
+```bash
+fuff -u 123.123.123.123/weather/forecast?city=\'FUZZ-- -w /opt/SecLists/Fuzzing/special-characters.txt -mc 200,500 -fw 9
+```
