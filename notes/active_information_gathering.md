@@ -745,5 +745,10 @@ ps aux
 
 Easier to parse through, shown in trees. If you have a reverse shell in an app, you can locate which app you're running in.
 
-```ps -ef --forest | less
+```bash
+ps -ef --forest | less
 ```
+
+## Server Side Template Injection (SSTI)
+
+Check input fields, such as inserting {{7*7}} and seeing whether you get a string or 49. There are good resources on hacktricks.xyz.
