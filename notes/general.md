@@ -238,3 +238,7 @@ TJ_Null's OSCP-like box list.
 
 - Use Medusa if you want to check a known list of potential usernames and passwords.
 - Use SHCrack if you want to check a password list for a specified user.. can put into a loop for multiple users.
+
+#### Fuzzing APIs
+
+When fuzzing APIs, try to fuzz in special characters ("/opt/SecLists/Fuzzing/special-characters.txt") and monitor for different responses. You can do this recursively. Find out if you can close out a command so you can inject new code.
