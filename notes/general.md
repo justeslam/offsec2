@@ -245,3 +245,10 @@ When fuzzing APIs, try to fuzz in special characters ("/opt/SecLists/Fuzzing/spe
 ```bash
 fuff -u 123.123.123.123/weather/forecast?city=\'FUZZ-- -w /opt/SecLists/Fuzzing/special-characters.txt -mc 200,500 -fw 9
 ```
+
+#### Special Characters in SQL
+
+If you run into special characters in a database that you need to extract, convert into Base64 with a command like:
+```bash
+select TO_BASE64(password) from accounts where id = 1;
+```
