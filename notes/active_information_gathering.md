@@ -731,11 +731,11 @@ iso.3.6.1.2.1.6.13.1.3.0.0.0.0.5985.0.0.0.0.0 = INTEGER: 5985
 ```
 The integer value from the output above represents the current listening TCP ports on the target. This information can be extremely useful as it can disclose ports that are listening only locally and thus reveal a new service that had been previously unknown.
 
-### SNMP Brute
+#### SNMP Brute
 
 Consider using whenever you can.
 
-## Processes
+#### Processes
 
 To look at all processes.
 
@@ -749,6 +749,10 @@ Easier to parse through, shown in trees. If you have a reverse shell in an app, 
 ps -ef --forest | less
 ```
 
-## Server Side Template Injection (SSTI)
+#### Server Side Template Injection (SSTI)
 
 Check input fields, such as inserting {{7*7}} and seeing whether you get a string or 49. There are good resources on hacktricks.xyz.
+
+#### Modifying Response Header
+
+If you're getting a bunch of 301s and 302s in GoBuster, try modifying the header in BurpSuite to a 200 and see if it's possible to view the webpage. What tips you off is when the 301s and 302s response with varying page sizes in your tool.
