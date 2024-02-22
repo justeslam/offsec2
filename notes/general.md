@@ -252,3 +252,7 @@ If you run into special characters in a database that you need to extract, conve
 ```bash
 select TO_BASE64(password) from accounts where id = 1;
 ```
+
+#### Path Injection
+
+If you have sudo permissions on a file (can be found with 'sudo -l'), and the file uses a command, such as 'gzip', you can modify the environment path in order to get your own file to run as 'gzip'. Simply create a bash file called 'gzip' and insert your current working directory into the first position in the path variable.
