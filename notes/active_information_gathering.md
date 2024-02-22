@@ -753,6 +753,6 @@ ps -ef --forest | less
 
 Check input fields, such as inserting {{7*7}} and seeing whether you get a string or 49. There are good resources on hacktricks.xyz.
 
-#### Modifying Response Header
+#### Modifying Response Header (IDOR)
 
 If you're getting a bunch of 301s and 302s in GoBuster, try modifying the header in BurpSuite to a 200 and see if it's possible to view the webpage. What tips you off is when the 301s and 302s response with varying page sizes in your tool.
