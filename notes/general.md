@@ -256,3 +256,17 @@ select TO_BASE64(password) from accounts where id = 1;
 #### Path Injection
 
 If you have sudo permissions on a file (can be found with 'sudo -l'), and the file uses a command, such as 'gzip', you can modify the environment path in order to get your own file to run as 'gzip'. Simply create a bash file called 'gzip' and insert your current working directory into the first position in the path variable.
+
+#### Mounting SMB Shares
+
+Instead of enumerating Windows shares with smbclient, you can mount shares on your local filesystem and enumerate in a familiar environment.
+```bash
+sudo mkdir /mnt/data
+sudo mount -t cifs //123.123.123.123/Data /mnt/data
+```
+
+Note that Windows likes to store some files in UTF-16LE, while Linux likes UTF8. If you run into this problem, you'll need to convert in order to cat the files.
+
+```bash
+cat file | iconv -f UTF-16LE -t utf8
+```
