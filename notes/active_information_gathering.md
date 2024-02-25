@@ -261,6 +261,13 @@ According to the output, this default 1000-port scan generated around 72 KB of t
 
 ## Nmap 
 
+#### TLDR
+
+- Quick port scan on the whole range, see what ports are open, "sudo nmap 123.123.123.123 -p- -o box-fullscan.out"
+- More detailed one, "sudo nmap 123.123.123.123 -sC -sV -Oa nmap/outfile.nmap"
+- Even more detailed one, based on ports you found open "sudo nmap -p21,22,80,8080 -sC -sV -Oa nmap/outfile.nmap"
+- Run a UDP scan, "sudo nmap -sU 192.168.50.149"
+
 ```bashrc
 kali@kali:~$ nmap -p 1-65536 192.168.50.149
 Starting Nmap 7.92 ( https://nmap.org ) at 2022-03-09 05:12 EST
@@ -324,11 +331,8 @@ PORT     STATE SERVICE
 ### TCP Connect Scanning
 
 - default when doesn't have raw socket priviledges
-
 - performs a three-way handshake, uses Berkeley sockets API
-
 - takes much longer
-
 - please also (at least) check for snmp on port 161 (udp)
 
 We may occasionally need to perform a connect scan using nmap, such as when scanning via certain types of proxies. We can use the -sT option to start a connect scan.
@@ -376,7 +380,6 @@ The UDP scan (-sU) can also be used in conjunction with a TCP SYN scan (-sS) to 
 ### Network Sweeping
 
 - Begin with broad scans, then use more specific scans against hosts of interest. 
-
 - Helps deal with large volumes of hosts
 
 When performing a network sweep with Nmap using the -sn option, the host discovery process consists of more than just sending an ICMP echo request. Nmap also sends a TCP SYN packet to port 443, a TCP ACK packet to port 80, and an ICMP timestamp request to verify whether a host is available.
@@ -465,7 +468,6 @@ Once we have recognized the underlying operating system, we can go further and i
 **Use --script *script* option for more complex nmap scripts**
 
 - To view more information about a script, use the --script-help *script* option
-
 
 ### Test-NetConnection
 
@@ -756,3 +758,9 @@ Check input fields, such as inserting {{7*7}} and seeing whether you get a strin
 #### Modifying Response Header (IDOR)
 
 If you're getting a bunch of 301s and 302s in GoBuster, try modifying the header in BurpSuite to a 200 and see if it's possible to view the webpage. What tips you off is when the 301s and 302s response with varying page sizes in your tool. Alternatively, if it's an account login page, you can try to pass additional parameters straight through Burp - username, password, and possibly a confirmation parameter. If you need a confirmation parameter, you can fuzz for that.
+
+#### What to Check for in GoBuster 
+
+First, always check to see what type of extensions that the IP or website supports. Check for the extensions {.php, .html, .js, .asp, .aspx, .jsp}. If one of them works, use the '-x {extension}' method for better enumeration.
+
+**Also, always check for both domains and subdomains.**
