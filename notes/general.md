@@ -270,3 +270,7 @@ Note that Windows likes to store some files in UTF-16LE, while Linux likes UTF8.
 ```bash
 cat file | iconv -f UTF-16LE -t utf8
 ```
+
+#### URL Directory Without Slash
+
+Try searching for URL directories without the slash (e.g. 'http://website.com/upload'), and if the url is automatically updated to 'http://website.com/upload/', then there's some sort of logic going on, and the directory probably exists, even if it says "Not Found" or something along those lines.
