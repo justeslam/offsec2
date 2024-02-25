@@ -278,3 +278,8 @@ Try searching for URL directories without the slash (e.g. 'http://website.com/up
 #### IP Address Blocked
 
 If for whatever reason (such as doing a SSRF) 127.0.0.1 & localhost (or any other IPs) are blocked, you may be able to get around this by representing the IP in hex form, '0x7f000001', in order to bypass this.
+
+#### Version Exposed
+
+When a version for ANYTHING is exposed or uncovered, DO NOT SKIP OVER THIS and search the web for public exploits. This will be a part of your process.
+
