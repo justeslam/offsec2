@@ -274,3 +274,7 @@ cat file | iconv -f UTF-16LE -t utf8
 #### URL Directory Without Slash
 
 Try searching for URL directories without the slash (e.g. 'http://website.com/upload'), and if the url is automatically updated to 'http://website.com/upload/', then there's some sort of logic going on, and the directory probably exists, even if it says "Not Found" or something along those lines.
+
+#### IP Address Blocked
+
+If for whatever reason (such as doing a SSRF) 127.0.0.1 & localhost (or any other IPs) are blocked, you may be able to get around this by representing the IP in hex form, '0x7f000001', in order to bypass this.
