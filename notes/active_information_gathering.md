@@ -764,3 +764,12 @@ If you're getting a bunch of 301s and 302s in GoBuster, try modifying the header
 First, always check to see what type of extensions that the IP or website supports. Check for the extensions {.php, .html, .js, .asp, .aspx, .jsp}. If one of them works, use the '-x {extension}' method for better enumeration.
 
 **Also, always check for both domains and subdomains.**
+
+#### Linux SMB
+
+Enumerate users by doing:
+'''bash
+rpclient -U '' -N 123.123.123.123
+
+$>enumdomusers
+'''
