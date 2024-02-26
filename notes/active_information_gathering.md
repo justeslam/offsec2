@@ -768,8 +768,8 @@ First, always check to see what type of extensions that the IP or website suppor
 #### Linux SMB
 
 Enumerate users by doing:
-'''bash
+```bash
 rpclient -U '' -N 123.123.123.123
 
 $>enumdomusers
-'''
+```
