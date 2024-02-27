@@ -773,3 +773,11 @@ rpclient -U '' -N 123.123.123.123
 
 $>enumdomusers
 ```
+#### Automated Crawling with Cewl
+
+You can use cewl to crawl a website with depth and look for whatever you want, given that you can put it in rules. This example uses cewl to crawl a max of 7 pages deep, and find words that are at least 8 characters long with numbers.
+
+```bash
+cewl -d 7 -m 8 --with-numbers -w cewl.out https://123.123.123.123/index.htm
+```
+
