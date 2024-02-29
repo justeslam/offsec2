@@ -19,6 +19,23 @@ powershell -ep bypass
 > (Get-DomainPolicy)."system access"
 # Information about the user you have access to, can be a lot of information
 > Get-NetUser
+# Only pull down the usernames
+> Get-NetUser | select samaccountname
+# See when the users last changed their passwords
+> Get-UserProperty -Properties pwdlastset
+# See how many times each user has logged on, great way to identify honeypot accounts
+> Get-UserProperty -Properties logoncount
+# Get a ton of information about the computers
+> Get-NetComputer -FullData # '| select {propertyName}' in order to nail down certain information, such as operating system
+# See who are admins
+> Get-NetGroupMember -GroupName *admin*
+# Look through the different shares
+> Invoke-ShareFinder
+# Get the group policies, important one
+> Get-NetGPO
+# Narrowing down the above
+> Get-NetGPO | select displayname, whenchanged
+
 ```
 
 #### schtasks
