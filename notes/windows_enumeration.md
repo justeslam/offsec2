@@ -1,6 +1,25 @@
 # Windows Enumeration
 
-### Rough Draft
+### Powerview
+
+*In the command prompt
+```bash
+# This will allow you to run scripts
+powershell -ep bypass
+...
+# Load PowerView (once it's already installed)
+> . ./PowerView.ps1
+# See the structure
+> Get-NetDomain
+# Get the domain controller IP, possibly end target
+> Get-NetDomainController
+# Important Policies
+> Get-DomainPolicy
+# Get password policy, important insights while cracking passwords 
+> (Get-DomainPolicy)."system access"
+# Information about the user you have access to, can be a lot of information
+> Get-NetUser
+```
 
 #### schtasks
 
@@ -42,5 +61,6 @@ netsh advfirewall set allprofiles state off
 ...
 # RDP In & Allow Clipboard Sharing
 xfreerdp /v:ms01 /u:backdoor /p:Password1 +x clipboard /cert:ignore
-
 ```
+
+
