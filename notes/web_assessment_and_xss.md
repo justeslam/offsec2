@@ -1,23 +1,5 @@
 ## Web Application Attacks
 
-**White-box testing** 
-
-Describes scenarios in which we have unconstrained access to the application's source code, the infrastructure it resides on, and its design documentation. 
-
-- Gives us a more comprehensive view of the application
-
-- Requires specific skill set to find vulnerabilities in source code
-
-**Black-box testing**
-
-Zero-knowledge testing.
-
-- Essential for the tester to invest significant resources into the enumeration stage
-
-**Grey-box testing**
-
-Limited information on the target's scope, including authentication methods, credentials, or details about the framework.
-
 **Start web application enumeration from its core component, the web server, since this is the common denominator of any web application that exposes its services.**
 
 Since we found port 80 open on our target, we can proceed with service discovery. To get started, we'll rely on the nmap service scan (-sV) to grab the web server (-p80) banner.
@@ -61,11 +43,9 @@ To do this, we would need to perform multiple queries against the target to disc
 
 ### Gobuster
 
-A tool (written in Go language) that can help us with this sort of enumeration. It uses wordlists to discover directories and files on a server through brute forcing.
+Can generate a lot of traffic, so not helpful if you need to stay under the radar
 
-- can generate a lot of traffic, so not helpful if you need to stay under the radar
-
-Gobuster supports different enumeration modes, including fuzzing and dns, but for now, we'll only rely on the dir mode, which enumerates files and directories. We need to specify the target IP using the -u parameter and a wordlist with -w. The default running threads are 10; we can reduce the amount of traffic by setting a lower number via the -t parameter.
+Gobuster supports different enumeration modes, including fuzzing and dns. The default running threads are 10; we can reduce the amount of traffic by setting a lower number via the -t parameter.
 ```bash
 kali@kali:~$ gobuster dir -u 192.168.50.20 -w /usr/share/wordlists/dirb/common.txt -t 5
 ===============================================================
@@ -98,11 +78,8 @@ by OJ Reeves (@TheColonial) & Christian Mehlmauer (@firefart)
 ===============================================================
 ```
 
-Status 403 = Insufficient priviledges
 
 ### Burp Suite
-
-A GUI-based integrated platform for web application security testing. It provides several different tools via the same user interface.
 
 Let's start with the Proxy tool. In general terms, a web proxy is any dedicated hardware or software meant to intercept requests and/or responses between the web client and the web server. This allows administrators and testers alike to modify any requests that are intercepted by the proxy, both manually and automatically.
 

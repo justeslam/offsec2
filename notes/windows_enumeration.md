@@ -38,9 +38,35 @@ powershell -ep bypass
 
 ```
 
+#### enum4linux
+
+"As soon as you see that SMB is open, run enum4linux." It will try to enumerate SMB as much as it can.
+```
+enum4linux -A 123.123.123.123 -u user -p password # user and password are optional
+```
+
+#### smbclient
+
+For enumerating SMB shares. I believe that you can also do it without credentials by putting an empty username and then maybe also an empty password, though maybe just the empty username. I may be getting this confused with cme smb. 
+
+```bash
+smbclient -L 123.123.123.123 -U domainname/username
+
+# I believe that you can also do it without credentials by putting an empty username and then maybe also an empty password, though maybe just the empty username. I may be getting this confused with cme smb. 
+cme smb -L -U '' 123.123.123.123
+```
+
+#### runas
+
+Use this command to run as another user (if you have their credentials):
+
+```bash
+>  runas /user:domainname\\username cmd.exe
+```
+
 #### schtasks
 
-Allows you to see the scheduled tasks on your local box (once you have a shell/ssh session). The following is command useful as it will essentially answer the quesion, if we can exploit this, what kind of priviledges will we gain:
+Allows you to see the scheduled tasks on your local box (once you have a shell/ssh session). The following is command useful as it will essentially answer the quesion, if we can exploit this, what kind of priviledges will we gain?
 
 ```bash
 schtasks /query
@@ -80,4 +106,32 @@ netsh advfirewall set allprofiles state off
 xfreerdp /v:ms01 /u:backdoor /p:Password1 +x clipboard /cert:ignore
 ```
 
+#### Collecting Data for Bloodhound on Windows
 
+We're using the SharpHound.ps1 from GitHub.
+```bash
+> . .\\SharpHound.ps1
+> Invoke-BloodHound -CollectionMethod All -Domain MARVEL.local -ZipFileName outfile.zip
+```
+
+#### Check for GPP Vulnerability
+
+Say that you have a shell in MetaSploit, you can background that shell and run the "smb_enum_gpp" module to check if there is the GPP vulnerability in the environment.
+
+#### Recursively Downloading Files with SMB
+
+```bash
+> prompt off
+> recurse on
+> mget *
+```
+
+#### Create a Share
+
+```bash
+> net share public=c:\\users\\public /GRANT:Everyone,FULL
+```
+
+#### NTLM v NTLMv2
+
+NTLM hashes can be passed, NTLMv2 hased CANNOT be passed.
