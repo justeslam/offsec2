@@ -753,7 +753,7 @@ ps -ef --forest | less
 
 #### Server Side Template Injection (SSTI)
 
-Check input fields, such as inserting {{7*7}} and seeing whether you get a string or 49. There are good resources on hacktricks.xyz.
+Check input fields, such as inserting {{7\*7}} and seeing whether you get a string or 49. There are good resources on hacktricks.xyz
 
 #### Modifying Response Header (IDOR)
 
@@ -781,3 +781,6 @@ You can use cewl to crawl a website with depth and look for whatever you want, g
 cewl -d 7 -m 8 --with-numbers -w cewl.out https://123.123.123.123/index.htm
 ```
 
+#### Word List Generator
+
+OffSec recommends using a word list generator on websites when you have usernames, no passwords, and need to login to a panel in order to continue enumerating.

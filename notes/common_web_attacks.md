@@ -649,4 +649,12 @@ PS C:\Users\Administrator\Documents\meteor>
 
 Instead of using Powercat, we could also inject a PowerShell reverse shell directly. There are many ways to exploit a command injection vulnerability that depend heavily on the underlying operating system and the implementation of the web application, as well as any security mechanisms in place.
 
-While the vulnerabilities are not dependent on specific programming languages or web frameworks, their exploitation may be. Therefore, **we should always take the time to briefly understand the web technologies being used before we attempt to exploit them. **
+While the vulnerabilities are not dependent on specific programming languages or web frameworks, their exploitation may be. Therefore, **we should always take the time to briefly understand the web technologies being used before we attempt to exploit them.**
+
+#### Encoding Curl Requests 
+
+It is recommended to automatically encode curl requests by using the --url-encode flag. An example is shown here:
+
+```bash
+kali@kali:~$ curl http://192.168.50.11/project/uploads/users/420919-backdoor.php --data-urlencode "cmd=which nc"
+```

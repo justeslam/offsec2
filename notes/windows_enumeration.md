@@ -135,3 +135,23 @@ Say that you have a shell in MetaSploit, you can background that shell and run t
 #### NTLM v NTLMv2
 
 NTLM hashes can be passed, NTLMv2 hased CANNOT be passed.
+
+#### Execution Policy Bypass - Per script basis
+
+```bash
+# Simply append to your script
+-ExecutionPolicy Bypass
+```
+
+#### Execution Policy Bypass - Per User Basis
+
+```bash
+# Get the current execution policy for your current user
+Get-ExecutionPolicy -Scope CurrentUser
+
+# Attempt the modify the execution policy
+Set-ExecutionPolicy -ExecutionPolicy Unrestricted -Scope CurrentUser
+
+# Assure that the policy was changed
+Get-ExecutionPolicy -Scope CurrentUser
+```
