@@ -316,3 +316,8 @@ i686-w64-mingw32-gcc 42341.c -o syncbreeze_exploit.exe -lws2_32
 #### AntiScan.me
 
 This service scans our sample against 30 different AV engines and claims to not divulge any submitted sample to third-parties.
+
+#### Bind Shells
+
+Be aware of this method of access, it is convinient. 
+
