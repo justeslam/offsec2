@@ -68,3 +68,48 @@ Once connected, we start PowerShell and choose Get-CimInstance to query the WMI 
 ```bash
 Get-CimInstance -ClassName win32_service | Select Name,State,PathName | Where-Object {$_.State -like 'Running'}
 ```
+
+## Service DLL Hijacking
+
+This comes into play because you often won't have the required permissions needed in order to replace a Windows binary.
+
+Dynamic Link Libraries (DLL) provide functionality to programs or the Windows operating system. DLLs contain code or resources, such as icon files, for other executable files or objects to use. These libraries provide a way for developers to use and integrate already existing functionality without reinventing the wheel. Windows uses DLLs to store functionality needed by several components. Otherwise, each component would need the functionality in their own source code resulting in a huge resource waste. On Unix systems, these files are called Shared Objects.
+
+There are several methods we can use to exploit how DLLs work on Windows and they can often be an effective way of elevating our privileges. One method is similar to the privilege escalation vector performed in the previous section. Instead of overwriting the binary, we merely overwrite a DLL the service binary uses. However, the service may not work as expected because the actual DLL functionality is missing. In most cases, this would still lead us to code execution of the DLL's code and then, for example, to the creation of a new local administrative user.
+
+Another method is to hijack the DLL search order.3 The search order is defined by Microsoft and determines what to inspect first when searching for DLLs. By default, all current Windows versions have safe DLL search mode enabled.
+
+This setting was implemented by Microsoft due to the high number of DLL hijacking vectors and ensures that DLLs are more difficult to hijack. The following listing shows the standard search order taken from the Microsoft Documentation:
+
+1. The directory from which the application loaded.
+2. The system directory.
+3. The 16-bit system directory.
+4. The Windows directory. 
+5. The current directory.
+6. The directories that are listed in the PATH environment variable.
+
+A special case of this method is a missing DLL. This means the binary attempted to load a DLL that doesn't exist on the system. This often occurs with flawed installation processes or after updates. However, even with a missing DLL, the program may still work with restricted functionality.
+
+To exploit this situation, we can try placing a malicious DLL (with the name of the missing DLL) in a path of the DLL search order so it executes when the binary is started.
+
+### Unquoted Service Paths
+
+We can use this attack when we have Write permissions to a service's main directory or subdirectories but cannot replace files within them.
+
+As we learned in the previous sections, each Windows service maps to an executable file that will be run when the service is started. If the path of this file contains one or more spaces and is not enclosed within quotes, it may be turned into an opportunity for a privilege escalation attack.
+
+If the provided string contains spaces and is not enclosed within quotation marks, it can be interpreted in various ways because it is unclear to the function where the file name ends and the arguments begin. To determine this, the function starts interpreting the path from left to right until a space is reached. For every space in the file path, the function uses the preceding part as file name by adding .exe and the rest as arguments.
+
+Here's an example:
+
+```bash
+C:\Program.exe
+C:\Program Files\My.exe
+C:\Program Files\My Program\My.exe
+C:\Program Files\My Program\My service\service.exe
+```
+
+In order to exploit this and subvert the original unquoted service call, we must create a malicious executable, place it in a directory that corresponds to one of the interpreted paths, and match its name to the interpreted filename. Then, once the service is started, our file gets executed with the same privileges that the service starts with. Often, this happens to be the LocalSystem account, which results in a successful privilege escalation attack.
+
+Great resource: https://juggernaut-sec.com/unquoted-service-paths/
+

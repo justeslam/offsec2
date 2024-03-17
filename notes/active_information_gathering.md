@@ -263,9 +263,7 @@ According to the output, this default 1000-port scan generated around 72 KB of t
 
 #### TLDR
 
-- Quick port scan on the whole range, see what ports are open, "sudo nmap 123.123.123.123 -p- -o box-fullscan.out"
-- More detailed one, "sudo nmap 123.123.123.123 -sC -sV -Oa nmap/outfile.nmap"
-- Even more detailed one, based on ports you found open "sudo nmap -p21,22,80,8080 -sC -sV -Oa nmap/outfile.nmap"
+- Extensive port scan on the whole range, see what ports are open, "nmap 123.123.123.123 nmap -p- -sV -sC -sT $IP —open -oA nmap/fullscan.nmap"
 - Run a UDP scan, "sudo nmap -sU 192.168.50.149"
 
 ```bashrc
