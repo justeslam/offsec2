@@ -113,3 +113,33 @@ In order to exploit this and subvert the original unquoted service call, we must
 
 Great resource: https://juggernaut-sec.com/unquoted-service-paths/
 
+### Scheduled Tasks
+
+Windows uses the Task Scheduler to execute various automated tasks, such as clean-up activities or update management. On Windows, they are called Scheduled Tasks, or Tasks, and are defined with one or more triggers. There are various other possible configurations for a task, categorized in the Conditions, Settings, and General menu tabs of a task's property.
+
+For us, three pieces of information are vital to obtain from a scheduled task to identify possible privilege escalation vectors:
+
+    As which user account (principal) does this task get executed?
+    What triggers are specified for the task?
+    What actions are executed when one or more of these triggers are met?
+
+The second question is important because if the trigger condition was met in the past, the task will not run again in the future and therefore, is not a viable target for us. Additionally, if we are in a week-long penetration test, but the task runs after this time, we should search for another privilege escalation vector. However, we would mention this finding in a penetration testing report for a client.
+
+We can view scheduled tasks on Windows with the **Get-ScheduledTask** Cmdlet or the command **schtasks/query**.
+
+### Privilege Exploits
+
+Types of Windows exploits:
+1. Application Exploits - Vulnerable application running with privileges
+2. Windows Kernel Exploits - Advanced, can crash system, effective
+3. Privilege Exploits - Certain privileges allow for certain exploits
+
+SeImpersonatePrivilege, can potentially abuse those privileges to perform privilege escalation attacks. SeImpersonatePrivilege offers the possibility to leverage a token with another security context. Meaning, a user with this privilege can perform operations in the security context of another user account under the right circumstances. Other privileges that may lead to privilege escalation are SeBackupPrivilege, SeAssignPrimaryToken, SeLoadDriver, and SeDebug. 
+
+In penetration tests, we'll rarely find standard users with this privilege assigned. However, we'll commonly come across this privilege when we obtain code execution on a Windows system by exploiting a vulnerability in an Internet Information Service (IIS) web server. In most configurations, IIS will run as LocalService, LocalSystem, NetworkService, or ApplicationPoolIdentity, which all have SeImpersonatePrivilege assigned. This also applies to other Windows services.
+
+Named pipes are one method for local or remote Inter-Process Communication in Windows. They offer the functionality of two unrelated processes sharing and transferring data with each other. A named pipe server can create a named pipe to which a named pipe client can connect via the specified name. The server and client don't need to reside on the same system.
+
+Once a client connects to a named pipe, the server can leverage SeImpersonatePrivilege to impersonate this client after capturing the authentication from the connection process. To abuse this, we need to find a privileged process and coerce it into connecting to a controlled named pipe. With SeImpersonatePrivilege assigned, we can then impersonate the user account connecting to the named pipe and perform operations in its security context.
+
+For this example, we'll use a tool named PrintSpoofer7 created by itm4n, which implements a variation of the printer bug8 to coerce NT AUTHORITY\SYSTEM into connecting to a controlled named pipe. We can use this tool in situations where we have code execution as a user with the privilege SeImpersonatePrivilege to execute commands or obtain an interactive shell as NT AUTHORITY\SYSTEM.

