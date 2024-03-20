@@ -346,3 +346,4 @@ Whenever encoding and decoding a reverse shell in base 64, remove the special ch
 ```
 
 This can overcome rules that don’t allow for spaces. 
+
