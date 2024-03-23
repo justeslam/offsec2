@@ -298,3 +298,108 @@ Foreach($obj in $result)
 }
 ```
 
+```bash
+PS C:\Users\stephanie> .\enumeration.ps1
+CN=Domain Admins,CN=Users,DC=corp,DC=com
+CN=Administrators,CN=Builtin,DC=corp,DC=com
+```
+
+We can use this script to enumerate any object available to us in AD. However, in the current state, this would require us to make further edits to the script itself based on what we wish to enumerate.
+
+Instead, we can make the script more flexible, allowing us to add the required parameters via the command line. For example, we could have the script accept the samAccountType we wish to enumerate as a command line argument.
+
+There are many ways we can accomplish this. One way is to simply encapsulate the current functionality of the script into an actual function. An example of this is shown below.
+
+```bash
+function LDAPSearch {
+    param (
+        [string]$LDAPQuery
+    )
+
+    $PDC = [System.DirectoryServices.ActiveDirectory.Domain]::GetCurrentDomain().PdcRoleOwner.Name
+    $DistinguishedName = ([adsi]'').distinguishedName
+
+    $DirectoryEntry = New-Object System.DirectoryServices.DirectoryEntry("LDAP://$PDC/$DistinguishedName")
+
+    $DirectorySearcher = New-Object System.DirectoryServices.DirectorySearcher($DirectoryEntry, $LDAPQuery)
+
+    return $DirectorySearcher.FindAll()
+
+}
+```
+
+To use the function, let's import it to memory:
+
+```bash
+PS C:\Users\stephanie> Import-Module .\function.ps1
+```
+
+Within PowerShell, we can now use the LDAPSearch command (our declared function name) to obtain information from AD. To repeat parts of the user enumeration we did earlier, we can again filter on the specific samAccountType:
+
+```bash
+PS C:\Users\stephanie> LDAPSearch -LDAPQuery "(samAccountType=805306368)"
+...
+```
+
+We can also search directly for an Object Class, which is a component of AD that defines the object type. Let's use objectClass=group in this case to list all the groups in the domain:
+
+```bash
+PS C:\Users\stephanie> LDAPSearch -LDAPQuery "(objectclass=group)"
+```
+
+To enumerate every group available in the domain and also display the user members, we can pipe the output into a new variable and use a foreach loop that will print each property for a group. This allows us to select specific attributes we are interested in. For example, let's focus on the CN and member attributes:
+
+```bash
+PS C:\Users\stephanie\Desktop> foreach ($group in $(LDAPSearch -LDAPQuery "(objectCategory=group)")) { $group.properties | select {$_.cn}, {$_.member} }
+```
+
+Even though this environment is somewhat small, we still received a lot of output. Let's focus on the three groups we noticed earlier in our enumeration with net.exe:
+```bash
+...
+Sales Department              {CN=Development Department,DC=corp,DC=com, CN=pete,CN=Users,DC=corp,DC=com, CN=stephanie,CN=Users,DC=corp,DC=com}
+Management Department         CN=jen,CN=Users,DC=corp,DC=com
+Development Department        {CN=Management Department,DC=corp,DC=com, CN=pete,CN=Users,DC=corp,DC=com, CN=dave,CN=Users,DC=corp,DC=com}
+...
+```
+
+Since the output can be somewhat difficult to read, let's once again search for the groups, but this time specify the Sales Department in the query and pipe it into a variable in our PowerShell command line:
+
+```bash
+PS C:\Users\stephanie\Desktop> $sales.properties.member
+CN=Development Department,DC=corp,DC=com
+CN=pete,CN=Users,DC=corp,DC=com
+CN=stephanie,CN=Users,DC=corp,DC=com
+PS C:\Users\stephanie\Desktop>
+```
+
+Now that we know the Development Department is a member of the Sales Department, let's enumerate it:
+
+```bash
+PS C:\Users\stephanie> $group = LDAPSearch -LDAPQuery "(&(objectCategory=group)(cn=Development Department*))"
+
+PS C:\Users\stephanie> $group.properties.member
+CN=Management Department,DC=corp,DC=com
+CN=pete,CN=Users,DC=corp,DC=com
+CN=dave,CN=Users,DC=corp,DC=com
+```
+
+Based on the output above, we have another case of a nested group since Management Department is a member of Development Department. Let's check this group as well:
+
+```bash
+PS C:\Users\stephanie\Desktop> $group = LDAPSearch -LDAPQuery "(&(objectCategory=group)(cn=Management Department*))"
+
+PS C:\Users\stephanie\Desktop> $group.properties.member
+CN=jen,CN=Users,DC=corp,DC=com
+```
+
+### Enumerating Object Permissions
+
+AD includes a wealth of permission types that can be used to configure an ACE.3 However, from an attacker's standpoint, we are mainly interested in a few key permission types. Here's a list of the most interesting ones along with a description of the permissions they provide:
+
+	GenericAll: Full permissions on object
+	GenericWrite: Edit certain attributes on the object
+	WriteOwner: Change ownership of the object
+	WriteDACL: Edit ACE's applied to object
+	AllExtendedRights: Change password, reset password, etc.
+	ForceChangePassword: Password change for object
+	Self (Self-Membership): Add ourselves to for example a group

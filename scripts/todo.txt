@@ -6,3 +6,4 @@
 - Create a map, Windows privileges --> Possible Exploit
 - Have scripts that automatically run when you compromise another network, will help with port forwarding and seeing what is available in the segmented network
 - Create or find manual sqli enumeration checklist, maybe automate 
+- Consider collecting every password referenced in Pen-200, putting them into a list, and making a custom rule set based off of them

