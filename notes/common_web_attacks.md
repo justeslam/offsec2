@@ -5,56 +5,6 @@
 - File Upload Attack Vulnerabilities
 - Command Injection
 
-### Understanding UNIX Directories 
-
-#### /etc
-
-Contains configuration files that vary for each machine, such as /etc/hosts & /etc/passwd. The /etc directory contains the files generally used in system administration. Most of the commands that previously resided in the /etc directory now reside in the /usr/sbin directory. However, for compatibility, the /usr/sbin directory contains symbolic links to the locations of some executable files. For example, /etc/chown is a symbolic link to /usr/bin/chown, and /etc/exportvg is a symbolic link to /usr/sbin/exportvg.
-
-#### /bin
-
-Symbolic link to the /usr/bin directory. In prior UNIX file systems, the /bin directory contained user commands that now reside in the /usr/bin directory.
-
-#### /sbin
-
-Contains files needed to boot the machine and mount the /usr file system. Most of the commands used during booting come from the boot image's RAM disk file system; therefore, very few commands reside in the /sbin directory.
-
-#### /dev
-
-Contains device nodes for special files for local devices. The /dev directory contains special files for tape drives, printers, disk partitions, and terminals.
-
-#### /tmp
-
-Serves as a mount point for a file system that contains system-generated temporary files. The /tmp file system is an empty directory.
-
-#### /var
-
-Serves as a mount point for files that vary on each machine. The /var file system is configured as a file system since the files it contains tend to grow.
-
-#### /u
-
-Symbolic link to the /home directory. 
-
-#### /usr
-
-Contains files that do not change and can be shared by machines such as executables and ASCII documentation. Standalone machines mount the root of a separate local file system over the /usr directory. Diskless machines and machines with limited disk resources mount a directory from a remote server over the /usr file system.
-
-#### /home
-
-Serves as a mount point for a file system containing user home directories. The /home file system contains per-user files and directories. In a standalone machine, the /home directory is contained in a separate file system whose root is mounted over the /home directory root file system. In a network, a server might contain user files that are accessible from several machines. In this case, the server copy of the /home directory is remotely mounted onto a local /home file system.
-
-#### /export
-
-Contains the directories and files on a server that are for remote clients. 
-
-#### /lib
-
-Symbolic link to the /usr/lib directory.
-
-#### /tftpboot
-
-Contains boot images and boot information for diskless clients. 
-
 ### Directory Traversal
 
 Directory Traversal attacks, also known as path traversal attacks. This type of attack can be used to access sensitive files on a web server and typically occurs when a web application is not sanitizing user input.
@@ -126,7 +76,9 @@ In Linux systems, a standard vector for directory traversal is to list the users
 
 Sensitive files are more difficult to find on Windows. To identify files containing sensitive information, we need to closely examine the web application and collect information about the web server, framework, and programming language.
 
-Once we gather information about the running application or service, we can research paths leading to sensitive files. For example, if we learn that a target system is running the Internet **Information Services (IIS)** web server, we can research its log paths and web root structure. Reviewing the Microsoft documentation, we learn that the logs are located at **"C:\inetpub\logs\LogFiles\W3SVC1\"**. Another file we should always check when the target is running an IIS web server is "**C:\inetpub\wwwroot\web.config**", which may contain sensitive information like passwords or usernames.
+Once we gather information about the running application or service, we can research paths leading to sensitive files. For example, if we learn that a target system is running the Internet **Information Services (IIS)** web server, we can research its log paths and web root structure. 
+
+Reviewing the Microsoft documentation, we learn that the logs are located at **"C:\inetpub\logs\LogFiles\W3SVC1\"**. Another file we should always check when the target is running an IIS web server is "**C:\inetpub\wwwroot\web.config**", which may contain sensitive information like passwords or usernames.
 
 Windows uses backslashes instead of forward slashes for file paths. 
 
@@ -159,7 +111,7 @@ Because leveraging ../ is a known way to abuse web application behavior, this se
 
 Fortunately for us, we can use **URL Encoding**, also called **Percent Encoding**, to potentially bypass these filters. We can leverage specific ASCII encoding lists to manually encode our query or use the online converter on the same page. For now, we will only encode the dots, which are represented as "%2e".
 ```bash
-kali@kali:/var/www/html$ curl http://192.168.50.16/cgi-bin/%2e%2e/%2e%2e/%2e%2e/%2e%2e/etc/passwd
+kali@kali:/var/www/html$ curl http://192.168.192.120/cgi-bin/%2e%2e/%2e%2e/%2e%2e/%2e%2e/etc/passwd
 
 root:x:0:0:root:/root:/bin/bash
 daemon:x:1:1:daemon:/usr/sbin:/usr/sbin/nologin

@@ -2,7 +2,6 @@
 
 **Start web application enumeration from its core component, the web server, since this is the common denominator of any web application that exposes its services.**
 
-Since we found port 80 open on our target, we can proceed with service discovery. To get started, we'll rely on the nmap service scan (-sV) to grab the web server (-p80) banner.
 ```bash
 kali@kali:~$ sudo nmap -p80  -sV 192.168.50.20
 Starting Nmap 7.92 ( https://nmap.org ) at 2022-03-29 05:13 EDT
@@ -35,48 +34,17 @@ PORT   STATE SERVICE
 Nmap done: 1 IP address (1 host up) scanned in 16.82 seconds
 ```
 
+### Wappalyzer
+
 We can also passively fetch a wealth of information about the application technology stack via Wappalyzer.
 
 **Once we have discovered an application running on a web server, our next step is to map all its publicly-accessible files and directories.**
 
-To do this, we would need to perform multiple queries against the target to discover any hidden paths. 
-
-### Gobuster
+### Gobuster / Directory & File Fuzzing
 
 Can generate a lot of traffic, so not helpful if you need to stay under the radar
 
 Gobuster supports different enumeration modes, including fuzzing and dns. The default running threads are 10; we can reduce the amount of traffic by setting a lower number via the -t parameter.
-```bash
-kali@kali:~$ gobuster dir -u 192.168.50.20 -w /usr/share/wordlists/dirb/common.txt -t 5
-===============================================================
-Gobuster v3.1.0
-by OJ Reeves (@TheColonial) & Christian Mehlmauer (@firefart)
-===============================================================
-[+] Url:                     http://192.168.50.20
-[+] Method:                  GET
-[+] Threads:                 5
-[+] Wordlist:                /usr/share/wordlists/dirb/common.txt
-[+] Negative Status codes:   404
-[+] User Agent:              gobuster/3.1.0
-[+] Timeout:                 10s
-===============================================================
-2022/03/30 05:16:21 Starting gobuster in directory enumeration mode
-===============================================================
-/.hta                 (Status: 403) [Size: 278]
-/.htaccess            (Status: 403) [Size: 278]
-/.htpasswd            (Status: 403) [Size: 278]
-/css                  (Status: 301) [Size: 312] [--> http://192.168.50.20/css/]
-/db                   (Status: 301) [Size: 311] [--> http://192.168.50.20/db/]
-/images               (Status: 301) [Size: 315] [--> http://192.168.50.20/images/]
-/index.php            (Status: 302) [Size: 0] [--> ./login.php]
-/js                   (Status: 301) [Size: 311] [--> http://192.168.50.20/js/]
-/server-status        (Status: 403) [Size: 278]
-/uploads              (Status: 301) [Size: 316] [--> http://192.168.50.20/uploads/]
-
-===============================================================
-2022/03/30 05:18:08 Finished
-===============================================================
-```
 
 
 ### Burp Suite
@@ -87,32 +55,23 @@ Some web proxies are employed to intercept company-wide TLS traffic. Known as TL
 
 **With the Burp Proxy tool, we can intercept any request sent from the browser before it is passed on to the server. We can change almost anything about the request at this point, such as parameter names or form values. We can even add new headers. This lets us test how an application handles unexpected arbitrary input. For example, an input field might have a size limit of 20 characters, but we could use Burp Suite to modify a request to submit 30 characters.**
 
-- When Intercept is enabled, we have to manually click on Forward to send each request to its destination. 
-
-- Alternatively, we can click Drop to not send the request. 
-
 - The Options sub-tab shows what ports are listening for proxy requests.
 
 - By default, Burp Suite enables a proxy listener on localhost:8080. This is the host and port that our browser must connect to in order to proxy traffic through Burp Suite
-
-In our case, the proxy (Burp) and the browser reside on the same host, so we'll use the loopback IP address 127.0.0.1 and specify port 8080. (Set Firefox Proxy in Network Settings)
 
 In some testing scenarios, we might want to capture the traffic from multiple machines, so the proxy will be configured on a standalone IP. In such cases, we will configure the browser with the external IP address of the proxy.
 
 Why does "detectportal.firefox.com" keep showing up in the proxy history? A captive portal is a web page that serves as a sort of gateway page when attempting to browse the Internet. It is often displayed when accepting a user agreement or authenticating through a browser to a Wi-Fi network. To ignore this, simply enter about:config in the address bar. Firefox will present a warning, but we can proceed by clicking I accept the risk!. Finally, search for "network.captive-portal-service.enabled" and double-click it to change the value to "false". This will prevent these messages from appearing in the proxy history.
 
-**Repeater is another fundamental Burp tool. With the Repeater, we can craft new requests or easily modify the ones in History, resend them, and review the responses. To observe this in action, we can right-click a request from Proxy > HTTP History and select Send to Repeater.**
-
 **Intruder is another essential Burp feature, as its name suggests, is designed to automate a variety of attack angles, from the simplest to more complex web application attacks.**
 
 First, we'll need to configure our local Kali's hosts file to statically assign the IP to the offsecwp website we are going to test.
+
 ```bash
 kali@kali:~$ cat /etc/hosts 
-
 ...
 192.168.50.16 offsecwp
 ```
-
 
 We can now select the Intruder tab in the upper bar, choose the POST request we want to modify, and move to the Positions sub-tab. Knowing that the user admin is correct, we only need to brute force the password field. First, we'll press Clear on the right bar so that all fields are cleared. We can then select the value of the pwd key and press the Add button on the right.
 
@@ -142,6 +101,8 @@ Some extensions, like .php, are straightforward, but others are more cryptic and
 
 File extensions on web pages are becoming less common, however, since many languages and frameworks now support the concept of routes, which allow developers to map a URI to a section of code. Applications leveraging routes use logic to determine what content is returned to the user, making URI extensions largely irrelevant.
 
+### Manual Inspection
+
 The **Firefox Debugger tool** (found in the Web Developer menu) displays the page's resources and content, which varies by application. The Debugger tool may display JavaScript frameworks, hidden input fields, comments, client-side controls within HTML, JavaScript, and much more.
 
 If the code is written in jQuery, prettify the code for greater readability.
@@ -151,6 +112,8 @@ The debugger will also reveal HTTP headers, response headers, server information
 The names or values in the response header often reveal additional information about the technology stack used by the application. Some examples of non-standard headers include X-Powered-By, x-amz-cf-id, and X-Aspnet-Version. Further research into these names could reveal additional information, such as that the "x-amz-cf-id" header indicates the application uses Amazon CloudFront.
 
 Sitemaps are another important element we should take into consideration when enumerating web applications. Web applications can include sitemap files to help search engine bots crawl and index their sites.  These files also include directives of which URLs not to crawl - typically sensitive pages or administrative consoles, which are exactly the sort of pages we are interested in.
+
+### Robots.txt
 
 Inclusive directives are performed with the sitemaps protocol, while robots.txt excludes URLs from being crawled. For example, we can retrieve the robots.txt file from
 www.google.com with curl:

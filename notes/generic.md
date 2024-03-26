@@ -376,7 +376,7 @@ kill -9 <PID>
 
 #### Is the Computer Connected to Other Internal Computers?
 
-When looking at the output from ifconfig, ipconfig, or ip addr, see if there is more than one network interface (other than the loopback). If there is, that is very interesting, and you should enumerate, if not, just focus on the computer itself. The computer below is not connected to other internal networks.
+When looking at the output from ifconfig, ipconfig, or ip addr, see if there is more than one network interface (other than the loopback). If there is, that is very interesting, and you should enumerate, if not, just focus on the computer itself. The target machine below is not connected to the internal network and we cannot use it as a pivot point.
 
 ```bash
 1: lo: <LOOPBACK,UP,LOWER_UP> mtu 65536 qdisc noqueue state UNKNOWN group default qlen 1000
@@ -394,3 +394,16 @@ When looking at the output from ifconfig, ipconfig, or ip addr, see if there is 
        valid_lft forever preferred_lft forever
 ```
 
+#### What to do with SMB
+
+If you have access to SMB shares, your options are to enumerate the shares for valuable information, and to craft 
+
+#### When you See Input Section on Website
+
+Try to set up a quick python server and make a get request with HTML:
+
+```html
+ <body>                                                                         
+     <a href="http://192.168.192.121:8000/your-endpoint">Send GET Request</a>         
+ </body>
+ ```
