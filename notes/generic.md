@@ -1,20 +1,7 @@
 ## Generic Notes
 
-### Learning and Problem-Solving Strategies
+Whether you think you can or think you can’t, you’re right."
 
-1. **Feynman Technique for Learning**:
-   - Learn a Module.
-   - Explain it to a beginner.
-   - Identify gaps in understanding.
-   - Return to study to fill those gaps.
-
-2. **SQ2R Method for Study**:
-   - Survey, Question, Read, Recite, Review.
-
-3. **Cool Quote by Henry Ford**:
-   - "Whether you think you can or think you can’t—you’re right."
-
----
 
 ### Technical Procedures and Commands
 
@@ -23,24 +10,7 @@
    ssh -o "UserKnownHostsFile=/dev/null" -o "StrictHostKeyChecking=no" learner@191.168.50.52
    ```
 
-2. **Updating and Locating Files in Linux**:
-   - Update the database with `sudo updatedb`.
-   - Locate specific files using `locate`.
-     Example:
-     ```bash
-     sudo updatedb
-     locate file.ovpn
-     ```
-
-3. **Connecting to a VPN**:
-   - Use `sudo openvpn` to connect.
-   - Keep the command prompt open.
-     Example:
-     ```bash
-     sudo openvpn file.ovpn
-     ```
-
-4. **Addressing File Execution Permission Issues**:
+2. **Addressing File Execution Permission Issues**:
    - If lacking execution permissions, copy the file to a location where execution is permitted.
 
 ---
@@ -91,11 +61,11 @@ To filter processes to find the processes you'd like:
 ```bash
 ps aux | grep process_name
 ```
-Aux argument will provide all processes, and piping to grep filters.
+Aux argument will provide all processes, and ping to grep filters.
 
 ---
 
-#### Adding Rerositories
+#### Adding Repositories
 
 Sources are stored in /etc/apt/sources.list. Let's say that a package isn't found, so you can't install new binaries or packages, you're likely missing the source location in which the binary or package is held. Modify the provided file to include the source you need.
 
@@ -342,7 +312,7 @@ Whenever encoding and decoding a reverse shell in base 64, remove the special ch
 #### No Spaces in Payload Work-Around
 
 ```bash
-{echo,-n,**base64 encoded reverse bash shell}|{base64,-d}|bash
+{echo,-n,**base64 encoded reverse bash shell**}|{base64,-d}|bash
 ```
 
 This can overcome rules that don’t allow for spaces. 
@@ -406,4 +376,10 @@ Try to set up a quick python server and make a get request with HTML:
  <body>                                                                         
      <a href="http://192.168.192.121:8000/your-endpoint">Send GET Request</a>         
  </body>
+ ```
+
+ #### How to tell if you're dealing with Powershell or CMD
+
+ ```bash
+ (dir 2>&1 *`|echo CMD);&<# rem #>echo PowerShell
  ```

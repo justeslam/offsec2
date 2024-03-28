@@ -85,15 +85,15 @@ mimikatz # sekurlsa::tickets
 
 The output shows both a TGT and a TGS. Stealing a TGS would allow us to access only particular resources associated with those tickets. Alternatively, armed with a TGT, we could request a TGS for specific resources we want to target within the domain.
 
-Before covering attacks on AD authentication mechanisms, let's briefly explore the use of Public Key Infrastructure (PKI)12 in AD. Microsoft provides the AD role Active Directory Certificate Services (AD CS)13 to implement a PKI, which exchanges digital certificates between authenticated users and trusted resources.
+Before covering attacks on AD authentication mechanisms, let's briefly explore the use of Public Key Infrastructure (PKI) in AD. Microsoft provides the AD role Active Directory Certificate Services (AD CS) to implement a PKI, which exchanges digital certificates between authenticated users and trusted resources.
 
-If a server is installed as a Certification Authority (CA),14 it can issue and revoke digital certificates (and much more). While a deep discussion on these concepts would require its own Module, let's focus on one aspect of cached and stored objects related to AD CS.
+If a server is installed as a Certification Authority (CA), it can issue and revoke digital certificates (and much more). While a deep discussion on these concepts would require its own Module, let's focus on one aspect of cached and stored objects related to AD CS.
 
-For example, we could issue certificates for web servers to use HTTPS or to authenticate users based on certificates from the CA via Smart Cards.15
+For example, we could issue certificates for web servers to use HTTPS or to authenticate users based on certificates from the CA via Smart Cards.
 
-These certificates may be marked as having a non-exportable private key16 for security reasons. If so, a private key associated with a certificate cannot be exported even with administrative privileges. However, there are various methods to export the certificate with the private key.
+These certificates may be marked as having a non-exportable private key for security reasons. If so, a private key associated with a certificate cannot be exported even with administrative privileges. However, there are various methods to export the certificate with the private key.
 
-We can rely again on Mimikatz to accomplish this. The crypto17 module contains the capability to either patch the CryptoAPI18 function with crypto::capi19 or KeyIso20 service with crypto::cng,21 making non-exportable keys exportable.
+We can rely again on Mimikatz to accomplish this. The crypto module contains the capability to either patch the CryptoAPI function with crypto::capi or KeyIso service with crypto::cng, making non-exportable keys exportable.
 
 ### Password Attacks
 
@@ -193,9 +193,9 @@ If you receive a network error, make sure that the encoding of usernames.txt is 
 
 As we have discussed, the first step of the authentication process via Kerberos is to send an AS-REQ. Based on this request, the domain controller can validate if the authentication is successful. If it is, the domain controller replies with an AS-REP containing the session key and TGT. This step is also commonly referred to as Kerberos preauthentication and prevents offline password guessing.
 
-By default, the AD user account option Do not require Kerberos preauthentication is disabled, meaning that Kerberos preauthentication is performed for all users. However, it is possible to enable this account option manually. In assessments, we may find accounts with this option enabled as some applications and technologies require it to function properly.
+By default, the AD user account option, Do not require Kerberos preauthentication, is disabled, meaning that Kerberos preauthentication is performed for all users. However, it is possible to enable this account option manually. In assessments, we may find accounts with this option enabled as some applications and technologies require it to function properly.
 
-On Kali, we can use impacket-GetNPUsers3 to perform AS-REP roasting. We'll need to enter the IP address of the domain controller as an argument for -dc-ip, the name of the output file in which the AS-REP hash will be stored in Hashcat format for -outputfile, and -request to request the TGT.
+On Kali, we can use impacket-GetNPUsers to perform AS-REP roasting. We'll need to enter the IP address of the domain controller as an argument for -dc-ip, the name of the output file in which the AS-REP hash will be stored in Hashcat format for -outputfile, and -request to request the TGT.
 
 ```bash
 kali@kali:~$ impacket-GetNPUsers -dc-ip 192.168.50.70  -request -outputfile hashes.asreproast corp.com/pete
@@ -259,7 +259,7 @@ Next, let's copy the AS-REP hash and paste it into a text file named hashes.asre
 kali@kali:~$ sudo hashcat -m 18200 hashes.asreproast2 /usr/share/wordlists/rockyou.txt -r /usr/share/hashcat/rules/best64.rule --force
 ```
 
-Let's assume that we are conducting an assessment in which we cannot identify any AD users with the account option Do not require Kerberos preauthentication enabled. While enumerating, we notice that we have GenericWrite or GenericAll permissions5 on another AD user account. Using these permissions, we could reset their passwords, but this would lock out the user from accessing the account. We could also leverage these permissions to modify the User Account Control value of the user to not require Kerberos preauthentication.6 This attack is known as Targeted AS-REP Roasting. Notably, we should reset the User Account Control value of the user once we've obtained the hash.
+Let's assume that we are conducting an assessment in which we cannot identify any AD users with the account option Do not require Kerberos preauthentication enabled. While enumerating, we notice that we have GenericWrite or GenericAll permissions on another AD user account. Using these permissions, we could reset their passwords, but this would lock out the user from accessing the account. We could also leverage these permissions to modify the User Account Control value of the user to not require Kerberos preauthentication. This attack is known as Targeted AS-REP Roasting. Notably, we should reset the User Account Control value of the user once we've obtained the hash.
 
 ### Kerberoasting
 
@@ -299,9 +299,9 @@ Now, let's store the TGS-REP hash in a file named hashes.kerberoast2 and crack i
 kali@kali:~$ sudo hashcat -m 13100 hashes.kerberoast2 /usr/share/wordlists/rockyou.txt -r /usr/share/hashcat/rules/best64.rule --force
 ```
 
-This technique is immensely powerful if the domain contains high-privilege service accounts with weak passwords, which is not uncommon in many organizations. However, if the SPN runs in the context of a computer account, a managed service account,5 or a group-managed service account,6 the password will be randomly generated, complex, and 120 characters long, making cracking infeasible. The same is true for the krbtgt user account which acts as service account for the KDC. Therefore, our chances of performing a successful Kerberoast attack against SPNs running in the context of user accounts is much higher.
+This technique is immensely powerful if the domain contains high-privilege service accounts with weak passwords, which is not uncommon in many organizations. However, if the SPN runs in the context of a computer account, a managed service account, or a group-managed service account, the password will be randomly generated, complex, and 120 characters long, making cracking infeasible. The same is true for the krbtgt user account which acts as service account for the KDC. Therefore, our chances of performing a successful Kerberoast attack against SPNs running in the context of user accounts is much higher.
 
-Let's assume that we are performing an assessment and notice that we have GenericWrite or GenericAll permissions7 on another AD user account. As stated before, we could reset the user's password but this may raise suspicion. However, we could also set an SPN for the user,8 kerberoast the account, and crack the password hash in an attack named targeted Kerberoasting. We'll note that in an assessment, we should delete the SPN once we've obtained the hash to avoid adding any potential vulnerabilities to the client's infrastructure.
+Let's assume that we are performing an assessment and notice that we have GenericWrite or GenericAll permissions on another AD user account. As stated before, we could reset the user's password but this may raise suspicion. However, we could also set an SPN for the user, kerberoast the account, and crack the password hash in an attack named targeted Kerberoasting. We'll note that in an assessment, we should delete the SPN once we've obtained the hash to avoid adding any potential vulnerabilities to the client's infrastructure.
 
 ### Silver Tickets
 
@@ -400,7 +400,7 @@ Since silver and golden tickets represent powerful attack techniques, Microsoft 
 
 ### Domain Controller Synchronization
 
-In production environments, domains typically rely on more than one domain controller to provide redundancy. The Directory Replication Service (DRS) Remote Protocol1 uses replication2 to synchronize these redundant domain controllers. A domain controller may request an update for a specific object, like an account, using the IDL_DRSGetNCChanges3 API.
+In production environments, domains typically rely on more than one domain controller to provide redundancy. The Directory Replication Service (DRS) Remote Protocol1 uses replication to synchronize these redundant domain controllers. A domain controller may request an update for a specific object, like an account, using the IDL_DRSGetNCChanges3 API.
 
 Luckily for us, the domain controller receiving a request for an update does not check whether the request came from a known domain controller. Instead, it only verifies that the associated SID has appropriate privileges. If we attempt to issue a rogue update request to a domain controller from a user with certain rights it will succeed.
 

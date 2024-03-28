@@ -226,3 +226,5 @@ Use exiftool to analyze a few documents on the website, see what information you
 24. Brute-Force Passwords
 
 Refer to ../notes/password_cracking.md
+
+Additional Resources at "https://book.hacktricks.xyz/network-services-pentesting/pentesting-web".
