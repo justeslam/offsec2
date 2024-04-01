@@ -383,3 +383,16 @@ Try to set up a quick python server and make a get request with HTML:
  ```bash
  (dir 2>&1 *`|echo CMD);&<# rem #>echo PowerShell
  ```
+
+ #### PHPINFO - What to Look For
+
+ Look for the document root, as it will tell you the directory the website is working out of. Also, look at "disable_functions" as it will tell you what functions you're allowed to run in PHP.
+
+ #### Mark Yourself as the Owner of Current Directory
+
+ This is more for ease of use, when you know that the files in this directory could be compromised without you worrying. 
+
+ ```bash
+ sudo chown -R username:username ./
+ ```
+  

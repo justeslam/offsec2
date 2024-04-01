@@ -13,3 +13,6 @@ rpcclient $>netshareenum
 nmblookup -A 192.168.1.1
 nbtscan IP
 nmap IP -p 139,445 –script smb*
+
+// smbmap
+// crackmapexec

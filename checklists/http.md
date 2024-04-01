@@ -7,7 +7,7 @@ sudo nmap -p80 --script=http-enum $IP
 2. Analyze tech stack with Wappalyzer
 3. Brute force directories, subdomains, files and apis
 ```bash
-gobuster dir -u http://$IP -w /opt/SecLists/Discovery/Web-Content/combined_directories.txt -k -t 30
+gobuster dir -u http://$IP -w /opt/Seclists/Discovery/Web-Content/combined_directories.txt -k -t 30
 gobuster dns -d http://$IP -w /opt/SecLists/Discovery/DNS/subdomains-top1million-110000.txt -t 30
 gobuster dir -u http://$IP -w /opt/SecLists/Discovery/Web-Content/raft-large-files.txt -k -t 30 -x php,txt,html,whatever
 # for api busting
