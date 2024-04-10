@@ -165,3 +165,10 @@ corp\jen
 FILES04
 ```
 
+---
+
+#### Permissions Mapped to Remote Execution tool
+
+Administrators -> psexec || sc 
+Remote Management Users -> winrm
+

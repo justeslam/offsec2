@@ -16,3 +16,5 @@ nmap IP -p 139,445 –script smb*
 
 // smbmap
 // crackmapexec
+
+You can try putting payloads in SMBs as soon as you can, that way you don't have to worry about that method of client-side attacks.

@@ -395,4 +395,8 @@ Try to set up a quick python server and make a get request with HTML:
  ```bash
  sudo chown -R username:username ./
  ```
-  
+
+
+#### Probably the best Cheat Sheet I've Found
+
+"https://cheatsheet.haax.fr/web-pentest/injections/server-side-injections/sql/" 

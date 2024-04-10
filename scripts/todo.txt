@@ -8,3 +8,4 @@
 - Create or find manual sqli enumeration checklist, maybe automate 
 - Consider collecting every password referenced in Pen-200, putting them into a list, and making a custom rule set based off of them
 - Web enumeration checklist 
+- Have automated way to extract notes in particular situations
