@@ -8,7 +8,7 @@ sudo nmap -p80 --script=http-enum $IP
 
 3. Brute force directories, subdomains, files and apis
 ```bash
-gobuster dir -u http://$IP -w /opt/Seclists/Discovery/Web-Content/combined_directories.txt -k -t 30
+gobuster dir -u http://loopback:9000 -w /opt/SecLists/Discovery/Web-Content/combined_directories.txt -k -t 30
 gobuster dns -d http://$IP -w /opt/SecLists/Discovery/DNS/subdomains-top1million-110000.txt -t 30
 gobuster dir -u http://$IP -w /opt/SecLists/Discovery/Web-Content/raft-large-files.txt -k -t 30 -x php,txt,html,whatever
 # for api busting
@@ -25,6 +25,10 @@ nikto --host $IP -ssl -evasion 1
 
 - Look for emails, names, user info, versioning (checking with searchsploit), examine input box code (checking for hidden form fields), anything interesting, check out robots.txt & sitemap.xml
 - Inspect every fkn inch of the website
+
+99. LFI
+
+https://github.com/carlospolop/Auto_Wordlists/blob/main/wordlists/file_inclusion_linux.txt
 
 6. WPscan if it's wordpress
 ```bash

