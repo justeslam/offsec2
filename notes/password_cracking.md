@@ -172,3 +172,9 @@ Now that we've successfully added our sshRules to the JtR configuration file, we
 ```bash
 kali@kali:~/passwordattacks$ john --wordlist=ssh.passwords --rules=sshRules ssh.hash
 ```
+
+#### NTLM Hashes
+
+```bash
+hashcat -m 1000 nelly.hash /usr/share/wordlists/rockyou.txt -r /usr/share/hashcat/rules/best64.rule --force
+```

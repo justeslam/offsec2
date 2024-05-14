@@ -1,0 +1,3 @@
+- https://burmat.gitbook.io/security/hacking/domain-exploitation
+- https://onedrive.live.com/embed?resid=4149EBCF4A8A1BD0%211849&filename=OSCP_Notes_NagendranGS.pdf&authkey=%21AE_gXz4ANnMhJIc
+- https://github.com/xsudoxx/OSCP

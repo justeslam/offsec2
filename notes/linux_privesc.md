@@ -41,6 +41,7 @@ You can display active network connections and listening ports using either nets
 ```bash
 ss -anp
 netstat -anp
+sudo netstat -ltnp
 ```
 
 If a network service is not remotely accessible because it is blocked by the firewall, it is generally accessible locally via the loopback interface. If we can interact with these services locally, we may be able to exploit them to escalate our privileges on the local system.
@@ -355,3 +356,7 @@ file cve-2017-16995
 ```bash
 hydra -l offsec -P wordlist -s 2222 ssh://192.168.12.133
 ```
+
+#### Payload of All Things
+
+Has some amazing enumeration and priv esc commands, 'https://github.com/swisskyrepo/PayloadsAllTheThings'.
