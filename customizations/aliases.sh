@@ -3,7 +3,7 @@ alias ll='ls -lsaht --color=auto'
 # ll .
 
 # Quick way to set up a netcat listener
-alias listen='sudo rlwrap -cAz nc -lvnp'
+alias listen='ip a | grep tun0; sudo rlwrap -cAz nc -lvnp'
 # listen 443
 
 # Alternative to Nmap scan, much faster

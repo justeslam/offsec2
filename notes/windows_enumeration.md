@@ -162,6 +162,10 @@ Use PsLoggedon.exe if it's an older machine, such as Server 2012 R2, 2016 (1607)
 .\PsLoggedOn.exe \\file04
 ```
 
+#### Look out for SeManageVolumePrivilege
+
+There are some great examples in Offsec's Access PG Practice write-ups. 
+
 #### Interesting Object Permissions
 
 AD includes a wealth of permission types that can be used to configure an ACE. However, from an attacker's standpoint, we are mainly interested in a few key permission types. Here's a list of the most interesting ones along with a description of the permissions they provide:
