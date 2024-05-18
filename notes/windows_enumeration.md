@@ -162,9 +162,29 @@ Use PsLoggedon.exe if it's an older machine, such as Server 2012 R2, 2016 (1607)
 .\PsLoggedOn.exe \\file04
 ```
 
+#### InvokeRunasCs.ps1
+
+If you have credentials for another user on a system, but cannot seem to login as them through any of the traditional methods, use the:
+
+```bash
+Invoke-RunasCs -Username svc_mssql -Password trustno1 -Command "<reverse shell code>""
+```
+
+and execute a reverse shell to get onto the system as them.
+
 #### Look out for SeManageVolumePrivilege
 
-There are some great examples in Offsec's Access PG Practice write-ups. 
+If you have the SeManageVolumePrivilege, then you may be able to abuse it to get root. Don't forget that you have ONE shot, so don't mess it up.
+
+There are some great examples in Offsec's Access PG Practice write-ups and "https://github.com/CsEnox/SeManageVolumeExploit/releases/tag/public?source=post_page-----b95d3146cfe9--------------------------------". 
+
+#### Additional Directory Information
+
+Simple way to get more information about files in directory, such as who owns them:
+
+```bash
+dir /a /o /q
+```
 
 #### Interesting Object Permissions
 
@@ -257,6 +277,16 @@ dir /s/b file.txt
 Get-ChildItem -Path C:\ -Include *.kdbx -File -Recurse -ErrorAction SilentlyContinue
 Get-ChildItem -Path C:\ -Include *.txt,*.pdf,*.xls,*.xlsx,*.doc,*.docx -File -Recurse -ErrorAction SilentlyContinue
 ```
+
+#### SAM and SYSTEM Files
+
+Always check the SAM if there's any sort of backup or loose permissions in SMB. If you're ever able to run into the SAM or SYSTEM files in Windows smb or filesystemm:
+
+```bash
+impacket-secretsdump -sam SAM -system SYSTEM LOCAL
+```
+
+This will provide hashes that you will be able to crack.
 
 #### Windows Password Spraying
 

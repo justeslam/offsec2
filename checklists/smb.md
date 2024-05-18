@@ -3,11 +3,16 @@
 enum4linux -a $IP
 smbclient -L //$IP
 smbclient -N -L //IP
+smbclient -L //IP -N
 smbclient -L //192.168.1.2/myshare -U anonymous
 smbclient //192.168.235.248/transfer -N
 proxychains -q smbclient //172.16.173.21/monitoring -U "relia.com\andrea"
+
+nxc smb 10.10.10.178 -u 'a' -p '' --shares # Guest logon
 nxc smb 10.10.10.10 -u 'user' -p 'pass' -M spider_plus
 nxc SMB <IP> -u USER -p PASSWORD --spider C\$ --pattern txt
+
+rpcclient -N -U "" -L \\10.10.10.161
 rpcclient -U “” $IP ///when asked enter empty password
 rpcclient $>srvinfo
 rpcclient $>enumdomusers
@@ -18,6 +23,7 @@ nmblookup -A 192.168.1.1
 nbtscan IP
 nmap IP -p 139,445 –script smb*
 
+#### To recursively download
 
 > prompt off
 > recurse on

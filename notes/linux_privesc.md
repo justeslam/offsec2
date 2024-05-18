@@ -96,10 +96,20 @@ Files with insufficient access restrictions can create a vulnerability that may 
 Search for every directory writable by the current user on the target system. We'll search the whole root directory (/) and use the -writable argument to specify the attribute we are interested in. We can also use -type d to locate directories, and filter errors with 2>/dev/null:
 
 ```bash
+# World writable notes
 find / -writable -type d 2>/dev/null
+
+# World executable folder
+find / -perm -o x -type d 2>/dev/null
+
+# World writable and executable folders
+find / \( -perm -o w -perm -o x \) -type d 2>/dev/null
 ```
 
 Look for the link between crons, their paths, and whether you can write to their path. If you can, it's game over. 
+
+### Don't Forget to Check for Path Injection
+
 
 ### Mounts and Drivers
 

