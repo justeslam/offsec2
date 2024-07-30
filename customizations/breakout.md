@@ -8,7 +8,9 @@ export TERM=xterm-256color
 alias ll='ls -lsaht --color=auto'
 Keyboard Shortcut: Ctrl + Z (Background Process.)
 stty raw -echo ; fg ; reset
+stty columns 200 rows 200
 stty columns 150 rows 150
+
 (stty size)
  
 * Don't forget that you can always set the terminal history to be infinite, and the keystroke scroll back. 

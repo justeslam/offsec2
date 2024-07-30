@@ -1,5 +1,10 @@
 # RPC Checklist
 
+````
+nmap -sV -p 111 --script=rpcinfo $ip
+nmap -sV -p 111 --script=rpc* $ip
+rpcdump.py $ip -p 135
+````
 #List the ports using RPC
 rpcinfo 10.10.10.10
 > Output would look something like below

