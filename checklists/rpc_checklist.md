@@ -4,6 +4,15 @@
 nmap -sV -p 111 --script=rpcinfo $ip
 nmap -sV -p 111 --script=rpc* $ip
 rpcdump.py $ip -p 135
+rpcclient -U "" $ip // when asked enter empty password
+rpcclient -N -U "" \\10.10.10.161
+rpcclient $>srvinfo
+rpcclient $>enumdomusers
+rpcclient $>querydominfo
+rpcclient $>getdompwinfo   //password policy
+rpcclient $>netshareenum
+nmblookup -A 192.168.1.1
+nbtscan IP
 ````
 #List the ports using RPC
 rpcinfo 10.10.10.10

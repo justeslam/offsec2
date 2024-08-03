@@ -283,7 +283,7 @@ $conn = new mysqli($servername, $username, $password);
 ...
 ```
 
-The decoded data contains MySQL[411] connection information, including a username and password. We can use these credentials to connect to the database or try the password for user accounts via SSH.
+The decoded data contains MySQL connection information, including a username and password. We can use these credentials to connect to the database or try the password for user accounts via SSH.
 
 While the php://filter wrapper can be used to include the contents of a file, we can use the **data:// wrapper** to **achieve code execution**. This wrapper is used to **embed data elements as plaintext or base64-encoded data in the running web application's code**. This offers an alternative method when we cannot poison a local file with PHP code.
 

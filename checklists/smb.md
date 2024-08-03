@@ -1,13 +1,13 @@
 # SMB Checklist
 
-enum4linux -a $IP
+enum4linux -a $ip
 enum4linux -a -u "CRAFT2\\thecybergeek" -p "winniethepooh" $ip
-enum4linux -a -M -l -d $IP 2>&1
+enum4linux -a -M -l -d $ip 2>&1
 enum4linux -a -u "" -p "" $ip && enum4linux -a -u "guest" -p "" $ip
 nmap $ip -p 139,445 –script smb*
-smbclient -L //$IP
-smbclient -N -L //IP
-smbclient -L //IP -N
+smbclient -L //$ip
+smbclient -N -L //$ip
+smbclient -L //$ip -N
 smbclient -N //$ip/backup
 smbclient -L //192.168.1.2/myshare -U anonymous
 smbclient //192.168.235.248/transfer -N
@@ -20,13 +20,13 @@ smbclient -L \\$ip -U "" -N -p 12445
 smbclient '//$ip/Sarge' -p 12445
 proxychains -q smbclient //172.16.173.21/monitoring -U "relia.com\andrea"
 
-nxc smb 10.10.10.178 -u 'a' -p '' --shares # Guest logon
+nxc smb $ip -u 'a' -p '' --shares # Guest logon
 nxc smb 10.10.10.10 -u 'user' -p 'pass' -M spider_plus
 nxc SMB $ip -u USER -p PASSWORD --spider C\$ --pattern txt
 nxc smb $ip -u "V.Ventz" -p "HotelCalifornia194\!" -M spider_plus -o DOWNLOAD_FLAG=true MAX_FILE_SIZE=1000000000
 
-rpcclient -N -U "" \\10.10.10.161
-rpcclient -U “” $IP ///when asked enter empty password
+rpcclient -N -U "" \\$ip
+rpcclient -U “” $ip ///when asked enter empty password
 rpcclient $>srvinfo
 rpcclient $>enumdomusers
 rpcclient $>querydominfo

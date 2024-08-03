@@ -10,7 +10,7 @@ snmpwalk -v 2 -c public $ip NET-SNMP-EXTEND-MIB::nsExtendObjects
 
 ````
 sudo nmap --script snmp-* -sU -p161 $IP
-sudo nmap -sU -p 161 --script snmp-brute $IP --script-args snmp-brute.communitiesdb=/usr/share/seclists/Discovery/SNMP/common-snmp-community-strings-onesixtyone.txt
+sudo nmap -sU -p 161 --script snmp-brute $ip --script-args snmp-brute.communitiesdb=/usr/share/seclists/Discovery/SNMP/common-snmp-community-strings-onesixtyone.txt
 ````
 
 ````
@@ -42,7 +42,8 @@ $ cat /etc/snmp/snmp.conf
 #
 # mibdirs /usr/share/snmp/mibs:/usr/share/snmp/mibs/iana:/usr/share/snmp/mibs/ietf
 ````
+
 ````
-sudo snmpbulkwalk -c public -v2c $IP .
-sudo snmpbulkwalk -c public -v2c $IP NET-SNMP-EXTEND-MIB::nsExtendOutputFull 
+sudo snmpbulkwalk -c public -v2c $ip .
+sudo snmpbulkwalk -c public -v2c $ip NET-SNMP-EXTEND-MIB::nsExtendOutputFull 
 ````

