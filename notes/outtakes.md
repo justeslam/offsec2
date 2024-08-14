@@ -128,6 +128,26 @@ Here is the reformatted content with each point preceded by a dash and placed on
 - Search "confluence 7.13.6 exploit github" format for finding poc's.. blogs are great too if you've exhausted your options.. after that, consider manually modifying exploits
 - If you're stuck, you have some information about a webapp or wordpress and you can't find it with gobuster, try checking out the same of the box/webapp manually as a directory
 - For Wordpress, you can upload malicious plugin or simply edit an existing page (theme editor) and insert a webshell
+- If anything is interesting, take fucking notes!
+- Make it a MUST to check web config file once you get onto the box. There may need to be local port forwarding, or certain vhosts or passwords that you weren't aware of.
+- Whenever a reverse shell isn't working as planned, test it on your own and make sure that it works
+- If you can run a command as sudo, and that command brings you into an editor, try to do the "!/bin/bash" thing to escape the man/editor/nano/whatever and go into a root shell
+- If there's a weird executable that you run, and it's connecting somewhere or in their domain, see what's going on in WireShark.. there may be a password that you can find through the raw packets, such as ldap
+- If the end of the ObjectID for a group in AD is above 1000, it is not a default group and is worth paying extra attention to.
+- Take the time to read the exploits you're using, in my current box, it noted that the php is uploaded even if it says it wasn't.. I don't know how I could've figured this out without reading
+- Check nmap http/s output to see if there is a vhost listed
+- Go through WinPEAS SLOWLYYYYY.. you just fucking missed another check for Windows Credentials stored in Firewox browser
+- Enumerate the local sql database if any signs lead towards it
+- Fully enumerate CMS, checking and clicking on any links about users or anything that would be of value to know more of
+- If nothing's coming up, try using combined-directories with a different dirbuster tool
+- Always collect NTLM hashes, there are times where PTH will work while a password won't
+- When you're using BloodHound, add groups that you're in as owned. It'll unlock more avenues. Do some manual research as to what nested groups you are in (MemberOf), and go for WriteDacl if given an option. Go to group membership node info on BloodHound to do
+- If there's an url input box or something, query both the localhost 127.0.0.1 and yourself.. intercept and test what it does. In this base, I found an extra directory that I didn't uncover with fuzzing. You could also upload something and trigger it by putting the url as the localhost directed at the reverse file in th e appropriate directory. Maybe find what it returns when you put the localhost and then traverse directories from there. You could also save the request as a file and fuzz for directories from there with ffuf, or fuzz for ports.
+- Reset the machines after your scan, even scanning nmap twice as it'll miss sometimes
+- Check for software and version numbers in exiftool
+- If you start seeing sqli error stuff, start intercepting requests and seeing if parameters are defined in the response. Also, look for sqli on the web for the software version.
+- Make sure your slashes ('/', '\') are right when you're running commands, especially impacket
+- When echo -n "hash" | base64 -d doesn't work, try adding | xxd at the end
 
 
 

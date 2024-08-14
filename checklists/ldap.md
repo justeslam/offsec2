@@ -1,7 +1,7 @@
 # LDAP - Ports 389,636,3268,3269
 
 ````
-ldapsearch -x -H ldap://192.168.214.122
+ldapsearch -x -H ldap://$ip
 
 # extended LDIF
 #
@@ -23,7 +23,7 @@ text: 0000208D: NameErr: DSID-0310021C, problem 2001 (NO_OBJECT), data 0, best
 ````
 
 ````
-ldapsearch -x -H ldap://192.168.214.122 -s base namingcontexts
+ldapsearch -x -H ldap://$ip -s base namingcontexts
 
 # extended LDIF
 #
@@ -50,5 +50,11 @@ result: 0 Success
 ````
 
 ````
-ldapsearch -x -H ldap://192.168.214.122 -b "DC=exampleH,DC=example"
+ldapsearch -x -H ldap://$ip
+ldapsearch -x -H ldap://$ip -s base namingcontexts
+ldapsearch -x -H ldap://$ip -b "DC=exampleH,DC=example"
+ldapsearch -x -H ldap://$ip -b "DC=exampleH,DC=example" '(objectClass=Person)'
+ldapsearch -x -H ldap://$ip -b "DC=exampleH,DC=example" '(objectClass=Person)' sAMAccountName sAMAccountType
+ldapsearch -x -H ldap://$ip  "DC=DomainDnsZones,DC=support,DC=htb"
+ldapsearch -H ldap://$ip -D 'ldap@support.htb' -w 'nvEfEK16^1aM4$e7AclUf8x$tRWxPWO1%lmz' -b 'dc=support,dc=htb'
 ````

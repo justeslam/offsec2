@@ -15,7 +15,7 @@ ftp://anonymous:anonymous@10.10.10.98
 2. Additional Enumeration
 
 ```bash
-nmap --script ftp-* -p 21 10.10.10.10
+nmap --script ftp-* -p 21 $ip 
 ```
 
 3. Brute force
@@ -53,6 +53,10 @@ put test.txt #check if it is reflected in a http port
 ftp> binary
 200 Type set to I.
 ftp> put winPEASx86.exe
-
-
 ````
+
+#### Hydra for Simple Bruteforce
+
+```bash
+hydra ftp -L usernames-shortlist -P best1050 $ip
+```

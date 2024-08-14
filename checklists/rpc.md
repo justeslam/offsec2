@@ -5,7 +5,7 @@ nmap -sV -p 111 --script=rpcinfo $ip
 nmap -sV -p 111 --script=rpc* $ip
 rpcdump.py $ip -p 135
 rpcclient -U "" $ip // when asked enter empty password
-rpcclient -N -U "" \\10.10.10.161
+rpcclient $ip -N -U "" \\$ip
 rpcclient $>srvinfo
 rpcclient $>enumdomusers
 rpcclient $>querydominfo
@@ -15,7 +15,7 @@ nmblookup -A 192.168.1.1
 nbtscan IP
 ````
 #List the ports using RPC
-rpcinfo 10.10.10.10
+rpcinfo $ip 
 > Output would look something like below
     100024    1    udp       0.0.0.0.150.11         status     29
     100024    1    tcp       0.0.0.0.219.244        status     29
@@ -23,37 +23,37 @@ rpcinfo 10.10.10.10
     100024    1    tcp6      ::.172.42              status     29
 
 #list accessible RPC service endpoints
-rpcinfo -p 10.10.10.10
+rpcinfo -p $ip 
 
 Domain Enumeration with RPcclient
 #Enum using Null Session
-rpcclient -U "" 10.10.10.10
+rpcclient -U "" $ip 
 
 #Login as a user
-rpcclient -U USERNAME //10.10.10.10
+rpcclient -U USERNAME //$ip 
 
 #Find Users in the domain 
-rpcclient -Uuser_Name%PASSWORD -c enumdomusers 10.10.10.10
+rpcclient -Uuser_Name%PASSWORD -c enumdomusers $ip 
 
 #Find Domian Info
-rpcclient -Uuser_Name%PASSWORD -c querydominfo  10.10.10.10
+rpcclient -Uuser_Name%PASSWORD -c querydominfo  $ip 
 
 #Find Groups and their Alias
-rpcclient -Uuser_Name%PASSWORD -c "enumalsgroups builtin" 10.10.10.10
+rpcclient -Uuser_Name%PASSWORD -c "enumalsgroups builtin" $ip 
 
 #Find more info using Alias and note SIDs
-rpcclient -Uuser_Name%PASSWORD -c "queryaliasmem builtin 0x244" 10.10.10.10
+rpcclient -Uuser_Name%PASSWORD -c "queryaliasmem builtin 0x244" $ip 
 
 #Find more info using SIDs
 rpcclient $> lookupsids S-1-5-21-586154515854-343543654-8743952433-1105 
 
 #Reset other Users Password
-rpcclient -U user1 //10.10.10.10
+rpcclient -U user1 //$ip 
 setuserinfo2 USER2 23 'PASSWORD'
 
 Enum using RPCClient
 
-rpcclient -U DOMAIN\\Username 10.10.10.10   #Enter pass 
+rpcclient -U DOMAIN\\Username $ip    #Enter pass 
 
 enumdomusers     #Enumerate Domain Users 
 
@@ -100,4 +100,4 @@ querydispinfo
 lsalookupprivvalue SeCreateTokenPrivielge
 
 #Run the below command
-for command in $(cat commands.txt); do rpcclient -U "%" -c $command 10.10.10.10; done
+for command in $(cat rpc-enum.txt); do rpcclient -U "%" -c $command $ip; done

