@@ -467,3 +467,5 @@ find / -type d -name ".git" 2>/dev/null
 If you have access to any source code that you can run as admin or another user, check whether the full path is always specified. If not, you can run it out of a directory that you have write access to and go crazy.
 
 Make sure that you investigate the logs folder whenever you run into a .git. Of course, also run git show and git log (redundant).
+
+#### Don't forget to test 'su' as any other user with shell: without password and with their names as password 

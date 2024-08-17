@@ -23,6 +23,7 @@ Copy: Prefix + [ -> space + direction + Enter
 Paste: Prefix + ] (You may need to ":set paste" in vi)
 Search down: Prefix + [ + /
 Search up: Prefix + [ + ?
+Kill pane: Ctrl-B + X
 
 #### Tmux Logging
 

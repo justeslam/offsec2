@@ -1,8 +1,4 @@
-Here is the reformatted content with each point preceded by a dash and placed on a new line:
-
----
-
-## Takeaways from Experience
+## Dump of takeaways from boxes that I haven't categorized
 
 - Jaws, privesccheck.ps1 are worth running if you're completely stuck. Jaws easily identifies whether spooler is running for potato exploits.
 - When in doubt, new technology, unfamiliar port, check hack tricks. Sweetpotato & god potato.
@@ -154,6 +150,8 @@ Here is the reformatted content with each point preceded by a dash and placed on
 - This resource has good ways to escalate privs on linux with a single command, "https://materials.rangeforce.com/tutorial/2019/11/07/Linux-PrivEsc-SUID-Bit/"
 - If you're pentesting webapp, look at the names of the cookies, if you don't know what it is, look into it and get a better understanding of the software and vulnerabilities on the backend
 - If you have a supposed password and its not working, try best64 rules, i was just stuck on one where there was an extra letter at the end of the password.. it something is out of the norm, don't take it for granted, in this case, the password i knew existed was changeme but it came out as changeme1 when i decrypted the sql hash
+- When searching through a lot of files for a secret or password, be aware of the language that the files are. If they're in php, you'll save some time and find more secrets if you search for '=>', ''password' => 'Playing-Unstylish7-Provided','user' => 'admin', 'name' => 'boxbilling', array ('
+- If there's a file that is the center of attention, and you can't seem to find out anything about it, do the traditional "/bin/file --help" or "man file"
 
 
 
