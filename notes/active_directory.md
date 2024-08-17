@@ -9,7 +9,6 @@ An AD environment has a critical dependency on the Domain Name System (DNS) serv
 To ease the management of various objects and assist with management, system administrators often organize these objects into Organizational Units (OUs).1
 
 OUs are comparable to file system folders in that they are containers used to store objects within the domain. Computer objects represent actual servers and workstations that are domain-joined (part of the domain), and user objects represent accounts that can be used to log in to the domain-joined computers. In addition, all AD objects contain attributes, which will vary depending on the type of object. For example, a user object may include attributes such as first name, last name, username, phone number, etc.
-
 AD relies on several components and communication services. For example, when a user attempts to log in to the domain, a request is sent to a Domain Controller (DC), which checks whether or not the user is allowed to log in to the domain. One or more DCs act as the hub and core of the domain, storing all OUs, objects, and their attributes. Since the DC is such a central domain component, we'll pay close attention to it as we enumerate AD.
 
 Objects can be assigned to AD groups so that administrators can manage those object as a single unit. For example, users in a group could be given access to a file server share or given administrative access to various clients in the domain. Attackers often target high-privileged groups.

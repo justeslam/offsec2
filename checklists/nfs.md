@@ -3,8 +3,8 @@ NFS Port 2049
 #### Enumeration
 
 ````
-showmount $IP
-showmount -e $IP
+showmount $ip
+showmount -e $ip
 ````
 
 ##### Mounting

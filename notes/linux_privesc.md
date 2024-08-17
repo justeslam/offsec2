@@ -11,6 +11,9 @@ ifconfig # or ip a
 cat /etc/issue
 cat /etc/os-release
 uname -a
+getent passwd
+getent group
+getfacl /srv/git
 ```
 
 #### Looking at Root Processes & Clear-Text Passwords

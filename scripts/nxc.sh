@@ -13,7 +13,7 @@ OUTPUT_FILE="output.txt"
 
 # NetExec commands, outputting to stdout and a file
 {
-    echo "Running NetExec commands for IP: $IP"
+    echo "Running NetExec commands for IP: $ip"
     nxc smb $ip -u users.txt -p passwords.txt --continue-on-success
     nxc winrm $ip -u users.txt -p passwords.txt --continue-on-success
     nxc ssh $ip -u users.txt -p passwords.txt --continue-on-success

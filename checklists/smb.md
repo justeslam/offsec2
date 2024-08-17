@@ -13,11 +13,11 @@ smbclient -L //$ip -N
 smbclient -N //$ip/backup
 smbclient -L //$ip/myshare -U anonymous
 smbclient //$ip/transfer -N
-smbclient -U '%' -N \\\\<smb $IP>\\<share name>
-smbclient -U 'guest' \\\\<smb $IP>\\<share name>
-smbclient -U null -N \\\\<smb $IP>\\<share name>
-smbclient -U '%' -N \\\\$IP\\<share name> -m SMB2
-smbclient -U '%' -N \\\\$IP\\<share name> -m SMB3
+smbclient -U '%' -N \\\\<smb $ip>\\<share name>
+smbclient -U 'guest' \\\\<smb $ip>\\<share name>
+smbclient -U null -N \\\\<smb $ip>\\<share name>
+smbclient -U '%' -N \\\\$ip\\<share name> -m SMB2
+smbclient -U '%' -N \\\\$ip\\<share name> -m SMB3
 smbclient -L \\$ip -U "" -N -p 12445
 smbclient '//$ip/Sarge' -p 12445
 proxychains -q smbclient //172.16.173.21/monitoring -U "relia.com\andrea"
@@ -47,6 +47,10 @@ nbtscan IP
 > prompt off
 > recurse on
 > mget *
+
+> prompt off
+> recurse on
+> dir *
 
 // smbmap
 // crackmapexec

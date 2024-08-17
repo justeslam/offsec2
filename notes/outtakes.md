@@ -61,7 +61,7 @@ Here is the reformatted content with each point preceded by a dash and placed on
 - If you're stuck on a Linux system, use pspy.
 - Find a way to upload document to ANY directory in the webroot, always recursively search for directories.
 - Try all of the netexec enumeration commands to verify credentials, explore vectors. Create a script to do do.
-- When using wget in a payload, don't do http://$IP.. leave out the 'http://'. There was a payload that didn't work when you kept the http://.
+- When using wget in a payload, don't do http://$ip.. leave out the 'http://'. There was a payload that didn't work when you kept the http://.
 - If nc isn't working for a revshell, and there are common variables to what you saw with the Berlin box, aka spring boot and java, try adding "busybox" in front of the command. Revshells.com has a version.
 - For port 8443, use a hostname with HTTPS instead of HTTP. (Face palm).
 - Say that you upload a web or reverse shell on one port (example 8443), the method of accessing it may be through one of the other port (such as 8000). Enumerate to find place the wwwroot.
@@ -123,7 +123,7 @@ Here is the reformatted content with each point preceded by a dash and placed on
 - Check out phpinfo for potential users
 - If you find a directory traversal vulnerability in the format of '?page=', try inserting a url to your own server with an exploit. I got this hint by looking in "..\..\..\..\..\..\..\xampp/apache/logs/access.log" and seeing the person setting up the lab test this with their own exploit.
 - If you run into a "Cannot "GET" /dir ", try doing a "POST" instead:, "curl -X POST http://192.168.179.99:33333/list-running-procs -H 'Content-Length: 0'"
-- If a password looks weird and it doesn't work, it may be base64
+- If a password looks weird and it doesn't work, it may be base64!!!!!!!! It's happened fucking twice noww.
 - Whenever you get some evidence, it's pretty fucking likely that it's important.. find a way where it could apply.. what are you not seeing ?
 - Search "confluence 7.13.6 exploit github" format for finding poc's.. blogs are great too if you've exhausted your options.. after that, consider manually modifying exploits
 - If you're stuck, you have some information about a webapp or wordpress and you can't find it with gobuster, try checking out the same of the box/webapp manually as a directory
@@ -148,8 +148,12 @@ Here is the reformatted content with each point preceded by a dash and placed on
 - If you start seeing sqli error stuff, start intercepting requests and seeing if parameters are defined in the response. Also, look for sqli on the web for the software version.
 - Make sure your slashes ('/', '\') are right when you're running commands, especially impacket
 - When echo -n "hash" | base64 -d doesn't work, try adding | xxd at the end
-
-
+- If password is encrypted, look up the encrypted used by the service,company,file type that you found it in, such as VNC
+- What's unique to your user.. there is often a story that's being played.. the person creating the machines wants to express themselves
+- For directory traversals, try to start with a '/', so "http://192.168.165.43/index.php?p=backup/../../../../../../../../"
+- This resource has good ways to escalate privs on linux with a single command, "https://materials.rangeforce.com/tutorial/2019/11/07/Linux-PrivEsc-SUID-Bit/"
+- If you're pentesting webapp, look at the names of the cookies, if you don't know what it is, look into it and get a better understanding of the software and vulnerabilities on the backend
+- If you have a supposed password and its not working, try best64 rules, i was just stuck on one where there was an extra letter at the end of the password.. it something is out of the norm, don't take it for granted, in this case, the password i knew existed was changeme but it came out as changeme1 when i decrypted the sql hash
 
 
 

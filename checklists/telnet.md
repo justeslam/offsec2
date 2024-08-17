@@ -2,7 +2,7 @@
 
 ##### POP3 Enumeration
 ````
-nmap --script "pop3-capabilities or pop3-ntlm-info" -sV -p 110 $IP
+nmap --script "pop3-capabilities or pop3-ntlm-info" -sV -p 110 $ip
 ````
 
 ##### Login

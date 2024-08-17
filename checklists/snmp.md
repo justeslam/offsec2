@@ -9,12 +9,12 @@ snmpwalk -v 2 -c public $ip NET-SNMP-EXTEND-MIB::nsExtendObjects
 ```
 
 ````
-sudo nmap --script snmp-* -sU -p161 $IP
+sudo nmap --script snmp-* -sU -p161 $ip
 sudo nmap -sU -p 161 --script snmp-brute $ip --script-args snmp-brute.communitiesdb=/usr/share/seclists/Discovery/SNMP/common-snmp-community-strings-onesixtyone.txt
 ````
 
 ````
-snmpwalk -c public -v1 $IP
+snmpwalk -c public -v1 $ip
 ````
 
 ##### Hacktricks
