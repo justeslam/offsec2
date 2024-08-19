@@ -152,6 +152,7 @@
 - If you have a supposed password and its not working, try best64 rules, i was just stuck on one where there was an extra letter at the end of the password.. it something is out of the norm, don't take it for granted, in this case, the password i knew existed was changeme but it came out as changeme1 when i decrypted the sql hash
 - When searching through a lot of files for a secret or password, be aware of the language that the files are. If they're in php, you'll save some time and find more secrets if you search for '=>', ''password' => 'Playing-Unstylish7-Provided','user' => 'admin', 'name' => 'boxbilling', array ('
 - If there's a file that is the center of attention, and you can't seem to find out anything about it, do the traditional "/bin/file --help" or "man file"
+- Note that you can bypass uploads with .htaccess file
 
 
 

