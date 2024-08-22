@@ -58,5 +58,5 @@ ftp> put winPEASx86.exe
 #### Hydra for Simple Bruteforce
 
 ```bash
-hydra ftp -L usernames-shortlist -P best1050 $ip
+hydra -L usernames-shortlist -P best1050 $ip ftp
 ```

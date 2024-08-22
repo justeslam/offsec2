@@ -153,6 +153,13 @@
 - When searching through a lot of files for a secret or password, be aware of the language that the files are. If they're in php, you'll save some time and find more secrets if you search for '=>', ''password' => 'Playing-Unstylish7-Provided','user' => 'admin', 'name' => 'boxbilling', array ('
 - If there's a file that is the center of attention, and you can't seem to find out anything about it, do the traditional "/bin/file --help" or "man file"
 - Note that you can bypass uploads with .htaccess file
+- If you're trying to get more information and cant find phpinfo, try /?phpinfo=1
+- You can proxy through your browser with foxy proxy
+- Port 135 allows egress traffic (Windows) for rpc
+- LFI ssh key doesn't work ? -> scp doesn't work ? -> ssh dynamic port forward 
+- If you're in evil-winrm and you don't like it, just execute a reverse shell
+- If pip isn't working for something that you need, create a virtual environment 'python -m venv venv;chmod +x venv/bin/activate;source venv/bin/activate', then 'pip uninstall {all requirements for the thing that you need', and then reinstall them
+- When you get those weird errors from gobuster,wfuzz,... about EOF or not being able to connect, but you can in your browser, there's a proxy in play. Maybe CSRF
 
 
 

