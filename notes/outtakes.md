@@ -57,7 +57,7 @@
 - If you're stuck on a Linux system, use pspy.
 - Find a way to upload document to ANY directory in the webroot, always recursively search for directories.
 - Try all of the netexec enumeration commands to verify credentials, explore vectors. Create a script to do do.
-- When using wget in a payload, don't do http://$ip.. leave out the 'http://'. There was a payload that didn't work when you kept the http://.
+- When using wget in a payload, don't do http://$ip.. leave out the 'http://'. There was a payload that didn't work when you kept the http://. Check the exploit code, I'm sure it was included already.
 - If nc isn't working for a revshell, and there are common variables to what you saw with the Berlin box, aka spring boot and java, try adding "busybox" in front of the command. Revshells.com has a version.
 - For port 8443, use a hostname with HTTPS instead of HTTP. (Face palm).
 - Say that you upload a web or reverse shell on one port (example 8443), the method of accessing it may be through one of the other port (such as 8000). Enumerate to find place the wwwroot.
@@ -66,7 +66,7 @@
 - If you get credentials, you should always rewind and try to log in the original services that you were trying to enumerate, such as ftp where you can place a shell in the webroot. This has come up again and again.
 - Assume that the name of the box is a username on the system.
 - Do you need to have the id_rsa.pub in your directory? not only the private key? try pub 666 priv 600.
-- If there are any weird binaries that stick out, especially if they have suids or guids set, run a string against them and check whether they have any relative paths that you can hijack. you could simply modify the path (put a writable directory at the front) & put a reverse shell in the writable directory which the same name. just make sure to change the permissions to make it executable
+- If there are any weird binaries that stick out, especially if they have suids or guids set, run 'strings' against them and check whether they have any relative paths that you can hijack. you could simply modify the path (put a writable directory at the front) & put a reverse shell in the writable directory which the same name. just make sure to change the permissions to make it executable. check the dlls as well, and have pspy running while you execute it.
 - Start at the smaller attack surfaces, and work your way to the larger ones if need be.
 - If you can upload/overwrite files, try to add a modified /etc/passwd with you in there, whenever you can, always do "../../../../../../../../etc/passwd" to avoid risking a lot of your time.
 - If anything has a password, and you can't get into it, hashcat can probably crack it.. I made this mistake with the zip file.. it's worth a search to find out if it is possible.
@@ -83,7 +83,7 @@
 - If you're POSTing data for a website, try to modify the route. In this case, an exploit relied on htmLawed.php for the exploit to work, and when it tried to post there, it noticed that there was no file with this name. When I modified the route to '/', it worked.
 - If you're modifying an exploit, and it's not working and you're getting a 400 error, you're not cleaning/modifying the GET/POST request correctly. Check if there are newlines where there are not supposed to be.
 - Use jadx to look at interested .apk files
-- Always enumerate and find unique files and their permissions, groups\
+- Always enumerate and find unique files and their permissions, groups
 - Stop forgetting to try default credentials before you try a bunch of fancy stuff
 - Look at the requests and headers of interesting urls, files, directories.. sometimes you'll find interesting hashed passwords and credentials. You never know.
 - If you have access to SMB shares, keep in mind that the actual server may have the same exact structure, especially if there's a backup share. Keep in mind the files where you find passwords, you may never know if you will end up crafting a file inclusion attack with their updated passwords or info.
@@ -139,7 +139,7 @@
 - Always collect NTLM hashes, there are times where PTH will work while a password won't
 - When you're using BloodHound, add groups that you're in as owned. It'll unlock more avenues. Do some manual research as to what nested groups you are in (MemberOf), and go for WriteDacl if given an option. Go to group membership node info on BloodHound to do
 - If there's an url input box or something, query both the localhost 127.0.0.1 and yourself.. intercept and test what it does. In this base, I found an extra directory that I didn't uncover with fuzzing. You could also upload something and trigger it by putting the url as the localhost directed at the reverse file in th e appropriate directory. Maybe find what it returns when you put the localhost and then traverse directories from there. You could also save the request as a file and fuzz for directories from there with ffuf, or fuzz for ports.
-- Reset the machines after your scan, even scanning nmap twice as it'll miss sometimes
+- Reset the machines after your scan, even scanning nmap twice as it'll miss sometimesUsername:
 - Check for software and version numbers in exiftool
 - If you start seeing sqli error stuff, start intercepting requests and seeing if parameters are defined in the response. Also, look for sqli on the web for the software version.
 - Make sure your slashes ('/', '\') are right when you're running commands, especially impacket
@@ -160,7 +160,14 @@
 - If you're in evil-winrm and you don't like it, just execute a reverse shell
 - If pip isn't working for something that you need, create a virtual environment 'python -m venv venv;chmod +x venv/bin/activate;source venv/bin/activate', then 'pip uninstall {all requirements for the thing that you need', and then reinstall them
 - When you get those weird errors from gobuster,wfuzz,... about EOF or not being able to connect, but you can in your browser, there's a proxy in play. Maybe CSRF
-
+- Look for .rdp files !
+- Make a point to enumerate all of the services that are available on the machine, looking CAREFULLY
+- Your /etc/hosts file can be everything when it comes to the website. It's best to try all of the different combinations. Base the domain off of an email if you have one
+- Collect as much as humanely possible and grep through it constantly for centering
+- Try another wordlist besides rockyou if it doesn't work
+- Take a step back every two hours, no typing, only review the information that you have so far. Reground yourself
+- If you have local admin on an AD set, create backdoor user and get an RDP session going
+- Try to modify the authorized_keys files if you can, "scp -i id_rsa -O authorized_keys max@sorcerer:/home/max/.ssh/authorized_keys"
 
 
 

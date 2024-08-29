@@ -13,6 +13,23 @@ chmod 600 id_rsa
 ssh userb@172.16.138.14 -i id_rsa
 ````
 
+##### Authorized Keys
+
+```bash
+ssh-keygen -t rsa
+cp id_rsa.pub authorized_keys
+chmod 600 id_rsa
+# move authorized_keys file onto machine
+```
+
+Say you have an ssh key with limited functionality, like only scp.
+
+```bash
+# Make your own clean authorized_keys file
+scp -i id_rsa -O authorized_keys max@sorcerer:/home/max/.ssh/authorized_keys
+# Then ssh in
+```
+
 ##### Cracking Private Key
 ````
 ssh2john id_ecdsa > id_ecdsa.hash

