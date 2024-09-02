@@ -21,6 +21,8 @@ smbclient -U '%' -N \\\\$ip\\<share name> -m SMB3
 smbclient -L \\$ip -U "" -N -p 12445
 smbclient '//$ip/Sarge' -p 12445
 proxychains -q smbclient //172.16.173.21/monitoring -U "relia.com\andrea"
+
+smbclient.py $dom
 smbclient.py active.htb/SVC_TGS:GPPstillStandingStrong2k18@$ip
 > shares
 > use Users
@@ -32,6 +34,7 @@ nxc smb $ip -u "V.Ventz" -p "HotelCalifornia194\!" -M spider_plus -o DOWNLOAD_FL
 
 rpcclient -N -U "" \\$ip
 rpcclient -U “” $ip ///when asked enter empty password
+rpcclient -U “” $ip -N
 rpcclient $>srvinfo
 rpcclient $>enumdomusers
 rpcclient $>querydominfo

@@ -2,3 +2,5 @@
 - https://onedrive.live.com/embed?resid=4149EBCF4A8A1BD0%211849&filename=OSCP_Notes_NagendranGS.pdf&authkey=%21AE_gXz4ANnMhJIc
 - https://github.com/xsudoxx/OSCP
 - flameshot for screenshots
+- Testing for regex. Could be to bypass when you have access to source code: https://regex101.com/
+- Like gtfobins but for argument injection: https://sonarsource.github.io/argument-injection-vectors/

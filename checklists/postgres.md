@@ -2,6 +2,14 @@
 
 Check out hacktricks.
 
+#### Login
+
+```bash
+psql -U <myuser> # Open psql console with user
+psql -h <host> -U <username> -d <database> # Remote connection
+psql -h <host> -p <port> -U <username> -W <password> <database> # Remote connection
+```
+
 #### RCE
 
 ```bash

@@ -168,7 +168,10 @@
 - Take a step back every two hours, no typing, only review the information that you have so far. Reground yourself
 - If you have local admin on an AD set, create backdoor user and get an RDP session going
 - Try to modify the authorized_keys files if you can, "scp -i id_rsa -O authorized_keys max@sorcerer:/home/max/.ssh/authorized_keys"
-
+- If nothing of the exploits are working, and in this case had very similar issues, zoom out your search, 'teamcity exploit github' instead of 'teamcity version x.x.x exploit'.. there may be newer ones
+- If ssh isn't working, you may need to crack the id_rsa password, even if there isn't the usual message. Make sure that the spelling is correct. 600.
+- Get used to fuzzing with nothing
+- Use replace feature in Burp if you need to take over a cookie, use regex .* to pattern match
 
 
 
