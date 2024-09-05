@@ -23,6 +23,8 @@ smbclient '//$ip/Sarge' -p 12445
 proxychains -q smbclient //172.16.173.21/monitoring -U "relia.com\andrea"
 
 smbclient.py $dom
+smbclient -W WORKGROUP -U % -t 5 -L //$dom -g
+smbclient -W WORKGROUP -U % -s /tmp/tmpm24idfat -t 5 -L //192.168.154.117 -g
 smbclient.py active.htb/SVC_TGS:GPPstillStandingStrong2k18@$ip
 > shares
 > use Users
@@ -43,6 +45,10 @@ rpcclient $>netshareenum
 nmblookup -A 192.168.1.1
 nbtscan IP
 ```
+
+#### Look up the SMB versions
+
+Miss this everytime.
 
 #### To recursively download
 

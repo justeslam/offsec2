@@ -172,6 +172,12 @@
 - If ssh isn't working, you may need to crack the id_rsa password, even if there isn't the usual message. Make sure that the spelling is correct. 600.
 - Get used to fuzzing with nothing
 - Use replace feature in Burp if you need to take over a cookie, use regex .* to pattern match
+- Before you spend a million hours on something that is unresolving, step back and explore other options
+- Search port 17001 exploit
+- See if there is a suggested rev/bind shell for the exploit that you're using.. that's probably a good way to go
+- Test the name of the application, host, box name, etc., in this case, "http://192.168.154.117:18000/Protomba"
+- Revshell with webapp lang, and if it doesn't stick, switch bash to sh
+- Go exploits have been really reliable, especially for port 25
 
 
 

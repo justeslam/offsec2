@@ -20,6 +20,12 @@ enum4linux | tee file.txt
 echo -n 6bcf2a4b6e5aca0f | xxd -r -p | openssl enc -des-cbc --nopad --nosalt -K e84ad660c4721ae0 -iv 0000000000000000 -d | hexdump -Cv
 ```
 
+#### Find largest directories on your fs, not including root dirs and their child
+
+```bash
+sudo du -ah / | grep -vE '^(/[^/]+/[^/]+)$' | sort -rh | head -n 20
+```
+
 #### Grep
 
 Recursively Grep for word, case insensitive, show 3 lines before and after match
@@ -44,6 +50,12 @@ Keeps lines that have a capital letter, a special character, and a number.
 
 ```bash
 cat input.txt | grep -P '[A-Z]' | grep -P '[^a-zA-Z0-9]' | grep -P '[0-9]'
+```
+
+Look at all of the directories:
+
+```bash
+ls -alR | grep ^d
 ```
 
 #### Manipulating Txt Files
@@ -101,4 +113,23 @@ Prepends file1 to the beginning of file2.
 
 ```bash
 cat file1 file2 > file3
+```
+
+Remove words from text file that start with '$2a'.
+
+```bash
+sed -i '/^\$2a/d' filename.txt
+```
+
+Print lines 90-870.
+
+```bash
+sed -n '90,870p' filename.txt
+awk 'NR >= 90 && NR <= 870' filename.txt > output.txt
+```
+
+Remove all words that start with $ and are longer than 25 chars.
+
+```bash
+awk '{ for (i = 1; i <= NF; i++) if (!($i ~ /^\$.{25,}/)) printf "%s ", $i; printf "\n"}' filename.txt > output.txt
 ```

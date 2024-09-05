@@ -8,6 +8,17 @@ function get_myip() {
 }
 alias myip='get_myip'
 
+# Decode base64
+decode64() {
+    echo -n "$1" | base64 -d
+}
+alias de='decode64'
+
+# Grep through my notes
+function gn() {
+        grep -ri $1 ~/repos/offsec/$2
+}
+
 # Colored and context-aware grep with PCRE support
 alias grep='grep --color=auto -P'
 

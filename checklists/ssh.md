@@ -142,3 +142,35 @@ sshpass -p passwrd ssh Brian.moore@pstcish.offsec
 ```bash
 ssh user@ip -t “bash —noprofile”
 ```
+
+#### Commands
+
+##### sshuttle
+
+```bash
+sshuttle -vvr user@10.10.10.10 10.1.1.0/24
+```
+
+##### Local port forwarding
+
+```bash
+ssh <gateway> -L <local port to listen>:<remote host>:<remote port>
+```
+
+##### Remote port forwarding
+
+```bash
+ssh <gateway> -R <remote port to bind>:<local host>:<local port>
+```
+
+##### Dynamic port forwarding
+
+```bash
+ssh -D <local proxy port> -p <remote port> <target>
+```
+
+##### Plink local port forwarding
+
+```bash
+plink -l root -pw pass -R 3389:<localhost>:3389 <remote host>
+```

