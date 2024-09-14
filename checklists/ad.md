@@ -1,6 +1,6 @@
-## AD Checklist
+## AD Checklist - Remote Enumeration
 
-Run through all of the relevant ports' mds.
+Run through all of the relevant ports' mds. All privilege escalation and local enumeration is is windows-enumeration.md.
 
 ```bash
 nxc smb 192.168.165.40
@@ -14,6 +14,7 @@ enum4linux -a $ip
 enum4linux -a -M -l -d $ip 2>&1
 enum4linux -a -u "$dom\\$user" -p "winniethepooh" $ip
 enum4linux -a -u "$dom\\$user" -p "" -M -l -d $ip 2>&1
+enum4linux -a -M -l -d $dom 2>&1 && enum4linux-ng $dom -A -C
 
 enum4linux-ng $ip
 enum4linux-ng $ip -A -C
@@ -24,6 +25,7 @@ smbclient -N -L //$ip
 smbclient -L //$ip -N
 
 nxc smb $ip -u 'a' -p '' --shares
+nxc smb $ip -u 'a' -p '' --all
 nxc smb $ip -u 'guest' -p '' --shares
 nxc smb $ip -u 'administrator' -p 'fake' --shares
 nxc smb $ip -u '' -p 'fake' --shares

@@ -178,6 +178,13 @@
 - Test the name of the application, host, box name, etc., in this case, "http://192.168.154.117:18000/Protomba"
 - Revshell with webapp lang, and if it doesn't stick, switch bash to sh
 - Go exploits have been really reliable, especially for port 25
+- Look at the source code for everything
+- Fucking try su name with the password being name
+- If you can run a python file as sudo, and a module isn't importing or loading, place a simple python file with that module's name in the directory that executes bash
+- whenever there is a filemanager, check the version and be sus as fuck, even if its within another app that has a million exploits
+- Manually inputting exploit in url fixed issue, great way to trouble any exploit issues
+- Understand the concept of placing files in smb directory that you cant view otherwise, such as php source on web, I could copy internal files but couldn't get contents from website (cant view php), but could in smb
+- Fucking try to login with user:user as creds on all possible surface
 
 
 

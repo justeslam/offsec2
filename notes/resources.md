@@ -4,3 +4,5 @@
 - flameshot for screenshots
 - Testing for regex. Could be to bypass when you have access to source code: https://regex101.com/
 - Like gtfobins but for argument injection: https://sonarsource.github.io/argument-injection-vectors/
+- Executable as image - https://github.com/idfp/masquerade
+- Jenkins https://github.com/gquere/pwn_jenkins

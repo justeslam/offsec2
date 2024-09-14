@@ -143,7 +143,7 @@ The JtR suite includes various transformation scripts like ssh2john and keepass2
 Let's use the keepass2john script to format the database file and save the output to keepass.hash.
 
 ```bash
-kali@kali:~/passwordattacks$ ls -la Database.kdbx
+kali@kali:~/passwordattacks$ ll Database.kdbx
 -rwxr--r-- 1 kali kali 1982 May 30 06:36 Database.kdbx
 
 

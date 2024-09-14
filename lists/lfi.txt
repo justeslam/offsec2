@@ -1,5 +1,6 @@
 .ssh/auhtorized_keys
 /.ssh/authorized_keys
+/proc/self/cgroup
 /var/mail/www-data
 /var/log/www-data
 \apache2\log\access_log
