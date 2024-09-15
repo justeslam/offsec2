@@ -150,3 +150,14 @@ sc config servicename binPath= "C:\Path\To\New\Service.exe"
 3. Upload compiled module.so and run redis-cli and load from /var/ftp/pub/module.so, execute revshell
 4. Weird mailer stuff, path that i could write to for .so files, lotta suids, centos7, vulnerable mailer exploit for sudo 1.8.23
 5. Run exploit and get revshell (https://github.com/worawit/CVE-2021-3156)
+
+1. Fuzz api endpoint, users/passwords spill out when i did $url/api/users;
+2. Ssh in and uncover git repo in root, cronjob that fetching remote changes and runs them
+3. Find the rights commands to push revshell and get root
+
+1. Find hint for subdomain in page source, now i know to look for comments, hrefs, and src when doing that
+2. Survey webapp has exploit, get shell
+3. Password deep in web directories
+4. Could sudo -l thing a shell script in /usr/bin, but as another user, not root
+5. Work some magic to bypass restriction, cat hidden files in his directories that held his pwds
+6. Sudo -i to root

@@ -185,6 +185,7 @@
 - Manually inputting exploit in url fixed issue, great way to trouble any exploit issues
 - Understand the concept of placing files in smb directory that you cant view otherwise, such as php source on web, I could copy internal files but couldn't get contents from website (cant view php), but could in smb
 - Fucking try to login with user:user as creds on all possible surface
+- Whenever you have LFI for initial access (or not), know that you can pivot laterally to whoever is running the webserver once youre on the machine, poison any file in a directory that you can write to
 
 
 

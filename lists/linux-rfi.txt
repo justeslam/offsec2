@@ -55,6 +55,8 @@
 /etc/networks
 /etc/npasswd
 /etc/passwd
+/etc/redis/redis.conf
+/var/log/redis/redis-server.log
 /etc/php4.4/fcgi/php.ini
 /etc/php4/apache2/php.ini
 /etc/php4/apache/php.ini
