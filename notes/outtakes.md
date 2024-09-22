@@ -186,6 +186,11 @@
 - Understand the concept of placing files in smb directory that you cant view otherwise, such as php source on web, I could copy internal files but couldn't get contents from website (cant view php), but could in smb
 - Fucking try to login with user:user as creds on all possible surface
 - Whenever you have LFI for initial access (or not), know that you can pivot laterally to whoever is running the webserver once youre on the machine, poison any file in a directory that you can write to
+- Troubleshooting the 'find' SUID privesc, because it runs the -exec parameter the n=(number of files in pwd) times, make a new directory and run the command in there
+- If it's a ruby application, you can find the web root from action controller via entering at invalid route or triggering routing error, and in the context of OffSec, don't go down Ruby exploit rabbitholes
+- If all or most of the exploits are pointing to having credentials, exhaust the other options, then brute force, both with all clues that you've gotten and with cewl
+- Be very aware whether you are in a powershell or cmd, and whether the command you're running is native to your shell. Many cmd.exe commands will not run when you enter them in, what's worse is it'll be without any message letting you know
+
 
 
 

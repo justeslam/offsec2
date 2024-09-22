@@ -72,7 +72,6 @@ Remove duplicate lines.
 awk '!seen[$0]++' users.txt
 ```
 
-
 Capitalize the first letter of every word.
 
 ```bash
@@ -165,6 +164,51 @@ Print specific lines.
 ```bash
 sed -n '2,15 p' log.txt
 ```
+
+#### Vi Magic
+
+Replace strings.
+
+```bash
+:%s/^t/,/g # Replace tabs with commas globally
+```
+
+Delete lines that match (or don't match) pattern.
+```bash
+:g/<pattern>/d
+:g!/<pattern>/d
+```
+
+Commenting out blocks of code.
+
+```bash
+# Enter ma at the start location, go to end of block and enter mb
+:'a,.s/^/#
+```
+
+Copy block of code, move block of code.
+
+```bash
+:'a,'bco . || :'a,'bmo .
+```
+
+Yanking to a buffer 'a', or append to buffer 'a'.
+
+```bash
+:'a,.ya a || :'a,.ya A
+```
+
+Substituting in a block of text.
+
+```bash
+:'a,.s/search_string/replace_string/[gc] # g is global and c is confirm functionality
+```
+
+I use them all the time for:
+    copying and moving blocks of code,
+    yanking and deleting blocks of code into named buffers, and
+    Edit: substituting in a block of test.
+
 
 #### Test out su
 

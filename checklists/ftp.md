@@ -58,6 +58,21 @@ ftp> binary
 ftp> put winPEASx86.exe
 ````
 
+#### FTP with OpenSSL
+
+```bash
+openssl s_client -connect crossfit.htb:21 -starttls ftp #Get certificate if any
+
+lftp
+lftp :~> set ftp:ssl-force true
+lftp :~> set ssl:verify-certificate no
+lftp :~> connect 10.10.10.208
+lftp 10.10.10.208:~> login                       
+Usage: login <user|URL> [<pass>]
+lftp 10.10.10.208:~> login username Password
+
+```
+
 #### Hydra for Simple Bruteforce
 
 ```bash

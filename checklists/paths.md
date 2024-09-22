@@ -161,3 +161,20 @@ sc config servicename binPath= "C:\Path\To\New\Service.exe"
 4. Could sudo -l thing a shell script in /usr/bin, but as another user, not root
 5. Work some magic to bypass restriction, cat hidden files in his directories that held his pwds
 6. Sudo -i to root
+
+1. Exploits for gitea and proftpd, gitea exploit would work, but something weird happening with git config
+2. Manually create an account on gitea, make new directory, modify git hooks to run reverse shell, clone repo, add, commit, and push to trigger
+3. Writable /usr/local/sbin where I could place shell3000 as run-parts and get reverse shell as root
+
+1. Bunch of webapps open, barracudaserver lets you configure admin, traverse through gui to another webroot
+2. Place bens_shell.php and trigger revshell
+3. Replace bd.exe (barracuda executable) with revshell to get nt authority
+
+1. Face Jetty webapp, another webapp both with a ton of vulns, but none work
+2. Many of the exploits assume you're authenticated, so brute force login with cewl
+3. Run exploit with encoded powershell to get on the box
+4. Plant reverse shell in webroot and move laterally
+5. Exploit seimpersonate with GodPotatoNet4, bolded 4, as other versions did not work, with nc.exe revshell to get nt authority
+
+1. Email on front page, uploading resume, only takes odt files
+2. Craft simple odt with macro-generator.py and 
