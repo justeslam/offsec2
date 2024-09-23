@@ -177,4 +177,13 @@ sc config servicename binPath= "C:\Path\To\New\Service.exe"
 5. Exploit seimpersonate with GodPotatoNet4, bolded 4, as other versions did not work, with nc.exe revshell to get nt authority
 
 1. Email on front page, uploading resume, only takes odt files
-2. Craft simple odt with macro-generator.py and 
+2. Craft simple odt with macro-generator.py and get revshell
+3. Plant revshell in webroot to move laterally
+4. Spooler is running and you have Impersonate, simple nc revshell command with PrintSpooler to get nt authority
+
+1. Odt that reaches out to server to grab ntlm (bad-odt.py), placed revshell in webroot to get in as apache
+2. MySQL running locally with phpmyadmin, chisel website so that I can execute commands
+3. Test db executes commands as admin, so WerTrigger is in the ballgame
+4. Transfer WerTrigger binaries through smb (phone dll is msfvenom revshell)
+5. Move binaries to system32 directory (for the exploit to work) with mysql (select load_file('') into dumpfile '';
+6. Cd into system32 and run WerTrigger.exe and receive revshell as nt authority

