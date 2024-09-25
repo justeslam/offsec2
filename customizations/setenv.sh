@@ -1,9 +1,16 @@
 #!/bin/bash
-# Example usage: source /opt/setenv.sh 192.168.165.40 hokkaido-aerospace.com dc.hokkaido-aerospace.com
+# Example usage:
+#   source /opt/setenv.sh <ip> <domain> <dc>
+#   source /opt/setenv.sh <ip> <domain> <dc> <user> <pass>
 
-export ip=$1
-export dom=$2
-export dc=$3
+# Assign positional arguments to variables
+export ip="$1"
+export dom="$2"
+export dc="$3"
+
+# Assign optional arguments if provided
+export user="$4"
+export pass="$5"
 
 # Check if 'dom' is unset or empty, set 'url' accordingly
 if [[ -z "$dom" ]]; then
@@ -11,3 +18,16 @@ if [[ -z "$dom" ]]; then
 else
     export url="http://$dom"
 fi
+
+# Optional: Display the set environment variables for verification
+# Uncomment the lines below if you want to see the variables when sourcing
+# echo "ip=$ip"
+# echo "dom=$dom"
+# echo "dc=$dc"
+# echo "url=$url"
+# if [[ -n "$user" ]]; then
+#     echo "user=$user"
+# fi
+# if [[ -n "$pass" ]]; then
+#     echo "pass=$pass"
+# fi

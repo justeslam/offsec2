@@ -1,6 +1,8 @@
 # Enhanced 'ls' for detailed and sorted directory listing
 alias ll='ls -lsaht --color=auto --group-directories-first'
 
+function ee() { export $1="$2" }
+
 # For ease of use
 function get_myip() {
     export myip=$(ip addr show tun0 | grep -oP 'inet \K[\d.]+')
@@ -42,6 +44,10 @@ function rustscan-log() {
         sudo rustscan -a $1 --ulimit 5000 -b 2048 | tee rustscan_$1.txt
     fi
 }
+
+function ee() { export $1="$2" }
+function ec() { echo -n "$1" | wc -c }
+function cl() { cat $1 | wc -l }
 
 # Repetitive gobuster script, url as argument
 function dbd() { gobuster dir -u "$1" -w /opt/SecLists/Discovery/Web-Content/raft-large-directories.txt -k -t 15 --exclude-length 0 }

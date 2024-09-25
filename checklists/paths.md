@@ -187,3 +187,11 @@ sc config servicename binPath= "C:\Path\To\New\Service.exe"
 4. Transfer WerTrigger binaries through smb (phone dll is msfvenom revshell)
 5. Move binaries to system32 directory (for the exploit to work) with mysql (select load_file('') into dumpfile '';
 6. Cd into system32 and run WerTrigger.exe and receive revshell as nt authority
+
+impacket-GetADUsers with bruteforced passwd with custom list (cewl & oscp.rule)
+getNPUusers and crack svc_mssql hash
+passwordspray asrep pass from svc_mssql and get svc_web (useless)
+run bloodhound-python
+use bloodyad to set new password for iain
+use bloodyad to set new password for christopher (using iain creds)
+Summer2023

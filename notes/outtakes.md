@@ -157,7 +157,7 @@
 - You can proxy through your browser with foxy proxy
 - Port 135 allows egress traffic (Windows) for rpc
 - LFI ssh key doesn't work ? -> scp doesn't work ? -> ssh dynamic port forward 
-- If you're in evil-winrm and you don't like it, just execute a reverse shell
+- If you're in evil-winrm and you don't like it, just execute a reverse shell, really useful when trying to run mimikatz and other cool stuff
 - If pip isn't working for something that you need, create a virtual environment 'python -m venv venv;chmod +x venv/bin/activate;source venv/bin/activate', then 'pip uninstall {all requirements for the thing that you need', and then reinstall them
 - When you get those weird errors from gobuster,wfuzz,... about EOF or not being able to connect, but you can in your browser, there's a proxy in play. Maybe CSRF
 - Look for .rdp files !
@@ -190,7 +190,7 @@
 - If it's a ruby application, you can find the web root from action controller via entering at invalid route or triggering routing error, and in the context of OffSec, don't go down Ruby exploit rabbitholes
 - If all or most of the exploits are pointing to having credentials, exhaust the other options, then brute force, both with all clues that you've gotten and with cewl
 - Be very aware whether you are in a powershell or cmd, and whether the command you're running is native to your shell. Many cmd.exe commands will not run when you enter them in, what's worse is it'll be without any message letting you know
-
+- You can test if you made silver ticket, kerberos ticket, ccache, klist, whatever, by running a kerberoasting tool such as rubeus and seeing if there are errors and everything looks gucci
 
 
 

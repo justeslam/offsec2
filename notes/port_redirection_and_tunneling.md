@@ -485,7 +485,7 @@ sudo ip link set ligolo up
 On the other machine:
 
 ```bash
-agent.exe -connect 192.168.49.140:11601 -ignore-cert
+agent.exe -connect 192.168.45.221:11601 -ignore-cert
 ```
 
 On your machine:

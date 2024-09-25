@@ -4,7 +4,7 @@ import socket
 import sys
 
 if len(sys.argv) != 3:
-        print("Usage: vrfy.py <username> <target_ip>")
+        print("Usage: vrfy.py $user <target_ip>")
         sys.exit(0)
 
 # Create a Socket

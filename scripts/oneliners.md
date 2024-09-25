@@ -106,7 +106,7 @@ awk 'length($0) >= 7' passwords.txt > tmp_passwords.txt && awk 'NR==FNR {a[$1]; 
 Combining two files' lines with a ':'.
 
 ```bash
-awk 'NR==FNR {a[$1]; next} {for (i in a) print i ":" i}' users.txt users.txt
+awk 'NR==FNR {a[$1]; next} {for (i in a) print i ":" i}' users.txt users.txt > combo.txt    
 ```
 
 Make a txt file of all port numbers.
@@ -204,6 +204,12 @@ Substituting in a block of text.
 :'a,.s/search_string/replace_string/[gc] # g is global and c is confirm functionality
 ```
 
+Recursively replace pattern/string with another within current directory.
+
+```bash
+for fyl in $(find . \( -type d -iregex "^\.git.*\|.*results.*\|.*ResetPassword.*" -prune \) -o -type f); do sed -i 's/192\.168\.172\.21/192\.168\.178\.21/g' $fyl; wait; done
+```
+
 I use them all the time for:
     copying and moving blocks of code,
     yanking and deleting blocks of code into named buffers, and
@@ -215,3 +221,5 @@ I use them all the time for:
 ```bash
 users=$(cat /etc/passwd 2>/dev/null | grep -i "sh$" | cut -d ":" -f 1); sucheck(){ sucheck=$(echo "$2" | timeout 1 su $user -c whoami 2>/dev/null); if [ "$sucheck" ]; then echo "  You can login as $user using password: $2" && echo "$1:$2" >> /dev/shm/valid.txt; fi }; printf "%s\n" "$users" | while read user; do sucheck "$user" ""; sucheck "$user" "$user"; sucheck "$user" "$hostname"; sucheck "$user" "$(echo $user | rev 2>/dev/null)"; if [ -f "passwords.txt" ]; then while IFS=' ' read -r guess; do sucheck "$user" "$guess"; sleep 0.01; done < "passwords.txt"; fi; if [ -f "$1" ]; then while IFS=' ' read -r guess; do sucheck "$user" "$guess"; sleep 0.01; done < "$1"; fi; done
 ```
+
+find ../ResetPassword -type f -exec strings {} \; -exec grep -riH password --color  {} \;
