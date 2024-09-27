@@ -72,6 +72,12 @@ Remove duplicate lines.
 awk '!seen[$0]++' users.txt
 ```
 
+Print without newline, replace with comma.
+
+```bash
+cat us.txt|awk -F'\n' '{printf "%s,",$1}'
+```
+
 Capitalize the first letter of every word.
 
 ```bash

