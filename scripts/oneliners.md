@@ -20,6 +20,12 @@ enum4linux | tee file.txt
 echo -n 6bcf2a4b6e5aca0f | xxd -r -p | openssl enc -des-cbc --nopad --nosalt -K e84ad660c4721ae0 -iv 0000000000000000 -d | hexdump -Cv
 ```
 
+#### Find largest files on fs
+
+```bash
+sudo find / -type f -exec du -h {} + | sort -rh | head -n 20
+```
+
 #### Find largest directories on your fs, not including root dirs and their child
 
 ```bash

