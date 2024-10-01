@@ -1,6 +1,6 @@
 # RPC Checklist
 
-````
+```bash
 nmap -sV -p 111 --script=rpcinfo $ip
 nmap -sV -p 111 --script=rpc* $ip
 rpcdump.py $ip -p 135
@@ -14,7 +14,7 @@ rpcclient $>getdompwinfo   //password policy
 rpcclient $>netshareenum
 nmblookup -A 192.168.1.1
 nbtscan IP
-````
+
 #List the ports using RPC
 rpcinfo $ip 
 > Output would look something like below
@@ -122,15 +122,17 @@ for name in $(cat ../users.txt.bak); do rpcclient 192.168.165.40 -U "hazel.green
 ```bash
 for command in $(cat rpc-enum.txt); do rpcclient $ip -U "$user%$pass" -c $command; done
 for command in $(cat rpc-enum.txt); do rpcclient $ip -U "%" -c $command; done
-for name in $(cat ../users.txt.bak); do rpcclient $ip -U "%" -c "queryuser $name"; done
+for name in $(cat ../users.txt); do rpcclient $ip -U "%" -c "queryuser $name"; done
 ```
 
 #### Enumerate Users
 
 ```bash
-    for i in $(seq 500 1100); do
-        rpcclient -N -U "" $ip -c "queryuser 0x$(printf '%x\n' $i)" | grep "User Name\|user_rid\|group_rid" && echo "";
-    done
+for i in $(seq 500 1100); do rpcclient -N -U "" $ip -c "queryuser 0x$(printf '%x\n' $i)" | grep "User Name\|user_rid\|group_rid" && echo ""; done
+```
+
+```bash
+python /opt/ridenum.py $ip 500 1200
 ```
 
 #### RCE

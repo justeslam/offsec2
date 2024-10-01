@@ -57,6 +57,7 @@ Access remote HTTPS website on port 443.
 ```bash
 ssh -N -L localhost:localPort:destinationServer:remotePort user@SSHserver
 ssh -N -L 127.0.0.1:443:127.0.0.1:8443 web_admin@10.4.50.215
+ssh -N -L 9000:localhost:8000 -i 245/id_ecdsa anita@192.168.196.246 -p 2222
 ```
 
 Upload files to remote.

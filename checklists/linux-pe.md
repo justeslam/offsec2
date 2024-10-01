@@ -42,9 +42,9 @@ ll -R /etc/cron* /var/spool/cron*
 cat /etc/cron* /etc/cron*/* /var/spool/cron/* /var/spool/cron/*/*
 
 # Writable files and directories
-ll -d $(find . -writable 2>/dev/null)
-ll -d $(find . -writable -user $(whoami) 2>/dev/null)
-ll -d $(find . -writable -group $(whoami) 2>/dev/null)
+ll -f $(find . -writable 2>/dev/null)
+ll -f $(find . -writable -user $(whoami) 2>/dev/null) # or another interesting  user
+ll -f $(find . -writable -group $(group) 2>/dev/null)
 
 # Executable files and directories
 ll -d $(find . -executable 2>/dev/null)
@@ -99,4 +99,5 @@ ll -d $(find /home -iregex ".*\.kdbx\|.*\.ini\|.*\.conf\|.*\.cnf\|.*\.config.*\|
 # What's been modified after..
 touch -t 202401031231.43 /tmp/wotsit
 find / -newer /tmp/wotsit -print 2>/dev/null
+
 ```

