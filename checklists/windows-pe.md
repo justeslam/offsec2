@@ -31,7 +31,7 @@ There are several key pieces of information we should always obtain:
 # Our goal in this next step is to identify all network interfaces, routes, and active network connections. Based on this information, we may identify new services or even access to other networks. This information may not directly lead us to elevated privileges, but they are vital to understand the machine's purpose and to obtain vectors to other systems and networks.
 > ipconfig /all # Note whether DHCP is enables, the IP address, the Default Gateway, the Physical Address, subnet mask, and the DNS Servers
 > route print #  The output of this command is useful to determine possible attack vectors to other systems or networks.
-> netstat -ano # To list all active network connections. Use -a to display all active TCP connections as well as TCP and UDP ports, -n to disable name resolution, and -o to show the process ID for each connection. Look for port 3389 to be in use, if it is, you're not the only user on the system (hint: use MimiKatz to extract credentials). 
+> netstat -ano|select-string LIST # netstat -ano # To list all active network connections. Use -a to display all active TCP connections as well as TCP and UDP ports, -n to disable name resolution, and -o to show the process ID for each connection. Look for port 3389 to be in use, if it is, you're not the only user on the system (hint: use MimiKatz to extract credentials). 
 # Check all installed applications. We can query two registry keys to list both 32-bit and 64-bit applications in the Windows Registry with the Get-ItemProperty Cmdlet. We pipe the output to select with the argument displayname to only display the application's names. We begin with the 32-bit applications and then display the 64-bit applications.
 > netsh firewall show state
 > netsh firewall show config
@@ -1984,3 +1984,7 @@ smbclient \\\\$ip\\nara
 put test.lnk
 # look for hashes in smb server
 ```
+
+#### Kerberos and Certificates
+
+"https://github.com/nturley3/zeek-kerberos-haters-guide"

@@ -34,6 +34,8 @@ crunch 4 4 -f /usr/share/crunch/charset.lst mixalpha # Only length 4 using chars
 crunch 6 8 -t ,@@^^%%
 ```
 
+### Try the rockyou when you're doing john
+
 ### Cewl
 
 ```bash

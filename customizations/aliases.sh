@@ -46,8 +46,16 @@ function rustscan-log() {
 }
 
 function ee() { export $1="$2" }
+function en() { echo -n "$1" | $@ }
+function cn() { cat $1 | grep -i $@ }
 function ec() { echo -n "$1" | wc -c }
 function cl() { cat $1 | wc -l }
+function pc() { python -c "$@" }
+
+alias so="sgpt --role kali --model gpt-4-turbo --no-md"
+
+export WINEARCH=win32
+export WINEPREFIX=$HOME/.wine/drive_c/windows/system32/
 
 # Repetitive gobuster script, url as argument
 function dbd() { gobuster dir -u "$1" -w /opt/SecLists/Discovery/Web-Content/raft-large-directories.txt -k -t 15 --exclude-length 0 }
