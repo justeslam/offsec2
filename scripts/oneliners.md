@@ -46,6 +46,12 @@ Print only the matched pattern.
 grep -o "35.237.4.214" log.txt
 ```
 
+Print only numbers that are in groups of 1-4.
+
+```bash
+grep -Eo '[0-9]{1,4}' log.txt
+```
+
 Show lines that don't have words.
 
 ```bash
@@ -82,6 +88,25 @@ Print without newline, replace with comma.
 
 ```bash
 cat us.txt|awk -F'\n' '{printf "%s,",$1}'
+```
+
+Trim leading and trailing whitespace, squeeze tabs and bunch of spaces into single space.
+
+```bash
+awk '{$1=$1};1' users.txt   
+```
+
+Trim leading and trailing whitespace, delete blank lines, squeeze tabs and bunch of spaces into single space.
+
+```bash
+awk 'NF{$1=$1};1' users.txt   
+```
+
+Delete blank lines.
+
+```bash
+tr -s -c ' ' users.txt
+awk '{print $5}' | tr -s -c ' ' users.txt
 ```
 
 Capitalize the first letter of every word.

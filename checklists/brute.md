@@ -21,6 +21,15 @@
 
 Find as much information about the target as you can and generate a custom dictionary. Tools that may help:
 
+### Reliable
+
+```bash
+cewl -g --with-numbers -d 20 $url |grep -v CeWL > custom-wordlist.txt
+cat users.txt >> custom-wordlist.txt
+echo "summer\nwinter\nspring\nfall\n$dom" >> custom-wordlist.txt
+hashcat --stdout -a 0 -r ~/repos/offsec/customizations/bdg.rule custom-wordlist.txt | awk '!a[$0]++ {print $0}' >> custom-passwords.txt
+```
+
 ### Crunch
 
 ```bash

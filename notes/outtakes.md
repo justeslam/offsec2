@@ -193,6 +193,11 @@
 - You can test if you made silver ticket, kerberos ticket, ccache, klist, whatever, by running a kerberoasting tool such as rubeus and seeing if there are errors and everything looks gucci
 - Snaffler.exe is great tool that exposes relavent paths, not many rabbit-holes, should use
 - When you're using chisel and ligolo make sure to fucking use the right port, likely there's is yours and yours is theres (that'll get ya thinking at least). Put the localhost for the ip on the victim/client machine ".\chisel.exe client 192.168.45.221:80 R:1433:127.0.0.1:1433"
+- Note that if dumping the hashes in the sam and system isn't fruitful (hashes dont work), then create a shadow copy and extract the ntds.dit
+- STATUS_NOT_SUPPORTED = no ntlm 
+- If jenkins is running, test with all credentials that you have
+- use c:/windows/system32/drivers/etc/hosts to check for lfi on windows
+- fuzz past aspnet_client/system_web/
 
 
 

