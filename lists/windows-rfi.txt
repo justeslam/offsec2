@@ -10,7 +10,7 @@ C:/inetpub/wwwroot/global.asa
 C:/MySQL/data/hostname.err
 C:/MySQL/data/mysql.err
 C:/MySQL/data/mysql.log
-C:/MySQL/my.cnf
+C:/MySQL/my.cnf 0/icingaweb2/lib/icinga/icinga-php-thirdparty/etc/icingaweb2/config.ini
 C:/MySQL/my.ini
 C:/php4/php.ini
 C:/php5/php.ini

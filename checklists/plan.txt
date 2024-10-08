@@ -3,7 +3,16 @@ You need to address these issues:
 
 Focus on user sweep and don't dial in too much on netexec. Provide additional commands to run for additional information with your creds filled in. Split information / commands on whether or additional permissions would return more information.
 - Keep auth methods in mind per service per user, will know what to use next time
+- When you get a new hash, do this, when you get a TGT, do this, when you get a password, do this, when you get a new user, do this
 - Automatically adjust /etc/hosts, krb5.conf, -> echo -n "$pass" | $user@$realm 
+- Provides all possible combinations of impacket commands for you to try -> point in direction of missing / why it's not working
+- Break it down and plug for ACL. e.g. there are various ACLs that can perform this
+- Map the transitivity (If this ACL -> these attacks are available) (In PFX -> Out NTLM)
+- In, Out, PreReqs, How to Find PreReqs, How to Exploit, 
+
+What can you do with a password that you can't with NTLM? Some RDP, Outlook, SharePoint
+
+When can I obtain TGS?
 
 Grab users via nxc:
 nxc smb $ip auth_method --users | awk '{print $5}' | tr -s -c ' ' >> users.txt 
@@ -11,6 +20,11 @@ nxc smb $ip auth_method --users | awk '{print $5}' | tr -s -c ' ' >> users.txt
 Run nxc authentication. If success -> User: svc1, svc2.. \n User Pwned: svc1.. -> perform relevant checks for authenticated services
 
 If x returned from y, then try z.
+
+When you run LDAP/bloodyad.py, if write privs over computer object -> rbcd
+If you have write permissions over object -> reset password
+When you can reset AD password -> recover old password
+Local admin -> dump lsass.dmp
 
 What are the commands you're interested in whenever a new potential credential is discovered?
 
@@ -96,5 +110,4 @@ python3 rbcd.py -action write -delegate-to "DC01$" -delegate-from "EVILCOMPUTER$
 
 #gpp-passwords?
 #asrep?
-# Scrape 0xdf and HackTricks? https://swisskyrepo.github.io/InternalAllTheThings/active-directory? https://wadcoms.github.io/?
-
+# Scrape 0xdf and HackTricks? https://swisskyrepo.github.io/InternalAllTheThings/active-directory? https://wadcoms.github.io/? https://github.com/swisskyrepo/InternalAllTheThings/tree/main/docs/active-directory https://www.hackingarticles.in/lateral-movement-pass-the-hash-attack/ https://www.n00py.io/2020/12/alternative-ways-to-pass-the-hash-pth/ https://github.com/skelsec/minikerberos https://www.thehacker.recipes/ad/movement/kerberos/asreproast

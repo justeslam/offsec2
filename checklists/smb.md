@@ -126,6 +126,7 @@ Instead of enumerating Windows shares with smbclient, you can mount shares on yo
 ```bash
 sudo mkdir /mnt/data
 sudo mount -t cifs //123.123.123.123/Data /mnt/data
+sudo mount -t cifs -o sec=krb5,vers=3.0 '//SERVER.DOMAIN.LOCAL/SHARE' /mnt/share
 ```
 
 Note that Windows likes to store some files in UTF-16LE, while Linux likes UTF8. If you run into this problem, you'll need to convert in order to cat the files.

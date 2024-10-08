@@ -198,6 +198,8 @@
 - If jenkins is running, test with all credentials that you have
 - use c:/windows/system32/drivers/etc/hosts to check for lfi on windows
 - fuzz past aspnet_client/system_web/
+- BloodHound all collection doesn't include GPOLocalGroup by default
+- BloodHound custom queries are a must
 
 
 

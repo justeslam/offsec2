@@ -180,6 +180,7 @@ def execute_netexec(ip, service, auth_method, args, auth_methods):
                         #"--active-users",
                         #"--trusted-for-delegation",
                         #"--groups",
+                        "--gmsa",
                         # Removed "--users"
                         # Removed "--user-count"
                         "-M adcs",
@@ -278,6 +279,8 @@ def execute_netexec(ip, service, auth_method, args, auth_methods):
                         # Run additional commands if args.wicked is set
                         if args.wicked:
                             mssql_commands = [
+                                "--local-auth"
+                                "-M mssql_priv"
                                 "-q SELECT name FROM master.dbo.sysdatabases;",
                                 "-x whoami"
                             ]

