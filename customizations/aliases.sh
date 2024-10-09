@@ -17,7 +17,7 @@ alias serve="echo http://$myip; python -m http.server"
 decode64() {
     echo -n "$1" | base64 -d
 }
-alias de='decode64'
+alias de='decode64' # e.g. "de 23iho432io4"
 
 # Grep through my notes
 function gn() { grep -ri $1 ~/repos/offsec/$2 }
@@ -25,37 +25,14 @@ function gn() { grep -ri $1 ~/repos/offsec/$2 }
 # Colored and context-aware grep with PCRE support
 alias grep='grep --color=auto -P'
 
-# Quick directory navigation
-alias ..='cd ..'
-alias ...='cd ../..' 
-alias ....='cd ../../..'
-
-# Enhanced network enumeration and exploitation
-alias listen='ip a | grep tun0; sudo rlwrap -cAz nc -lvnp'
-alias scan='sudo rustscan -t 3000 --tries 2 -b 2048 -u 16384 -a'
-alias nmap-scan='sudo nmap -sC -sV -oN nmap_scan.txt'
-alias nikto='nikto -host'
-
-# Advanced scanning with detailed logging
-function rustscan-log() {
-    if [ -z "$1" ]; then
-        echo "Usage: rustscan-log <target IP>"
-    else
-        sudo rustscan -a $1 --ulimit 5000 -b 2048 | tee rustscan_$1.txt
-    fi
-}
-
-function ee() { export $1="$2" }
-function en() { echo -n "$1" | $@ }
+function ee() { export $1="$2" } # Quickly set environment variable e.g. "ee user henry"
+function en() { echo -n "$1" | $@ } # 
 function cn() { cat $1 | grep -i $@ }
 function ec() { echo -n "$1" | wc -c }
 function cl() { cat $1 | wc -l }
 function pc() { python -c "$@" }
 
 alias so="sgpt --role kali --model gpt-4-turbo --no-md"
-
-export WINEARCH=win32
-export WINEPREFIX=$HOME/.wine/drive_c/windows/system32/
 
 # Repetitive gobuster script, url as argument
 function dbd() { gobuster dir -u "$1" -w /opt/SecLists/Discovery/Web-Content/raft-large-directories.txt -k -t 15 --exclude-length 0 }
@@ -78,13 +55,6 @@ alias smbserver='echo -ne "\033]0;SMBserv\007"; echo "net use x: $smbAddress /us
 
 # Repetitive hashcat command
 function hc() { hashcat $1 /usr/share/wordlists/rockyou.txt $@ -O}
-
-# Clean Rustscan output for better readability
-alias clean='sed -e '\''s/\x1b\[[0-9;]*m//g'\'''
-# Example: clean initial > rustscan_cleaned.txt
-
-# Automated extraction and cleaning of nmap results
-alias nmap-summary="grep 'open\|filtered\|closed' nmap_scan.txt | awk '{print \$1,\$2}'"
 
 function serve() {
     if [[ $# -eq 0 ]]; then
@@ -113,6 +83,31 @@ function servew() {
         python -m http.server $1
     fi
 }
+
+export WINEARCH=win32
+export WINEPREFIX=$HOME/.wine/drive_c/windows/system32/
+
+# Enhanced network enumeration and exploitation
+alias listen='ip a | grep tun0; sudo rlwrap -cAz nc -lvnp'
+alias scan='sudo rustscan -t 3000 --tries 2 -b 2048 -u 16384 -a'
+alias nmap-scan='sudo nmap -sC -sV -oN nmap_scan.txt'
+alias nikto='nikto -host'
+
+# Advanced scanning with detailed logging
+function rustscan-log() {
+    if [ -z "$1" ]; then
+        echo "Usage: rustscan-log <target IP>"
+    else
+        sudo rustscan -a $1 --ulimit 5000 -b 2048 | tee rustscan_$1.txt
+    fi
+}
+
+# Clean Rustscan output for better readability
+alias clean='sed -e '\''s/\x1b\[[0-9;]*m//g'\'''
+# Example: clean initial > rustscan_cleaned.txt
+
+# Automated extraction and cleaning of nmap results
+alias nmap-summary="grep 'open\|filtered\|closed' nmap_scan.txt | awk '{print \$1,\$2}'"
 
 # Reverse shell snippets ready for deployment
 alias revshells='cat /opt/tools/reverse-shells.txt | grep'

@@ -1,4 +1,4 @@
-### Linux Privilege Escalation (Condensed)
+### Linux Privilege Escalation (Condensed version of notes/linux_privesc.md)
 
 ```bash
 # Proper shell

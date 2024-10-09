@@ -1,4 +1,8 @@
 #!/bin/bash
+
+# Typing out usernames and passwords was driving me crazy.
+# This turns bash suggestions into an absolute warrior for most or many of the commands I run. 
+
 # Example usage:
 #   source /opt/setenv.sh <ip> <domain> <dc>
 #   source /opt/setenv.sh <ip> <domain> <dc> <user> <pass>
@@ -18,16 +22,3 @@ if [[ -z "$dom" ]]; then
 else
     export url="http://$dom"
 fi
-
-# Optional: Display the set environment variables for verification
-# Uncomment the lines below if you want to see the variables when sourcing
-# echo "ip=$ip"
-# echo "dom=$dom"
-# echo "dc=$dc"
-# echo "url=$url"
-# if [[ -n "$user" ]]; then
-#     echo "user=$user"
-# fi
-# if [[ -n "$pass" ]]; then
-#     echo "pass=$pass"
-# fi

