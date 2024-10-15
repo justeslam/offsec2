@@ -55,6 +55,14 @@ def read_targets(args):
         targets = [args.ip]
     return targets
 
+
+
+
+
+
+
+
+
 def execute_netexec(ip, service, auth_method, args, auth_methods):
     global stop_threads
     if stop_threads:
@@ -111,23 +119,23 @@ def execute_netexec(ip, service, auth_method, args, auth_methods):
                     smb_commands = [
                         #"--groups",
                         #"--interfaces",
-                        #"--laps",
+                        "--laps",
                         #"--local-group",
                         #"--local-groups",
                         "--lsa",
                         #"--pass-pol",
                         #"--rid-brute",
                         "--sam",
-                        #"--sessions",
+                        "--sessions",
                         #"--sccm",
                         #"--sccm disk",
                         #"--sccm wmi",
                         "--shares",
                         # Removed "--users"
-                        #"-M enum_ca",
-                        #"-M enum_dns",
-                        #"-M gpp_password",
-                        #"-M gpp_autologin",
+                        "-M enum_ca",
+                        "-M enum_dns",
+                        "-M gpp_password",
+                        "-M gpp_autologin",
                         "-M lsassy",
                         #"-M mremoteng",
                         #"-M msol",
@@ -178,7 +186,7 @@ def execute_netexec(ip, service, auth_method, args, auth_methods):
                 elif service == "ldap":
                     ldap_commands = [
                         #"--active-users",
-                        #"--trusted-for-delegation",
+                        "--trusted-for-delegation",
                         #"--groups",
                         "--gmsa",
                         # Removed "--users"
@@ -187,9 +195,9 @@ def execute_netexec(ip, service, auth_method, args, auth_methods):
                         f"-M daclread -o TARGET={args.kdcHost if args.kdcHost else ip} ACTION=read",
                         "-M enum_trusts",
                         "-M get-network -o ALL=true",
-                        #"-M laps",
+                        "-M laps",
                         #"-M ldap-checker",
-                        #"-M user-desc"
+                        "-M user-desc"
                     ]
                     for option in ldap_commands:
                         if stop_threads:

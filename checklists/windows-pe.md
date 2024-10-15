@@ -226,7 +226,7 @@ Note that SharpHound supports looping, running cyclical queries over time like a
 ```bash
 > . .\Sharphound.ps1 # or Import-Module .\SharpHound.ps1
 > Get-Help Invoke-BloodHound
-> Invoke-BloodHound -CollectionMethod All $ip -OutputDirectory C:\Windows\Tasks\ -OutputPrefix "dev04-leon" # May take a couple minutes
+> Invoke-BloodHound -CollectionMethod All,GPOLocalGroup $ip -OutputDirectory C:\Windows\Tasks\ -OutputPrefix "molly" # May take a couple minutes
 > Invoke-BloodHound -CollectionMethod All -OutputDirectory C:\Windows\Tasks\ -OutputPrefix "bum"
 # Or remotely
 > bloodhound-python --dns-tcp -d support.htb -u ldap -p "nvEfEK16^1aM4\$e7AclUf8x\$tRWxPWO1%lmz" -c all -ns $ip 
@@ -1895,7 +1895,7 @@ sudo nc -lvnp 80
 if access to RDP and C:\Windows\System32 then you an do the utilman exploit.
 ```
 
-#### Exploiting Service Operators Group Membership
+#### Exploiting Service (think I meant..) Server Operators Group Membership
 
 ```bash
 services # look for True

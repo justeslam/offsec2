@@ -6,3 +6,8 @@
 - Like gtfobins but for argument injection: https://sonarsource.github.io/argument-injection-vectors/
 - Executable as image - https://github.com/idfp/masquerade
 - Jenkins https://github.com/gquere/pwn_jenkins
+- Sudo privs https://www.hackingarticles.in/linux-privilege-escalation-using-exploiting-sudo-rights/
+- Lxd Privilege Escalation - https://www.hackingarticles.in/lxd-privilege-escalation/
+- Linux privesc - https://github.com/Ignitetechnologies/Linux-Privilege-Escalation?tab=readme-ov-file
+- ACE/ACL - https://www.ired.team/offensive-security-experiments/active-directory-kerberos-abuse/abusing-active-directory-acls-aces
+- Dynamic cheat sheet - https://docs.google.com/spreadsheets/d/13g6RFbaS-5KJcETONOSSV7vNSh9OXCgbNak8WM2H1A0/edit?gid=1858408689#gid=1858408689

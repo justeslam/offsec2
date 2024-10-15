@@ -200,7 +200,9 @@
 - fuzz past aspnet_client/system_web/
 - BloodHound all collection doesn't include GPOLocalGroup by default
 - BloodHound custom queries are a must
-
+- If net rpc commands aren't working, try doing the commands by connecting with rpcclient
+- Reset the box if something isn't working that should
+- YOU MUST TRY TO OPEN POWERSHELL AS ADMIN. JUST TRY IT.
 
 
 

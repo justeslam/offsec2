@@ -485,3 +485,21 @@ That doesn't remove punctuation, though, so maybe you want:
 ```bash
 tr -s [:space:][:punct:] \\n < filename | sort | uniq
 ```
+
+#### Google Search Operators
+
+```bash
+allintext:"keyword" # Searches for all keywords given.
+intext:"keyword" # Searches for keywords together or separately.
+inurl:"keyword" # Finds URLs with a keyword.
+allinurl:"keyword" # Finds URLs with all specified keywords.
+intitle:"keyword" # Finds titles with keywords.
+allintitle:"keyword" # Finds titles with all specified keywords.
+site:"www.google.com" # Searches within a specific site.
+filetype:"pdf" # Finds files of a specified type.
+link:"keyword" # Finds external links to pages.
+numrange:321-325 # Finds specific numbers in searches.
+filetype:pdf & (before:2020-01-01 after:2021-01-01) # Searches within a date range.
+inanchor:rat # Shows sites with keyterms in inbound links.
+allinpostauthor:"keyword" # Finds blog posts by specific authors.
+```

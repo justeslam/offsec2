@@ -11,6 +11,8 @@ function get_myip() {
 }
 get_myip
 
+alias reload="source $HOME/.zshrc"
+
 alias serve="echo http://$myip; python -m http.server"
 
 # Decode base64

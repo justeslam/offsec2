@@ -23,7 +23,8 @@ hydra -L /usr/share/wordlists/dirb/others/names.txt -p "SuperS3cure1337#" rdp://
 ###### logging in
 
 ```bash
-xfreerdp /cert-ignore /bpp:8 /compression -themes -wallpaper /auto-reconnect /h:1000 /w:1600 /v: /u: /p: /domain: /drive:SHARE,/opt/windows
+xfreerdp /cert-ignore /bpp:8 /compression -themes -wallpaper /auto-reconnect /h:1000 /w:1600 /v:$ip /u:$user /p:$pass /domain:$dom /drive:SHARE,/opt/windows
+xfreerdp /cert-ignore /bpp:8 /compression /auto-reconnect /h:1000 /w:1600 /v:$ip /u:$user /p:$pass /drive:SHARE,/opt/windows
 xfreerdp /cert-ignore /bpp:8 /compression -themes -wallpaper /auto-reconnect /h:1000 /w:1600 /v:$ip /u: /p:
 xfreerdp /u:admin  /v:192.168.238.191 /cert:ignore /p:"password"  /timeout:20000 /drive:home,/tmp
 xfreerdp /v:$ip /u:backdoor /p:Password123 /cert:ignore +clipboard

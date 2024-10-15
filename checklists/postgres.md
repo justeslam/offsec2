@@ -13,7 +13,22 @@ psql -h <host> -p <port> -U $user -W <password> <database> # Remote connection
 #### Enumeration
 
 ```bash
-\s history
+\s # history
+\l
+\c hr_backup
+select * from payroll;
+\d
+\du
+\du+
+SELECT datname FROM pg_database;
+SELECT usename, passwd from pg_shadow;
+\s
+SELECT * FROM pg_extension;
+SELECT schema_name,schema_owner FROM information_schema.schemata;
+\dn+
+\du
+SELECT current_setting('is_superuser');
+\c postgres
 ```
 
 #### RCE
