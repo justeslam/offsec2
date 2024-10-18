@@ -32,6 +32,12 @@ sudo find / -type f -exec du -h {} + | sort -rh | head -n 20
 sudo du -ah / | grep -vE '^(/[^/]+/[^/]+)$' | sort -rh | head -n 20
 ```
 
+#### Lines only present in file1 or file2 (not in both)
+
+```bash
+comm -3 recently_modified_files.txt non_root_owned_directories.txt
+```
+
 #### Grep
 
 Recursively Grep for word, case insensitive, show 3 lines before and after match

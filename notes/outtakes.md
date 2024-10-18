@@ -208,6 +208,7 @@
 - Write report with "https://docs.sysreptor.com/oscp-reporting-tools/"
 - Combine wordlists, separate lower, 202x
 - namemash.py
+- When testing for ssti, nothing worked if i did `3*3 {3*4} {{3*5}}` but it worked when I just did `3*3`
  
 
 

