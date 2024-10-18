@@ -35,7 +35,7 @@ enum4linux -a -u "$dom\\$user" -p $pass $ip
 enum4linux -a -u "$dom\\$user" -p "" -M -l -d $ip 2>&1
 enum4linux -a -u "" -p "" $ip && enum4linux -a -u "guest" -p "" $ip
 enum4linux -a -M -l -d $dom 2>&1 && enum4linux-ng $dom -A -C
-enum4linux -a -u "" -p "" $ip && enum4linux -a -u "guest" -p "" $ip
+enum4linux -a -M -l -u "" -p "" $ip && enum4linux -a -u "guest" -p "" $ip
 enum4linux -a -u "$dom\\$user" -M -l -d $dom 2>&1 && enum4linux-ng $dom -u $user -p $pass -A -C
 
 enum4linux-ng $ip
@@ -77,6 +77,7 @@ getTGT.py $dom/Administrator -dc-ip $dc -hashes aad3b435b51404eeaad3b435b51404ee
 KRB5CCNAME=/home/kali/htb/absolute/d.klay.ccache nxc smb $ip -u $user -p $pass -k
 
 nxc smb $ip -d $dom -u 'a' -p '' -M enum_dns
+adidnsdump -u $dom\\$user -p $pass winterfell.north.sevenkingdoms.local
 
 rpcclient -U $user $ip 
 rpcclient $ip -N -U ""

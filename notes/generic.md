@@ -503,3 +503,31 @@ filetype:pdf & (before:2020-01-01 after:2021-01-01) # Searches within a date ran
 inanchor:rat # Shows sites with keyterms in inbound links.
 allinpostauthor:"keyword" # Finds blog posts by specific authors.
 ```
+
+#### Combine wordlists
+
+Directory list.
+
+```bash
+cat /usr/share/wordlists/seclists/Discovery/Web-Content/common.txt /usr/share/wordlists/seclists/Discovery/Web-Content/dirsearch.txt /usr/share/wordlists/seclists/Discovery/Web-Content/big.txt /usr/share/wordlists/seclists/Discovery/Web-Content/raft-large-words.txt /opt/SecLists/Discovery/Web-Content/content_discovery_all.txt > /opt/SecLists/Discovery/Web-Content/temp.txt
+awk '!a[$0]++' /opt/SecLists/Discovery/Web-Content/megadir.txt > /opt/SecLists/Discovery/Web-Content/megadir.txt
+rm /opt/SecLists/Discovery/Web-Content/temp.txt
+```
+
+Lowercase directory list.
+
+```bash
+cat /usr/share/wordlists/seclists/Discovery/Web-Content/common.txt /usr/share/wordlists/seclists/Discovery/Web-Content/dirsearch.txt /usr/share/wordlists/seclists/Discovery/Web-Content/big.txt /usr/share/wordlists/seclists/Discovery/Web-Content/raft-large-words-lowercase.txt /opt/SecLists/Discovery/Web-Content/content_discovery_all.txt > /opt/SecLists/Discovery/Web-Content/temp.txt
+awk '{line=tolower($0)} !seen[line]++'  /opt/SecLists/Discovery/Web-Content/temp.txt > /opt/SecLists/Discovery/Web-Content/megadirlow.txt #
+rm /opt/SecLists/Discovery/Web-Content/temp.txt
+```
+
+Password list.
+
+```bash
+cd /usr/share/wordlists/seclists/Passwords
+for num in $(seq 2018 2024); for word in $(echo "Summer" "summer" "Winter" "winter" "Spring" "spring" "Autumn" "autumn"); do echo ${word}${num} >> /usr/share/wordlists/fasttrack.txt; done
+cat /usr/share/wordlists/fasttrack.txt 500-worst-passwords.txt xato-net-10-million-passwords-100.txt probable-v2-top207.txt darkweb2017-top100.txt 2023-200_most_used_passwords.txt 2020-200_most_used_passwords.txt xato-net-10-million-passwords-1000000.txt probable-v2-top12000.txt darkweb2017-top10000.txt mssql-passwords-nansh0u-guardicore.txt darkc0de.txt bt4-password.txt /usr/share/wordlists/rockyou.txt > temp.txt
+awk '!a[$0]++' temp.txt > /usr/share/wordlists/combo.txt
+rm temp.txt
+```

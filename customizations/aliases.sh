@@ -36,6 +36,8 @@ function pc() { python -c "$@" }
 
 alias so="sgpt --role kali --model gpt-4-turbo --no-md"
 
+function ftpbrute() { hydra -C /opt/SecLists/Passwords/Default-Credentials/ftp-betterdefaultpasslist.txt $1 ftp }
+
 # Repetitive gobuster script, url as argument
 function dbd() { gobuster dir -u "$1" -w /opt/SecLists/Discovery/Web-Content/raft-large-directories.txt -k -t 15 --exclude-length 0 }
 

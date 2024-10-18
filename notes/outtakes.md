@@ -203,6 +203,12 @@
 - If net rpc commands aren't working, try doing the commands by connecting with rpcclient
 - Reset the box if something isn't working that should
 - YOU MUST TRY TO OPEN POWERSHELL AS ADMIN. JUST TRY IT.
+- Read any error messages as if nothing else matters. Don't go anywhere.
+- AV will delete the malicious files in your share given the chance
+- Write report with "https://docs.sysreptor.com/oscp-reporting-tools/"
+- Combine wordlists, separate lower, 202x
+- namemash.py
+ 
 
 
 

@@ -4,8 +4,7 @@
 nmap -sV -p 111 --script=rpcinfo $ip
 nmap -sV -p 111 --script=rpc* $ip
 rpcdump.py $ip -p 135
-rpcclient -U '' -N $ip
-rpcclient -U "" $ip // when asked enter empty password
+rpcclient -U '' -N $ip // when asked enter empty password
 rpcclient $ip -N -U "" \\$ip
 rpcclient $>srvinfo
 rpcclient $>enumdomusers

@@ -195,3 +195,9 @@ run bloodhound-python
 use bloodyad to set new password for iain
 use bloodyad to set new password for christopher (using iain creds)
 Summer2023
+
+Enum smtp users
+Try username as passwords for ftp
+Find mysql password in config.php
+Check version and see that it's 5.x
+Do the library file exploit to get admin

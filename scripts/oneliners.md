@@ -82,6 +82,7 @@ Remove duplicate lines.
 
 ```bash
 awk '!seen[$0]++' users.txt
+awk '{line=tolower($0)} !seen[line]++' # case insensitive
 ```
 
 Print without newline, replace with comma.
