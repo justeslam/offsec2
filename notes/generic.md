@@ -531,3 +531,11 @@ cat /usr/share/wordlists/fasttrack.txt 500-worst-passwords.txt xato-net-10-milli
 awk '!a[$0]++' temp.txt > /usr/share/wordlists/combo.txt
 rm temp.txt
 ```
+
+#### Unknown ports
+
+```bash
+nc -nv $ip 3003 #run this
+help
+version # Then use version to look for exploits
+````

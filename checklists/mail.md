@@ -9,7 +9,9 @@
 
 - Enumeration
 	- Check for valid users
-	- Try valid usernames elsewhere, perhaps username as their password
+	- Try valid usernames elsewhere
+		- Perhaps username as their password
+		- Non-person names ran through rule list for password
 
 - Exploits
 	- Haven't done in 200+ boxes so far (remotely)
@@ -110,19 +112,46 @@ nmap -n -v -p $port -sV --script="pop3-* and safe" -oA pop3 $ip
 
 ```bash
 hydra -V -f -l $user -P /usr/share/seclists/Passwords/2020-200_most_used_passwords.txt $ip pop3
+hydra -l simon -P /usr/share/wordlists/rockyou.txt -f $ip pop3
 ```
 
 ```bash
+openssl s_client -connect $ip:pop3s # or fqdn
+```
+
+Telnet to port 110 with valid creds to look at mailbox.
+
+```bash
 telnet $ip $port   # alternate method
-user $user@$dom
+user $user@$dom # or $user , see if it's a valid name
 PASS $PASS
 LIST # gets list of emails and sizes
 RETR 1 # retrieve first email
 # try real (root) and fake users to see if there is a difference in error msgs
 ```
 
+```bash
+telnet -l jess $ip
+USER sales
+PASS sales
+LIST
+RETR 1.
+```
+
 ## IMAP 143 993
 
 ```bash
 hydra -V -f -L user.txt -P /usr/share/seclists/Passwords/2020-200_most_used_passwords.txt $RHOST imap
+```
+
+#### Log in
+
+```bash
+curl -k "imaps://$ip" --user $user:$pass
+```
+
+#### Connect
+
+```bash
+openssl s_client -connect $ip:imaps # or fqdn
 ```

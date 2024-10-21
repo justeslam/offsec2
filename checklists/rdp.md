@@ -20,6 +20,12 @@ nxc rdp $ip -u users.txt -H $HASH --continue-on-success
 hydra -L /usr/share/wordlists/dirb/others/names.txt -p "SuperS3cure1337#" rdp://192.168.50.202
 ```
 
+#### Check Security Settings
+
+```bash
+rdp-sec-check.pl $ip
+```
+
 ###### logging in
 
 ```bash

