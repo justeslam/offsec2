@@ -62,6 +62,12 @@ ssh-audit.py $ip
 ssh $user@$ip -o PreferredAuthentications=password
 ```
 
+##### Check to see what servers a user's key can access in known_hosts. Could be hashed
+
+##### Check to see what users have accessed the server in authorized_keys
+
+##### Bob.key may work for jane
+
 ##### Cracking Private Key
 ````
 ssh2john id_ecdsa > id_ecdsa.hash

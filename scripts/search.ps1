@@ -12,3 +12,5 @@ Get-ChildItem -Path C:\ -Recurse -ErrorAction SilentlyContinue -File |
     } |
     Select-String -Pattern $searchWord |
     Select-Object -Unique Path
+
+Write-host "Done"

