@@ -28,6 +28,11 @@ egrep -r ^transf /usr/share/wordlists/* | sed 's/^[^:]*://' > /tmp/list.txt # If
 gobuster dir -u http://10.129.204.231/ -w /tmp/list.txt -x .aspx,.asp
 cd /opt/windows/sns && go run main.go -u http://nagoya.nagoya-industries.com
 /opt/SecLists/Discovery/Web-Content/content_discovery_all.txt
+
+# Additional Apache Fuzzing
+gobuster dir -e -q -n -u http://$1:$2 -k -w /usr/share/wordlists/seclists/Discovery/Web-Content/apache.txt -o $DIR/apache-$1-$2.txt
+gobuster dir -e -q -n -u http://$1:$2 -k -w /usr/share/wordlists/seclists/Discovery/Web-Content/apacheFuzz.txt -o $DIR/apacheFuzz-$1-$2.txt
+gobuster dir -e -q -n -u http://$1:$2 -k -w /usr/share/wordlists/seclists/Discovery/Web-Content/apacheTomcat.txt -o $DIR/apacheTomcat-$1-$2.txt
 ```
 
 #### Fuzzing Subdomains & vhosts

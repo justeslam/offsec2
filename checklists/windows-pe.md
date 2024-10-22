@@ -110,6 +110,7 @@ powershell -ep bypass
 > Get-NetUser
 # Only pull down the usernames
 > Get-NetUser | select samaccountname # or select cn
+> Get-ADUser -Identity YourUsername -Properties *
 # See when the users last changed their passwords, if before policy change, may be weaker
 > Get-UserProperty -Properties pwdlastset,logoncount
 # See how many times each user has logged on, great way to identify honeypot accounts
