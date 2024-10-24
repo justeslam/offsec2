@@ -9,11 +9,10 @@
     Path to the file containing custom words (e.g., usernames) to search for.
 
 .EXAMPLE
-    .\SensitiveInfoScanner.ps1 -customWords "C:\Path\to\customWords.txt"
+    .\amorous.ps1 -w "C:\Path\to\customWords.txt"
 #>
 
 #### MAKE IT WHERE PEOPLE DONT NEED TO PUT WORDS FILE
-#### Filter out desktop.ini, ThirdPartyNotices.txt, 
 
 #### Since we have all of our file types sorted.. we can do additional checks that would otherwise be inconvenient, like checking the imports of exes and exports off dlls -> matching them up
 
@@ -195,36 +194,35 @@ try {
     # Start searching for files
     Get-ChildItem -Path "C:\" -Recurse -Include $fileExtensions -File -ErrorAction SilentlyContinue -Force | 
     Where-Object {
-        ($_.FullName -notlike "C:\Windows\servicing\*") -and
-        ($_.FullName -notlike "C:\Windows\Microsoft.NET\Framework\*") -and
-        ($_.FullName -notlike "C:\Windows\Microsoft.NET\Framework64\*") -and
-        ($_.FullName -notlike "C:\Windows\WinSxS\*") -and
-        ($_.FullName -notlike "C:\Windows\Microsoft.NET\assembly\*") -and
-        ($_.FullName -notlike "C:\Windows\Help*") -and
-        ($_.FullName -notlike "C:\Windows\diagnostics\*") -and
-        ($_.FullName -notlike "C:\Windows\SystemApps\Microsoft*")
-        ($_.FullName -notlike "C:\Windows\Policy*") -and
-        ($_.FullName -notlike "C:\Windows\INF\*") -and
-        ($_.FullName -notlike "C:\ProgramData\VMware\*") -and
-        ($_.FullName -notlike "C:\Windows\assembly\Native*") -and
-        ($_.FullName -notlike "C:\Program Files\VMware\*") -and
-        ($_.FullName -notlike "C:\Windows\Program Files*\WindowsPowerShell\Modules\Pester\*") -and
         ($_.FullName -notlike "C:\Program Files*\windows nt\tabletextservice*") -and
-        ($_.FullName -notlike "C:\Windows\Tasks\*") -and
-        ($_.FullName -notlike "C:\Users\All Users\VMware\*") -and
-        ($_.FullName -notlike "C:\*\WindowsPowerShell\*") -and
-        ($_.FullName -notlike "C:\*\en-US\*") -and
-        ($_.FullName -notlike "C:\*amd64*") -and
+        ($_.FullName -notlike "C:\Windows\Microsoft.NET\Framework64\*") -and
+        ($_.FullName -notlike "C:\Windows\Microsoft.NET\Framework\*") -and
+        ($_.FullName -notlike "C:\Windows\SystemResources\Windows.*") -and
+        ($_.FullName -notlike "C:\Windows\Microsoft.NET\assembly\*") -and
         ($_.FullName -notlike "C:\Windows\System32\DriverStore\*") -and
         ($_.FullName -notlike "C:\Windows\SystemApps\*.Windows.*") -and
-        ($_.FullName -notlike "C:\Windows\SystemResources\Windows.*") -and
-        ($_.FullName -notlike "C:\*ThirdParty*.txt") -and
-        ($_.FullName -notlike "C:\*Desktop.ini")
+        ($_.FullName -notlike "C:\Windows\SystemApps\Microsoft*") -and
+        ($_.FullName -notlike "C:\Windows\assembly\Native*") -and
+        ($_.FullName -notlike "C:\Users\All Users\VMware\*") -and
+        ($_.FullName -notlike "C:\Program Files\VMware\*") -and
+        ($_.FullName -notlike "C:\Windows\diagnostics\*") -and
+        ($_.FullName -notlike "C:\ProgramData\VMware\*") -and
+        ($_.FullName -notlike "C:\Windows\servicing\*") -and
+        ($_.FullName -notlike "C:\Windows\WinSxS\*") -and
+        ($_.FullName -notlike "C:\Windows\Policy*") -and
+        ($_.FullName -notlike "C:\Windows\Tasks\*") -and
+        ($_.FullName -notlike "C:\Windows\Help*") -and
+        ($_.FullName -notlike "C:\Windows\INF\*") -and
     } | ForEach-Object {
-            $Path = $_
-            $interestingFiles += $Path.FullName
-            Write-Host "Path: ${path}"
-            "${Path}" | Out-File -FilePath $foundLogFile -Append -Encoding UTF8
+            if (
+            ($_.FullName | Select-String "C:\\Windows\\.*\\(\.exe\..*|\.dll|\.vbs)" -notMatch ) -and
+            ($_.FullName | Select-String "C:\\.*(en-US|amd64|WindowsPowerShell|ThirdParty|Desktop\.ini)" -notMatch ) 
+            ) {
+                $Path = $_
+                $interestingFiles += $Path.FullName
+                Write-Host "Path: ${path}"
+                "${Path}" | Out-File -FilePath $foundLogFile -Append -Encoding UTF8
+            }
     }
 } catch {
   Log "Error during file search: $_"
