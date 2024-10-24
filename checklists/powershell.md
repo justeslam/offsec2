@@ -245,29 +245,29 @@ try {
     Write-Host "Failed to retrieve process owners"
 }
 
-# Define headers for scheduled tasks CSV parsing                                                                                                                                                                                            
-$header = "HostName", "TaskName", "NextRunTime", "Status", "LogonMode", "LastRunTime", "LastResult",                                                                                                                                        
-          "Author", "TaskToRun", "StartIn", "Comment", "ScheduledTaskState", "IdleTime", "PowerManagement",                                                                                                                                 
-          "RunAsUser", "DeleteTaskIfNotRescheduled", "StopTaskIfRunsXHoursandXMins", "Schedule",                                                                                                                                            
-          "ScheduleType", "StartTime", "StartDate", "EndDate", "Days", "Months", "RepeatEvery",                                                                                                                                             
-          "RepeatUntilTime", "RepeatUntilDuration", "RepeatStopIfStillRunning"                                                                                                                                                              
+# Define headers for scheduled tasks CSV parsing
+$header = "HostName", "TaskName", "NextRunTime", "Status", "LogonMode", "LastRunTime", "LastResult",
+          "Author", "TaskToRun", "StartIn", "Comment", "ScheduledTaskState", "IdleTime", "PowerManagement",
+          "RunAsUser", "DeleteTaskIfNotRescheduled", "StopTaskIfRunsXHoursandXMins", "Schedule",
+          "ScheduleType", "StartTime", "StartDate", "EndDate", "Days", "Months", "RepeatEvery",
+          "RepeatUntilTime", "RepeatUntilDuration", "RepeatStopIfStillRunning"
                                                                                                                                                                                                                                             
 # Query scheduled tasks, convert from CSV, select unique tasks based on specific fields, and filter based on conditions                                                                                                                     
-Write-Output "Querying and filtering scheduled tasks..."                                                                                                                                                                                    
-$scheduledTasks = schtasks /query /fo csv /nh /v |                                                                                                                                                                                          
-                  ConvertFrom-Csv -Header $header |                                                                                                                                                                                         
-                  Select-Object -Unique TaskName, NextRunTime, Status, TaskToRun, RunAsUser |                                                                                                                                               
-                  Where-Object {                                                                                                                                                                                                            
-                      $_.RunAsUser -ne $env:UserName -and                                                                                                                                                                                   
-                      $_.TaskToRun -notlike "%windir%*" -and                                                                                                                                                                                
-                      $_.TaskToRun -ne "COM handler" -and                                                                                                                                                                                   
-                      $_.TaskToRun -notlike "%systemroot%*" -and                                                                                                                                                                            
-                      $_.TaskToRun -notlike "C:\Windows\*" -and                                                                                                                                                                             
-                      $_.TaskName -notlike "\Microsoft\Windows\*"                                                                                                                                                                           
-                  }                                                                                                                                                                                                                         
+Write-Output "Querying and filtering scheduled tasks..."                                                         
+$scheduledTasks = schtasks /query /fo csv /nh /v |
+ConvertFrom-Csv -Header $header |
+Select-Object -Unique TaskName, NextRunTime, Status, TaskToRun, RunAsUser |
+Where-Object {
+    $_.RunAsUser -ne $env:UserName -and
+    $_.TaskToRun -notlike "%windir%*" -and
+    $_.TaskToRun -ne "COM handler" -and
+    $_.TaskToRun -notlike "%systemroot%*" -and
+    $_.TaskToRun -notlike "C:\Windows\*" -and
+    $_.TaskName -notlike "\Microsoft\Windows\*"
+}
                                                                                                                                                                                                                                             
-# Output the filtered scheduled tasks                                                                                                                                                                                                       
-Write-Output "Filtered Scheduled Tasks:"                                                                                                                                                                                                    
+# Output the filtered scheduled tasks
+Write-Output "Filtered Scheduled Tasks:"
 $scheduledTasks | Format-Table -AutoSize
 
 ###############################

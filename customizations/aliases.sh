@@ -143,6 +143,19 @@ function extract() {
     fi
 }
 
+# History configurations
+HISTFILE=~/.zsh_history
+HISTSIZE=100000
+SAVEHIST=2000000
+HISTCONTROL=ignoredups:erasedups
+setopt histappend
+PROMPT_COMMAND="${PROMPT_COMMAND:+$PROMPT_COMMAND$'\n'}history -a; history -c; history -r"
+setopt hist_expire_dups_first # delete duplicates first when HISTFILE size exceeds HISTSIZE
+setopt hist_ignore_dups       # ignore duplicated commands history list
+setopt hist_ignore_space      # ignore commands that start with space
+setopt hist_verify            # show command with history expansion to user before running it
+setopt share_history         # share command history data
+
 # Customized tmux session for pentesting
 alias tmuxpen='tmux new-session -s pentest \; split-window -v \; split-window -h \; attach'
 alias tmuxrestore='tmux attach-session -t pentest || tmuxpen'
@@ -155,12 +168,8 @@ alias tmuxrestore='tmux attach-session -t pentest || tmuxpen'
 alias pingtest='ping -c 4'
 alias realip='curl ifconfig.me'
 
-# Network traffic monitoring with tcpdump
-alias sniff='sudo tcpdump -i tun0 -w capture.pcap'
-alias viewpcap='wireshark capture.pcap'
-
 # Quick enumeration of running processes and logins
-alias psaux='ps aux | grep'
+alias psaux='ps auxww | grep'
 alias findlogins='grep -r -i "password\|user" /etc/* 2>/dev/null'
 
 # Reverse engineering with GDB and pwntools
@@ -198,20 +207,6 @@ alias scriptedit='vim ~/scripts/'
 # Enable strict mode for Bash scripts for safer scripting
 set -euo pipefail
 IFS=$'\n\t'
-
-
-# Automated setup for web exploitation environments
-function webexploitenv() {
-    mkdir -p ~/web_exploits/$1
-    cd ~/web_exploits/$1
-    tmux new-session -d -s webexploits
-    tmux send-keys "burpsuite &" C-m
-    tmux split-window -h
-    tmux send-keys "gobuster dir -u $1 -w /usr/share/wordlists/dirb/common.txt -o gobuster_$1.txt" C-m
-    tmux split-window -v
-    tmux send-keys "nikto -host $1 -output nikto_$1.txt" C-m
-    tmux attach-session -t webexploits
-}
 
 
 # Setup environment for binary exploitation

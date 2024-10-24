@@ -8,6 +8,11 @@ import signal
 import sys
 from multiprocessing import cpu_count
 
+'''
+TODO:
+- separate simple nxc mssql and ftp commands from brute
+'''
+
 # Define protocols and services to test
 SERVICES = ["smb", "winrm", "ssh", "ftp", "rdp", "wmi", "ldap", "mssql", "vnc"]
 stop_threads = False
@@ -54,14 +59,6 @@ def read_targets(args):
     else:
         targets = [args.ip]
     return targets
-
-
-
-
-
-
-
-
 
 def execute_netexec(ip, service, auth_method, args, auth_methods):
     global stop_threads
@@ -117,30 +114,30 @@ def execute_netexec(ip, service, auth_method, args, auth_methods):
             if args.wicked:
                 if service == "smb":
                     smb_commands = [
-                        #"--groups",
+                        "--groups",
                         #"--interfaces",
-                        "--laps",
+                        #"--laps",
                         #"--local-group",
-                        #"--local-groups",
-                        "--lsa",
-                        #"--pass-pol",
+                        "--local-groups",
+                        #"--lsa",
+                        "--pass-pol",
                         #"--rid-brute",
-                        "--sam",
+                        #"--sam",
                         "--sessions",
                         #"--sccm",
                         #"--sccm disk",
                         #"--sccm wmi",
                         "--shares",
-                        # Removed "--users"
-                        "-M enum_ca",
+                        #"--users"
+                        #"-M enum_ca",
                         "-M enum_dns",
                         "-M gpp_password",
-                        "-M gpp_autologin",
-                        "-M lsassy",
+                        #"-M gpp_autologin",
+                        #"-M lsassy",
                         #"-M mremoteng",
                         #"-M msol",
                         #"-M nanodump",
-                        "-M nopac",
+                        #"-M nopac",
                         #"-M ntdsutil",
                         #"-M petitpotam",
                         #"-M procdump",
@@ -151,11 +148,11 @@ def execute_netexec(ip, service, auth_method, args, auth_methods):
                         #"-M smbghost",
                         #"-M teams_localdb",
                         #"-M veeam",
-                        "-M vnc",
+                        #"-M vnc",
                         #"-M webdav",
                         #"-M zerologon",
-                        "-x whoami",
-                        "-X '$PSVersionTable'"
+                        #"-x whoami",
+                        #"-X '$PSVersionTable'"
                     ]
                     for option in smb_commands:
                         if stop_threads:
@@ -185,17 +182,17 @@ def execute_netexec(ip, service, auth_method, args, auth_methods):
                             print(f"Command timed out: {' '.join(cmd_option)}")
                 elif service == "ldap":
                     ldap_commands = [
-                        #"--active-users",
+                        "--active-users",
                         "--trusted-for-delegation",
-                        #"--groups",
+                        "--groups",
                         "--gmsa",
-                        # Removed "--users"
+                        "--users"
                         # Removed "--user-count"
                         "-M adcs",
                         f"-M daclread -o TARGET={args.kdcHost if args.kdcHost else ip} ACTION=read",
                         "-M enum_trusts",
-                        "-M get-network -o ALL=true",
-                        "-M laps",
+                        #"-M get-network -o ALL=true",
+                        #"-M laps",
                         #"-M ldap-checker",
                         "-M user-desc"
                     ]

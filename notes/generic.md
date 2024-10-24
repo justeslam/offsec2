@@ -539,3 +539,18 @@ nc -nv $ip 3003 #run this
 help
 version # Then use version to look for exploits
 ````
+
+#### Import ADModule Active Directory
+
+First just try..
+
+```bash
+Import-Module ActiveDirectory
+```
+
+```bash
+curl https://raw.githubusercontent.com/samratashok/ADModule/master/ActiveDirectory/ActiveDirectory.psd1 -o ActiveDirectory.psd1  
+curl https://github.com/samratashok/ADModule/blob/master/Microsoft.ActiveDirectory.Management.dll?raw=true -o Microsoft.ActiveDirectory.Management.dll  
+Import-Module .\Microsoft.ActiveDirectory.Management.dll  
+Import-Module .\ActiveDirectory.psd1  
+```

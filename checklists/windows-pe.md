@@ -26,6 +26,7 @@ https://github.com/lkarlslund/Adalanche/releases
 > $env:path
 > cd env:appkey
 > dir :env # Check for USERPROFILE
+> cmd /c echo %PATH%
 > powershell -command "Get-Clipboard"
 > Tasklist /SVC #List processes running and services
 > Get-WmiObject -Query "Select * from Win32_Process" | where {$_.Name -notlike "svchost*"} | Select Name, Handle, @{Label="Owner";Expression={$_.GetOwner().User}} | ft -AutoSize
@@ -59,13 +60,15 @@ https://github.com/lkarlslund/Adalanche/releases
 > dir /q # Use this instead of plain dir to see who owns
 # While it is important to create a list of installed applications on the target system, it is equally important to identify which of them are currently running. 
 > Get-Process | where {$_.ProcessName -notlike "svchost*"} | ft ProcessName, Id, Path
+> get-process -Id 3324 
 > Get-Process NonStandardProcess | Select-Object Path
 > Get-Process -Name notepad | Select-Object -ExpandProperty "Path"
+> get-service \| ? {$_.DisplayName -like 'Druva*'}
 # Get the path of the process
 # Sensitive information may be stored in meeting notes, configuration files, or onboarding documents. With the information we gathered in the situational awareness process, we can make educated guesses on where to find such files.
 > Get-ChildItem -Path C:\xampp -Include *.txt,*.ini -File -Recurse -ErrorAction SilentlyContinue
 > Get-ChildItem -Path C:\ -Include *.txt,*.pdf,*.xls,*.xlsx,*.doc,*.docx,*.log,*kdbx,*.git,SYSTEM,SAM,SECURITY,ntds.dit -File -Recurse -ErrorAction SilentlyContinue
-> Get-ChildItem -Path C:\ -Include *.txt,*.pdf,*.xls,*.xlsx,*.doc,*.docx,*.log,*.kdbx,*.git,*.rdp,*.config,*.bat,*.bak,*.conf,*.vbs,*.sql,*.reg,*cups*,*print*,*secret*,*cred*,*.ini,*oscp*,*ms01*,*pass*,*ms02*,*dc01*,SYSTEM,SAM,SECURITY,ntds.dit,id_rsa,authorized_keys -File -Recurse -ErrorAction SilentlyContinue | Where-Object { -not ($_.FullName -like "C:\Windows\servicing\LCU\*") -and -not ($_.FullName -like "C:\Windows\Microsoft.NET\Framework\*") -and -not ($_.FullName -like "C:\Windows\WinSxS\amd*") -and -not ($_.FullName -like "C:\Windows\WinSxS\x*")}
+> Get-ChildItem -Path C:\ -Include *.txt,*.pdf,*.xls,*.xlsx,*.doc,*.docx,*.log,*.kdbx,*.git,*.rdp,*.config,*.bat,*.bak,*.conf,*.vbs,*.sql,*.reg,*password*,*sensitive*,*admin*,*login*,*secret*,*.vmdk,*cups*,*print*,*secret*,*cred*,*.ini,*oscp*,*ms01*,*pass*,*ms02*,*dc01*,SYSTEM,SAM,SECURITY,ntds.dit,id_rsa,authorized_keys -File -Recurse -ErrorAction SilentlyContinue | Where-Object { -not ($_.FullName -like "C:\Windows\servicing\LCU\*") -and -not ($_.FullName -like "C:\Windows\Microsoft.NET\Framework\*") -and -not ($_.FullName -like "C:\Windows\WinSxS\amd*") -and -not ($_.FullName -like "C:\Windows\WinSxS\x*")}
 > Get-ChildItem -Path C:\Users -Include *.xml,*.txt,*.pdf,*.xls,*.xlsx,*.doc,*.docx,id_rsa,authorized_keys,*.exe,*.log -File -Recurse -ErrorAction SilentlyContinue
 > Get-ChildItem -Path C:\ -Include SYSTEM,SAM,SECURITY,ntds.dit -File -Recurse -ErrorAction SilentlyContinue
 # Find a string
@@ -76,6 +79,8 @@ https://github.com/lkarlslund/Adalanche/releases
 > Get-ChildItem -Path C:\Users -Include user.txt,root.txt -File -Recurse -ErrorAction SilentlyContinue | type # Great, but only for CTFs, probably shouldn't get used to it
 > findstr /spin “password” *.* # find all files with the word "password" in them
 > findstr /is "passwordss" *.txt *.config *.log *.xml *.docx *.xls
+> takeown /f C:\backups\wwwroot\web.config # TAKE OWNERSHIP OF A FILE
+> Get-ChildItem -Path ‘C:\backups\wwwroot\web.config’ \| select name,directory, @{Name=“Owner”;Expression={(Ge t-ACL $_.Fullname).Owner}} # CONFIRMING SUCCESS
 > Get-History
 > (Get-PSReadlineOption).HistorySavePath
 > LOOK IN THE EVENT VIEWER FOR PASSWORDS # should go to Event Viewer → Events from Script Block Logging are in Application and Services → Microsoft → Windows → PowerShell → Operational then search more . Apply filter for 4104 events , should appear in top 5
@@ -88,6 +93,9 @@ Get-ChildItem -Path C:\ -Include *.txt,*.pdf,*.xls,*.xlsx,*.doc,*.docx,*.log,*.k
 > netstat -p tcp
 > netstat -p tcp -f
 > findstr /SIM /C:"password" *.txt *.ini *.cfg *.config *.xml *.git *.ps1 *.yml
+> wevtutil qe Security /rd:true /f:text \| Select-String "/user" #	Searching security event logs
+> wevtutil qe Security /rd:true /f:text /r:share01 /u:julie.clay /p:Welcome1 \| findstr "/user" # Passing credentials to wevtutil
+> Get-WinEvent -LogName security \| where { $_.ID -eq 4688 -and $_.Properties[8].Value -like '*/user*' } \| Select-Object @{name='CommandLine';expression={ $_.Properties[8].Value }} 
 ```
 
 ### PowerView.ps1
@@ -180,6 +188,12 @@ powershell -ep bypass
 > Get-DomainObjectAcl -LDAPFilter '(objectCategory=groupPolicyContainer)' | ? { ($_.SecurityIdentifier -match '^S-1-5-.*-[1-9]\d{3,}$') -and ($_.ActiveDirectoryRights -match 'WriteProperty|GenericAll|GenericWrite|WriteDacl|WriteOwner')}
 ```
 
+```bash
+Find-InterestingDomainShareFile -Include *passwords*
+Find-InterestingDomainAcl -ResolveGUIDs
+Find-InterestingFile 
+```
+
 ### PowerSploit
 
 ```bash
@@ -191,6 +205,17 @@ Get-CachedGPPPassword
 Get-RegistryAutoLogon
 Find-ProcessDLLHijack
 Find-PathDLLHijack # Write-HijackDll
+```
+
+```cmd
+# With WMIC
+wmic service get name,displayname,pathname,startmode |findstr /i "Auto" |findstr /i /v "C:\Windows\\" |findstr /i /v """ 
+# Writable Path (accesschk.exe > upnphost)
+# Accesschk for any writable path
+accesschk.exe -uwcqv "Authenticated Users" * /accepteula
+accesschk.exe -qdws "Authenticated Users" C:\Windows\ /accepteula
+accesschk.exe -qdws Users C:\Windows\ /accepteula
+accesschk.exe -wuvc daclsvc /accepteula
 ```
 
 ### PowerShell Scripts
@@ -251,7 +276,7 @@ Note that SharpHound supports looping, running cyclical queries over time like a
 > . .\Sharphound.ps1 # or Import-Module .\SharpHound.ps1
 > Get-Help Invoke-BloodHound
 > Invoke-BloodHound -CollectionMethod All,GPOLocalGroup $ip -OutputDirectory C:\Windows\Tasks\ -OutputPrefix "molly" # May take a couple minutes
-> Invoke-BloodHound -CollectionMethod All -OutputDirectory C:\Windows\Tasks\ -OutputPrefix "bum"
+> Invoke-BloodHound -CollectionMethod All,GPOLocalGroup -OutputDirectory C:\Windows\Tasks\ -OutputPrefix "local"
 # Or remotely
 > bloodhound-python --dns-tcp -d support.htb -u ldap -p "nvEfEK16^1aM4\$e7AclUf8x\$tRWxPWO1%lmz" -c all -ns $ip 
 > python bloodhound.py --dns-tcp -d $dom -u enox -p california -c all -ns $ip
