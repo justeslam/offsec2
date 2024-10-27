@@ -1,5 +1,6 @@
 ## Tmux Tips & Tricks
 
+```bash
 Create a new session: tmux new -s {session name}
 List the tmux sessions: tmux ls
 Attach (go into) a tmux session: tmux attach -t {session name}
@@ -29,9 +30,11 @@ To paste terminal contents to a normal file:
 - Paste the text with shift key + middle-button
 lowercase g -> go all the way to the top
 uppercase G -> go all the way to the bottom
+```
 
 #### Tmux Logging
 
+```
 Toggle (start/stop) logging in the current pane: prefix + shift + p
 Save visible text, in the current pane. Equivalent of a "textual screenshot": prefix + alt + p
 Save complete pane history to a file. Convenient if you retroactively remember you need to log/save all the work: prefix + alt + shift + p
@@ -39,11 +42,13 @@ Clear pane history: prefix + alt + c
 Fetch and source plugin: prefix + I
 
 set -g mouse on
+```
 
 ## Vi Tricks
-
+```
 Get rid of spaces: "%s/ //g"
 Substitute "|" with newline: "%s/|/\r/g"
+```
 
 ## Slicing and Dicing Output
 

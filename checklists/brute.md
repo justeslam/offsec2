@@ -80,6 +80,8 @@ john -wordlist=/usr/share/wordlists/rockyou.txt pdf.hash
 hydra -I -V -f -L users.txt -u -P /opt/SecLists/Passwords/xato-net-10-million-passwords.txt 192.168.179.46 ftp
 ```
 
+#### Remove the '\*' from MySQL Hashes
+
 #### HTTP Examples
 
 As before, we'll specify -l for the user, -P for the wordlist, the target IP without any protocol, and a new http-post-form argument, which accepts three colon-delimited fields.
@@ -97,7 +99,7 @@ hydra -I -l admin -P /usr/share/wordlists/rockyou.txt -t 1 "http-get://192.168.2
 ```
 
 
-### [CUPP](https://github.com/Mebus/cupp)
+### CUPP
 
 Generate passwords based on your knowledge of the victim (names, dates...)
 
@@ -105,7 +107,7 @@ Generate passwords based on your knowledge of the victim (names, dates...)
 python3 cupp.py -h
 ```
 
-### [Wister](https://github.com/cycurity/wister)
+### Wister
 
 A wordlist generator tool, that allows you to supply a set of words, giving you the possibility to craft multiple variations from the given words, creating a unique and ideal wordlist to use regarding a specific target.
 
@@ -217,7 +219,6 @@ legba ftp --username admin --password wordlists/passwords.txt --target localhost
 
 ### HTTP Generic Brute
 
-#### [WFuzz](../pentesting-web/web-tool-wfuzz.md)
 
 ### HTTP Basic Auth
 

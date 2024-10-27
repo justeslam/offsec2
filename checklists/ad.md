@@ -1,6 +1,6 @@
 ## AD Checklist - Remote Enumeration
 
-Run through all of the relevant ports' mds. All privilege escalation and local enumeration is is windows-enumeration.md.
+Got so sick of running all other the place for commands and variation of them. Run through all of the relevant ports' mds. All windows os privilege escalation and local enumeration is is windows-enumeration.md.
 
 sprayhound
 https://github.com/lkarlslund/Adalanche/releases
