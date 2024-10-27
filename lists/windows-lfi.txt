@@ -153,6 +153,7 @@ c:/xampp/apache/logs/error.log
 c:/xampp/mysql/data/mysql-bin.index
 c:/xampp/mysql/data/mysql.err
 c:/xampp/mysql/data/{IPDELHOST}.err
+C:\xampp\mysql\bin\my.ini
 c:/xampp/sendmail/sendmail.log
 c:/xampp/apache/conf/httpd.conf
 c:/xampp/FileZillaFTP/FileZilla Server.xml

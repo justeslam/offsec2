@@ -15,6 +15,7 @@ wfuzz -c -z file,/opt/SecLists/Discovery/Web-Content/megadirlow.txt --hc 404 "ht
 wfuzz -c -z file,/opt/SecLists/Discovery/Web-Content/raft-large-files.txt --hc 404 "http://$url/FUZZ"
 gobuster dir -u $url -w /opt/SecLists/Discovery/Web-Content/raft-large-files.txt -erk -t 30 -x php,txt,html,whatever
 feroxbuster -k -u $url:3000 -o feroxbuster.out -w /opt/SecLists/Discovery/Web-Content/megadir.txt -b "connect.sid=s%3Awy8r5K11MKvRQ7w5lr8QS9KyHJr_q92B.2fbWC6h%2FH6u7sCs06k4dwmYRTFkdvhy%2BdwOjxLaufwA; userLevel=YWRtaW4%3d"
+wfuzz -c -z file,/opt/SecLists/Discovery/Web-Content/megadir.txt --hc 404 -d "SESSIONID=value" "$url"
 ffuf -k -u "$url/FUZZ" -w /opt/SecLists/Discovery/Web-Content/content_discovery_all.txt -fs 106
 
 # If you get hits, try to discover more directories using a more niche wordlist

@@ -1,0 +1,39 @@
+# Ignore all temporary files
+#*.tmp
+
+# Ignore specific directories
+#notes/
+
+# Ignore Markdown files in checklists
+#checklists/*.md
+
+# Ignore specific files
+#README.md
+notes/active_directory.md
+notes/attacking_ad.md
+notes/file_inclusion.md
+notes/lateral_movement_windows.md
+notes/linux_privesc_guide.md
+notes/metasploit.md
+notes/passive_information_gathering.md
+notes/metasploit.md
+notes/peer_notes.md
+notes/postexploitation.md
+notes/s1ren_report_format.md
+notes/tunneling_deep_packet_inspection.md
+notes/vulnerability_scanning.md
+notes/metasploit.md
+notes/web_assessment_and_xss.md
+notes/windows_privesc.md
+notes/windows_privesc_guide.md
+notes/metasploit.md
+
+# Exception rules for ignoring
+#notes/*
+#!notes/exam.md
+
+# Multiple criteria for customizations
+#customizations/*.rule
+#customizations/*.sh
+#customizations/*
+#!customizations/tmux.conf

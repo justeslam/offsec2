@@ -212,6 +212,8 @@
 - NT AUTHORITY\LOCAL SERVICE can't create users
 - Some processes are run as NT AUTHORITY\LOCAL SERVICE, so try a reverse shell if creating user doesn't work. 
 - Run bloodhound local, it'll give you more information. Also, do All,GPOLocalGroup as it'll leave it out by default
+- The files C:\Windows\inf\defltdc.inf & C:\Windows\security\logs\scedcpro.log will tell you how they deviated from base configuratino
+- If there's a developer warning about access to admin page or ... with links to learn why or more, take the take. Learn some more and reserve running in circles.
  
 
 

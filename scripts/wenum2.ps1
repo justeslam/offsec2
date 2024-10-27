@@ -13,9 +13,6 @@
 
 # Implement the ability to specify (in a txt document, one word per line) words to be included, that are to be used in functions like..
 
-foreach ($customUser in $additionalUsers) {
-Get-CimInstance -Query "Select * from Win32_Process" | where {$_.Name -notlike "svchost*"} | Select Name, Handle, @{Label="Owner";Expression={$_.GetOwner().User}} | ft -AutoSize # Replace .User
-}
 
 # Implement the ability to specify (in a txt document, one word per line) groups that will be checked in functions like 'accesschk.exe /accepteula -uwcqv "$additionalGroup" *' 
 

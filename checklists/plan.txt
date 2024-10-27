@@ -111,3 +111,13 @@ python3 rbcd.py -action write -delegate-to "DC01$" -delegate-from "EVILCOMPUTER$
 #gpp-passwords?
 #asrep?
 # Scrape 0xdf and HackTricks? https://swisskyrepo.github.io/InternalAllTheThings/active-directory? https://wadcoms.github.io/? https://github.com/swisskyrepo/InternalAllTheThings/tree/main/docs/active-directory https://www.hackingarticles.in/lateral-movement-pass-the-hash-attack/ https://www.n00py.io/2020/12/alternative-ways-to-pass-the-hash-pth/ https://github.com/skelsec/minikerberos https://www.thehacker.recipes/ad/movement/kerberos/asreproast
+
+- fuzz and discover setup.sql
+- use admin creds
+- brute 2fa pin with ffuf
+- go to admin.php -> set hooks to encoded busybox nc cmd port 80
+- use readable id_rsa to pivot to user
+- uncover cronjob executing command from sqlite table with pspy
+- add entry with same command as before
+- root
+

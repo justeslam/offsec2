@@ -27,6 +27,8 @@ Kill pane: Ctrl-B + X
 To paste terminal contents to a normal file:
 - Copy the text: select the text and press mouse left-button with shift key press too.
 - Paste the text with shift key + middle-button
+lowercase g -> go all the way to the top
+uppercase G -> go all the way to the bottom
 
 #### Tmux Logging
 

